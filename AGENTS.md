@@ -2,6 +2,8 @@
 
 ## 工程目录维护
 
+新增文件、组件版本、分支、提交及受委托上传按 [docs/35-命名版本与GitHub发布约定.md](docs/35-命名版本与GitHub发布约定.md) 执行。
+
 目录与命令入口见README.md及docs/15-工程目录与维护约定.md。前端按src/features组织业务组件，components只保留共享实现；CSS集中src/styles。阶段检查放new-system/tooling/checks，工具测试放tooling/tests；前端单元测试和浏览器验收分放tests/unit、tests/browser。常用命令由scripts/project.ps1调用。保持已发布课程、运行数据和历史验收证据的路径与内容稳定。
 
 ## 当前决策

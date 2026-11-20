@@ -50,6 +50,7 @@
 ## 工程与证据
 
 - [15 工程目录与维护约定](15-工程目录与维护约定.md)
+- [35 命名、版本与 GitHub 发布约定](35-命名版本与GitHub发布约定.md)
 - [当前工程](../new-system/README.md)、[前端](../new-system/frontend/README.md)、[后端](../new-system/backend/README.md)
 - [阶段验收](../new-system/docs/acceptance/README.md)、[目录整理记录](../new-system/docs/acceptance/project-structure/README.md)
 - [抖音参考](references/douyin/作品内容与采用说明.md)
