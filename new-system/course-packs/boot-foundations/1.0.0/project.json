@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 3,
+  "courseId": "boot-foundations",
+  "courseVersion": "1.0.0",
+  "status": "published",
+  "title": "接口启动实验室",
+  "subtitle": "四章，从启动到数据库",
+  "description": "在真实IDE编码，用隔离检查和新情境理解验证每一关。",
+  "outcomes": [
+    "可运行的Maven工程",
+    "真实接口与数据库操作",
+    "版本绑定的功能与理解证据"
+  ],
+  "prerequisites": [
+    "Java基础、HTTP/JSON；JDBC章节还需SQL基础"
+  ],
+  "chapters": [
+    {
+      "stageId": "boot-start",
+      "title": "启动Spring Boot",
+      "minutes": 45,
+      "goal": "用Maven构建并运行第一个Boot健康接口。",
+      "concepts": [
+        {
+          "title": "启动类与组件扫描",
+          "body": "@SpringBootApplication把当前包及其子包交给Spring管理；main启动应用上下文与内嵌服务器。类存在于目录中并不等于已注册为组件。"
+        },
+        {
+          "title": "Maven依赖与端口",
+          "body": "pom.xml描述依赖和构建插件；首次IDE导入可能需要下载。依赖失败发生在编译前，端口冲突发生在启动时，应分别查看日志。"
+        }
+      ],
+      "task": "恢复健康接口，使GET /api/health返回200与{\"status\":\"ok\"}。",
+      "steps": [
+        "先预测请求的状态、字段和数据变化，再阅读本章示例。",
+        "下载本关骨架文件，按相对路径在IDEA建立工程；保持固定pom.xml。",
+        "实现任务后运行Application，按验收清单逐条请求，记录实际结果。",
+        "在网页预览文件范围并配对，保存不可变快照，提交功能检查。",
+        "根据报告修复，再完成两道新情境理解题；正式双结果由服务端保存。"
+      ],
+      "requirements": [
+        "恢复健康接口，使GET /api/health返回200与{\"status\":\"ok\"}。",
+        "修改后重新保存快照；旧报告始终对应原摘要。",
+        "环境失败可重试，不计为知识错误。"
+      ],
+      "pitfall": "pom.xml描述依赖和构建插件；首次IDE导入可能需要下载。依赖失败发生在编译前，端口冲突发生在启动时，应分别查看日志。",
+      "example": "GET /api/health → 200 {\"status\":\"ok\"}",
+      "formalQuestions": [
+        {
+          "id": "apply",
+          "prompt": "将端口改为8090但8080旧进程仍运行，如何验证？",
+          "options": [
+            "保存后只刷新8080",
+            "停止旧进程、重启并请求8090",
+            "修改JSON字段"
+          ]
+        },
+        {
+          "id": "transfer",
+          "prompt": "依赖缓存缺失时应当怎样处理？",
+          "options": [
+            "修复依赖环境后重试",
+            "认为HTTP知识不合格",
+            "删除Controller"
+          ]
+        }
+      ],
+      "formalAnswer": {
+        "apply": 1,
+        "transfer": 0
+      }
+    },
+    {
+      "stageId": "boot-http",
+      "title": "路由、请求体与DTO",
+      "minutes": 50,
+      "goal": "从路径、查询参数和JSON请求体接收不同数据。",
+      "concepts": [
+        {
+          "title": "三种输入位置",
+          "body": "/api/echo/7中的7通过@PathVariable绑定，?name=Java通过@RequestParam绑定，请求体通过@RequestBody交给DTO。三者不能相互替代。"
+        },
+        {
+          "title": "DTO与JSON类型",
+          "body": "record简洁表达传输数据。本例用Object保留completed的原始JSON类型，再检查Boolean，避免把字符串false悄悄当成布尔值。返回对象由框架序列化为JSON。"
+        }
+      ],
+      "task": "实现GET /api/echo/{id}?name=...与POST /api/echo，POST有效时201，缺字段或字符串布尔时400。",
+      "steps": [
+        "先预测请求的状态、字段和数据变化，再阅读本章示例。",
+        "下载本关骨架文件，按相对路径在IDEA建立工程；保持固定pom.xml。",
+        "实现任务后运行Application，按验收清单逐条请求，记录实际结果。",
+        "在网页预览文件范围并配对，保存不可变快照，提交功能检查。",
+        "根据报告修复，再完成两道新情境理解题；正式双结果由服务端保存。"
+      ],
+      "requirements": [
+        "实现GET /api/echo/{id}?name=...与POST /api/echo，POST有效时201，缺字段或字符串布尔时400。",
+        "修改后重新保存快照；旧报告始终对应原摘要。",
+        "环境失败可重试，不计为知识错误。"
+      ],
+      "pitfall": "record简洁表达传输数据。本例用Object保留completed的原始JSON类型，再检查Boolean，避免把字符串false悄悄当成布尔值。返回对象由框架序列化为JSON。",
+      "example": "POST /api/echo\n{\"title\":\"学Java\",\"completed\":false} → 201",
+      "formalQuestions": [
+        {
+          "id": "apply",
+          "prompt": "JSON中completed为\"false\"，接口要求布尔，如何处理？",
+          "options": [
+            "直接按非空字符串转true",
+            "返回400并要求JSON布尔值",
+            "返回201"
+          ]
+        },
+        {
+          "id": "transfer",
+          "prompt": "路径编号和查询名称分别用什么读取？",
+          "options": [
+            "两者都从请求体取",
+            "都从响应头取",
+            "PathVariable与RequestParam"
+          ]
+        }
+      ],
+      "formalAnswer": {
+        "apply": 1,
+        "transfer": 2
+      }
+    },
+    {
+      "stageId": "boot-layers",
+      "title": "分层与构造器注入",
+      "minutes": 40,
+      "goal": "沿Controller→Service→Repository解释一次真实组件调用。",
+      "concepts": [
+        {
+          "title": "各层职责",
+          "body": "Controller负责HTTP输入输出，Service组织业务规则，Repository负责数据读写。分层把变化集中到对应位置，接口层不拼SQL。"
+        },
+        {
+          "title": "构造器注入",
+          "body": "Spring先构建Repository，再把它传给Service，最后传给Controller。单构造器不必写@Autowired；手工new且依赖为空时不会得到容器管理的依赖。"
+        }
+      ],
+      "task": "补齐三层构造器调用，使GET /api/layers返回{\"title\":\"构造器注入\"}。",
+      "steps": [
+        "先预测请求的状态、字段和数据变化，再阅读本章示例。",
+        "下载本关骨架文件，按相对路径在IDEA建立工程；保持固定pom.xml。",
+        "实现任务后运行Application，按验收清单逐条请求，记录实际结果。",
+        "在网页预览文件范围并配对，保存不可变快照，提交功能检查。",
+        "根据报告修复，再完成两道新情境理解题；正式双结果由服务端保存。"
+      ],
+      "requirements": [
+        "补齐三层构造器调用，使GET /api/layers返回{\"title\":\"构造器注入\"}。",
+        "修改后重新保存快照；旧报告始终对应原摘要。",
+        "环境失败可重试，不计为知识错误。"
+      ],
+      "pitfall": "Spring先构建Repository，再把它传给Service，最后传给Controller。单构造器不必写@Autowired；手工new且依赖为空时不会得到容器管理的依赖。",
+      "example": "Controller(service) → Service(repository) → Repository",
+      "formalQuestions": [
+        {
+          "id": "apply",
+          "prompt": "new TaskService(null)能否自动获得Repository？",
+          "options": [
+            "不能，需由容器注入或显式传入",
+            "可以，因为类有@Service",
+            "只要重启浏览器即可"
+          ]
+        },
+        {
+          "id": "transfer",
+          "prompt": "数据库读取应主要放在哪层？",
+          "options": [
+            "Controller",
+            "Repository",
+            "DTO"
+          ]
+        }
+      ],
+      "formalAnswer": {
+        "apply": 0,
+        "transfer": 1
+      }
+    },
+    {
+      "stageId": "boot-jdbc",
+      "title": "JDBC连接与参数绑定",
+      "minutes": 55,
+      "goal": "把Java接口接到隔离MySQL，并验证引号标题和重启后的持久数据。",
+      "concepts": [
+        {
+          "title": "DataSource与JdbcTemplate",
+          "body": "DataSource管理数据库连接，JdbcTemplate执行SQL并映射结果。平台的SQLite保存学习记录，课程的MySQL保存任务，两者用途和凭据独立。"
+        },
+        {
+          "title": "占位符绑定值",
+          "body": "WHERE id=?和VALUES(?,?)将数据作为值传入。用户标题中的单引号无需手工拼接或删除。表名只能来自程序固定白名单，不能作为普通占位值替换。"
+        }
+      ],
+      "task": "实现任务读取与新增，参数化保存包含单引号的标题，重启服务后仍可读取。",
+      "steps": [
+        "先预测请求的状态、字段和数据变化，再阅读本章示例。",
+        "下载本关骨架文件，按相对路径在IDEA建立工程；保持固定pom.xml。数据库运行配置见下方环境说明。",
+        "实现任务后运行Application，按验收清单逐条请求，记录实际结果。",
+        "在网页预览文件范围并配对，保存不可变快照，提交功能检查。",
+        "根据报告修复，再完成两道新情境理解题；正式双结果由服务端保存。"
+      ],
+      "requirements": [
+        "实现任务读取与新增，参数化保存包含单引号的标题，重启服务后仍可读取。",
+        "修改后重新保存快照；旧报告始终对应原摘要。",
+        "环境失败可重试，不计为知识错误。"
+      ],
+      "pitfall": "WHERE id=?和VALUES(?,?)将数据作为值传入。用户标题中的单引号无需手工拼接或删除。表名只能来自程序固定白名单，不能作为普通占位值替换。",
+      "example": "SELECT id,title,completed FROM tasks WHERE id=?;\nPOST /api/tasks\n{\"title\":\"O'Reilly\",\"completed\":false}",
+      "formalQuestions": [
+        {
+          "id": "apply",
+          "prompt": "标题是O'Reilly，安全写法是什么？",
+          "options": [
+            "把单引号全部删除",
+            "直接拼SQL字符串",
+            "使用?占位符并绑定值"
+          ]
+        },
+        {
+          "id": "transfer",
+          "prompt": "重启Java服务后MySQL记录应怎样？",
+          "options": [
+            "保留，只要未清库",
+            "随内存对象消失",
+            "写入平台SQLite"
+          ]
+        }
+      ],
+      "formalAnswer": {
+        "apply": 2,
+        "transfer": 0
+      }
+    }
+  ]
+}

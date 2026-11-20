@@ -1,0 +1,25 @@
+{
+  "status" : "passed",
+  "report" : {
+    "snapshotDigest" : "1c73c64b6f678fc7ca90cc1e79ac69a31e23c075dacb008d6bcabe7b85bbbb68",
+    "courseVersion" : "1.0.0",
+    "stageId" : "boot-layers",
+    "policy" : "boot-layers-v1",
+    "image" : "sha256:1d8c33dc7ce617e0cbf115ac2fdafbbbf95b081aae77d0b644d70b9bb3ed93a4",
+    "harnessDigest" : "62b246ebccb2c515184a232ff6f939e26f006745de78263f62c8b45a926d0bd2",
+    "functionalPassed" : true,
+    "assertions" : [ {
+      "name" : "离线Maven构建",
+      "passed" : true,
+      "expected" : "固定依赖构建成功",
+      "actual" : "多文件工程已离线编译并生成可执行JAR。"
+    }, {
+      "name" : "三层组件调用",
+      "passed" : true,
+      "expected" : "Repository→Service→Controller返回构造器注入",
+      "actual" : "HTTP 200 {\"title\":\"构造器注入\"}"
+    } ],
+    "log" : "\n  .   ____          _            __ _ _\n /\\\\ / ___'_ __ _ _(_)_ __  __ _ \\ \\ \\ \\\n( ( )\\___ | '_ | '_| | '_ \\/ _` | \\ \\ \\ \\\n \\\\/  ___)| |_)| | | | | || (_| |  ) ) ) )\n  '  |____| .__|_| |_|_| |_\\__, | / / / /\n =========|_|==============|___/=/_/_/_/\n\n :: Spring Boot ::                (v4.1.2)\n\n2026-11-12T06:29:08.469Z  INFO 60 --- [           main] dev.codesomething.lab.Application        : Starting Application v1.0.0 using Java 21.0.13 with PID 60 (/tmp/project/target/boot-lab.jar started by nobody in /tmp/project)\n2026-11-12T06:29:08.473Z  INFO 60 --- [           main] dev.codesomething.lab.Application        : No active profile set, falling back to 1 default profile: \"default\"\n2026-11-12T06:29:10.081Z  INFO 60 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)\n2026-11-12T06:29:10.090Z  INFO 60 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]\n2026-11-12T06:29:10.090Z  INFO 60 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.27]\n2026-11-12T06:29:10.188Z  INFO 60 --- [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1517 ms\n2026-11-12T06:29:10.967Z  INFO 60 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'\n2026-11-12T06:29:10.973Z  INFO 60 --- [           main] dev.codesomething.lab.Application        : Started Application in 3.997 seconds (process running for 5.115)\n2026-11-12T06:29:11.003Z  INFO 60 --- [0.1-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'\n2026-11-12T06:29:11.003Z  INFO 60 --- [0.1-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'\n2026-11-12T06:29:11.003Z  INFO 60 --- [0.1-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms\n",
+    "finishedAt" : "2026-11-12T06:29:11.976758300Z"
+  }
+}

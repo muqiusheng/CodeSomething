@@ -1,0 +1,1 @@
+-- Application owns its schema. No learner table names are assumed.

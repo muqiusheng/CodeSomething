@@ -1,0 +1,22 @@
+from pathlib import Path
+root=Path(__file__).resolve().parents[1]
+path=root/'tooling/r7-reference/DemoController.java'
+code=path.read_text(encoding='utf-8')
+code=code.replace('<main><h1>','<a class="skip" href="#main">跳到主要内容</a><main id="main" tabindex="-1"><h1>')
+code=code.replace('h1{font-size:', '.skip{position:absolute;left:-10000px}.skip:focus{left:16px;top:8px;background:var(--base);padding:8px}h1{font-size:')
+code=code.replace('h2{font-size:21px}', 'h2{font-size:21px}h1,h2{text-wrap:balance}textarea{color:var(--ink);background:var(--base);border:1px solid var(--ink);border-radius:8px;padding:8px}#pagination{font-variant-numeric:tabular-nums}')
+code=code.replace('name="username" autocomplete=', 'name="username" spellcheck="false" autocomplete=')
+code=code.replace('<input id="plan-title"', '<input name="title" autocomplete="off" id="plan-title"')
+code=code.replace('<input id="plan-id"', '<input name="planId" inputmode="numeric" id="plan-id"')
+code=code.replace('<select id="status"', '<select name="status" id="status"')
+code=code.replace('<textarea id="batch"', '<textarea name="batch" autocomplete="off" id="batch"')
+code=code.replace('id="feedback" role=', 'id="feedback" tabindex="-1" role=')
+code=code.replace("$('feedback').textContent=message};", "$('feedback').textContent=message;if(error)$('feedback').focus()};")
+code=code.replace('button.disabled=true;try{await work()}', "const label=button.textContent;button.disabled=true;button.setAttribute('aria-busy','true');button.textContent='处理中…';try{await work()}")
+code=code.replace('finally{button.disabled=false}}', "finally{button.disabled=false;button.removeAttribute('aria-busy');button.textContent=label}}")
+code=code.replace("textContent='暂无计划，创建一个开始。'}", "textContent='暂无计划，创建一个开始。';return items}")
+code=code.replace("async function tasks(){const plan=", "async function tasks(){$('tasks').replaceChildren();$('pagination').textContent='正在读取…';$('previous').disabled=true;$('next').disabled=true;const plan=")
+code=code.replace("page=0;await plans();feedback('登录成功", "page=0;$('tasks').replaceChildren();$('pagination').textContent='';$('audit-result').textContent='尚未查询';const items=await plans();if(items.length){$('plan-id').value=items[0].id;await tasks()}feedback('登录成功")
+code=code.replace("$('audit-result').textContent='尚未查询';feedback('已退出", "$('audit-result').textContent='尚未查询';$('tasks').replaceChildren();$('plans').replaceChildren();$('pagination').textContent='';feedback('已退出")
+path.write_text(code,encoding='utf-8')
+print('Polished labels, skip link, focus feedback, loading states and account-switch data clearing.')

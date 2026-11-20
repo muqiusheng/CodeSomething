@@ -1,0 +1,175 @@
+{
+  "status" : "passed",
+  "report" : {
+    "snapshotDigest" : "e1938c6df659a43e89737aa9be1fe53a72196ee3aa2745d68873d8377f085466",
+    "courseVersion" : "1.0.0",
+    "stageId" : "a-transfer",
+    "policy" : "a-transfer-v1",
+    "image" : "sha256:ed231f8aa9ebb2e48df58330e80692ecc5ca67717ee3c11dc0ab8ffabe3c3dc5",
+    "harnessDigest" : "925378569e19d30f40e76199487cddfae0ba37c61b0a387eefb0be3a6c2d6b15",
+    "functionalPassed" : true,
+    "assertions" : [ {
+      "name" : "离线Maven构建",
+      "passed" : true,
+      "expected" : "固定依赖构建成功",
+      "actual" : "多文件工程已离线编译并生成可执行JAR。"
+    }, {
+      "name" : "读取单条与JSON类型",
+      "passed" : true,
+      "expected" : "id=1，初始标题与布尔字段",
+      "actual" : "HTTP 200 {\"id\":1,\"title\":\"Java文档\",\"saved\":false}"
+    }, {
+      "name" : "未知编号404",
+      "passed" : true,
+      "expected" : "404与非空message",
+      "actual" : "HTTP 404 {\"message\":\"资源不存在\"}"
+    }, {
+      "name" : "列表",
+      "passed" : true,
+      "expected" : "分页对象与5条初始数据",
+      "actual" : "HTTP 200 {\"items\":[{\"id\":1,\"title\":\"Java文档\",\"saved\":false},{\"id\":2,\"title\":\"SQL手册\",\"saved\":true},{\"id\":3,\"title\":\"接口笔记\",\"saved\":false},{\"id\":4,\"title\":\"开发指南\",\"saved\":true},{\"id\":5,\"title\":\"数据库指南\",\"saved\":false}],\"page\":0,\"size\":10,\"total\":5}"
+    }, {
+      "name" : "筛选稳定分页第0页",
+      "passed" : true,
+      "expected" : "匹配id=1/3/5，total=3，页大小2",
+      "actual" : "HTTP 200 {\"items\":[{\"id\":1,\"title\":\"Java文档\",\"saved\":false},{\"id\":3,\"title\":\"接口笔记\",\"saved\":false}],\"page\":0,\"size\":2,\"total\":3}"
+    }, {
+      "name" : "筛选稳定分页第1页",
+      "passed" : true,
+      "expected" : "匹配id=1/3/5，total=3，页大小2",
+      "actual" : "HTTP 200 {\"items\":[{\"id\":5,\"title\":\"数据库指南\",\"saved\":false}],\"page\":1,\"size\":2,\"total\":3}"
+    }, {
+      "name" : "筛选稳定分页第2页",
+      "passed" : true,
+      "expected" : "匹配id=1/3/5，total=3，页大小2",
+      "actual" : "HTTP 200 {\"items\":[],\"page\":2,\"size\":2,\"total\":3}"
+    }, {
+      "name" : "拒绝非法分页page=-1",
+      "passed" : true,
+      "expected" : "400 JSON",
+      "actual" : "HTTP 400 {\"message\":\"page不能为负，size需在1—50之间\"}"
+    }, {
+      "name" : "拒绝非法分页size=0",
+      "passed" : true,
+      "expected" : "400 JSON",
+      "actual" : "HTTP 400 {\"message\":\"page不能为负，size需在1—50之间\"}"
+    }, {
+      "name" : "拒绝非法分页size=51",
+      "passed" : true,
+      "expected" : "400 JSON",
+      "actual" : "HTTP 400 {\"message\":\"page不能为负，size需在1—50之间\"}"
+    }, {
+      "name" : "拒绝非法分页page=bad",
+      "passed" : true,
+      "expected" : "400 JSON",
+      "actual" : "HTTP 400 {\"message\":\"JSON或请求参数格式不正确\"}"
+    }, {
+      "name" : "新增与生成键",
+      "passed" : true,
+      "expected" : "201，自动编号与原样引号标题",
+      "actual" : "HTTP 201 {\"id\":6,\"title\":\"O'Reilly\",\"saved\":false}"
+    }, {
+      "name" : "连续生成不同编号",
+      "passed" : true,
+      "expected" : "第二个新编号不同",
+      "actual" : "HTTP 201 {\"id\":7,\"title\":\"第二条\",\"saved\":true}"
+    }, {
+      "name" : "写入后读取",
+      "passed" : true,
+      "expected" : "引号标题已持久化",
+      "actual" : "HTTP 200 {\"id\":6,\"title\":\"O'Reilly\",\"saved\":false}"
+    }, {
+      "name" : "真实数据库记录",
+      "passed" : true,
+      "expected" : "O'Reilly",
+      "actual" : "O'Reilly\n"
+    }, {
+      "name" : "更新目标",
+      "passed" : true,
+      "expected" : "200与目标新值",
+      "actual" : "HTTP 200 {\"id\":6,\"title\":\"已修改\",\"saved\":true}"
+    }, {
+      "name" : "其他记录不变",
+      "passed" : true,
+      "expected" : "编号1保持原值",
+      "actual" : "HTTP 200 {\"id\":1,\"title\":\"Java文档\",\"saved\":false}"
+    }, {
+      "name" : "更新未知编号",
+      "passed" : true,
+      "expected" : "404",
+      "actual" : "HTTP 404 {\"message\":\"资源不存在\"}"
+    }, {
+      "name" : "删除204空体",
+      "passed" : true,
+      "expected" : "204无响应体",
+      "actual" : "HTTP 204 "
+    }, {
+      "name" : "重复删除404",
+      "passed" : true,
+      "expected" : "404",
+      "actual" : "HTTP 404 {\"message\":\"资源不存在\"}"
+    }, {
+      "name" : "写入前校验",
+      "passed" : true,
+      "expected" : "400与错误message",
+      "actual" : "HTTP 400 {\"message\":\"title需为1—100字符，saved需为布尔值\"}"
+    }, {
+      "name" : "写入前校验",
+      "passed" : true,
+      "expected" : "400与错误message",
+      "actual" : "HTTP 400 {\"message\":\"title需为1—100字符，saved需为布尔值\"}"
+    }, {
+      "name" : "写入前校验",
+      "passed" : true,
+      "expected" : "400与错误message",
+      "actual" : "HTTP 400 {\"message\":\"title需为1—100字符，saved需为布尔值\"}"
+    }, {
+      "name" : "写入前校验",
+      "passed" : true,
+      "expected" : "400与错误message",
+      "actual" : "HTTP 400 {\"message\":\"title需为1—100字符，saved需为布尔值\"}"
+    }, {
+      "name" : "写入前校验",
+      "passed" : true,
+      "expected" : "400与错误message",
+      "actual" : "HTTP 400 {\"message\":\"JSON或请求参数格式不正确\"}"
+    }, {
+      "name" : "错误输入未写库",
+      "passed" : true,
+      "expected" : "6\n",
+      "actual" : "6\n"
+    }, {
+      "name" : "去首尾空白",
+      "passed" : true,
+      "expected" : "保存去空格后的标题",
+      "actual" : "HTTP 201 {\"id\":8,\"title\":\"去空格\",\"saved\":false}"
+    }, {
+      "name" : "书签与任务隔离",
+      "passed" : true,
+      "expected" : "5条任务未变",
+      "actual" : "5\n"
+    }, {
+      "name" : "迁移重启持久",
+      "passed" : true,
+      "expected" : "重启后仍保留书签",
+      "actual" : "HTTP 200 {\"id\":8,\"title\":\"去空格\",\"saved\":false}"
+    }, {
+      "name" : "运行与数据流说明",
+      "passed" : true,
+      "expected" : "RUN.md至少80字符，说明环境、命令和数据流",
+      "actual" : "已提交说明"
+    }, {
+      "name" : "学员自动化测试",
+      "passed" : true,
+      "expected" : "JUnit测试通过且至少一个测试",
+      "actual" : "Failed to load native library:jansi-2.4.2-5681b2829b31282c-libjansi.so. The native library file at /tmp/jansi-2.4.2-5681b2829b31282c-libjansi.so is not executable, make sure that the directory is mounted on a partition without the noexec flag, or set the jansi.tmpdir system property to point to a proper location.  osinfo: Linux/x86_64\njava.lang.UnsatisfiedLinkError: /tmp/jansi-2.4.2-5681b2829b31282c-libjansi.so: /tmp/jansi-2.4.2-5681b2829b31282c-libjansi.so: failed to map segment from shared object\n[INFO] Scanning for projects...\n[INFO] \n[INFO] ---------------------< dev.codesomething:boot-lab >---------------------\n[INFO] Building boot-lab 1.0.0\n[INFO]   from pom.xml\n[INFO] --------------------------------[ jar ]---------------------------------\n[INFO] \n[INFO] --- resources:3.5.0:resources (default-resources) @ boot-lab ---\n[INFO] skip non existing resourceDirectory /tmp/project/src/main/resources\n[INFO] skip non existing resourceDirectory /tmp/project/src/main/resources\n[INFO] \n[INFO] --- compiler:3.15.0:compile (default-compile) @ boot-lab ---\n[INFO] Nothing to compile - all classes are up to date.\n[INFO] \n[INFO] --- resources:3.5.0:testResources (default-testResources) @ boot-lab ---\n[INFO] skip non existing resourceDirectory /tmp/project/src/test/resources\n[INFO] \n[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ boot-lab ---\n[INFO] Nothing to compile - all classes are up to date.\n[INFO] \n[INFO] --- surefire:3.5.6:test (default-test) @ boot-lab ---\n[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider\n[INFO] \n[INFO] -------------------------------------------------------\n[INFO]  T E S T S\n[INFO] -------------------------------------------------------\n[INFO] Running dev.codesomething.lab.TitleTest\n[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.105 s -- in dev.codesomething.lab.TitleTest\n[INFO] \n[INFO] Results:\n[INFO] \n[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0\n[INFO] \n[INFO] ------------------------------------------------------------------------\n[INFO] BUILD SUCCESS\n[INFO] ------------------------------------------------------------------------\n[INFO] Total time:  2.782 s\n[INFO] Finished at: 2026-11-12T06:38:46Z\n[INFO] ------------------------------------------------------------------------\n"
+    }, {
+      "name" : "校验变式检测",
+      "passed" : true,
+      "expected" : "故意允许空白标题后，JUnit出现断言失败",
+      "actual" : "Failed to load native library:jansi-2.4.2-aaa5bdb4b8571b74-libjansi.so. The native library file at /tmp/jansi-2.4.2-aaa5bdb4b8571b74-libjansi.so is not executable, make sure that the directory is mounted on a partition without the noexec flag, or set the jansi.tmpdir system property to point to a proper location.  osinfo: Linux/x86_64\njava.lang.UnsatisfiedLinkError: /tmp/jansi-2.4.2-aaa5bdb4b8571b74-libjansi.so: /tmp/jansi-2.4.2-aaa5bdb4b8571b74-libjansi.so: failed to map segment from shared object\n[INFO] Scanning for projects...\n[INFO] \n[INFO] ---------------------< dev.codesomething:boot-lab >---------------------\n[INFO] Building boot-lab 1.0.0\n[INFO]   from pom.xml\n[INFO] --------------------------------[ jar ]---------------------------------\n[INFO] \n[INFO] --- resources:3.5.0:resources (default-resources) @ boot-lab ---\n[INFO] skip non existing resourceDirectory /tmp/mutation/src/main/resources\n[INFO] skip non existing resourceDirectory /tmp/mutation/src/main/resources\n[INFO] \n[INFO] --- compiler:3.15.0:compile (default-compile) @ boot-lab ---\n[INFO] Recompiling the module because of changed source code.\n[INFO] Compiling 6 source files with javac [debug parameters release 21] to target/classes\n[INFO] \n[INFO] --- resources:3.5.0:testResources (default-testResources) @ boot-lab ---\n[INFO] skip non existing resourceDirectory /tmp/mutation/src/test/resources\n[INFO] \n[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ boot-lab ---\n[INFO] Recompiling the module because of changed dependency.\n[INFO] Compiling 1 source file with javac [debug parameters release 21] to target/test-classes\n[INFO] \n[INFO] --- surefire:3.5.6:test (default-test) @ boot-lab ---\n[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider\n[INFO] \n[INFO] -------------------------------------------------------\n[INFO]  T E S T S\n[INFO] -------------------------------------------------------\n[INFO] Running dev.codesomething.lab.TitleTest\n[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.090 s <<< FAILURE! -- in dev.codesomething.lab.TitleTest\n[ERROR] dev.codesomething.lab.TitleTest.blankTitleIsRejectedAndSpacesAreRemoved -- Time elapsed: 0.077 s <<< FAILURE!\norg.opentest4j.AssertionFailedError: Expected org.springframework.web.server.ResponseStatusException to be thrown, but nothing was thrown.\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:159)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:74)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)\n\tat org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3223)\n\tat dev.codesomething.lab.TitleTest.blankTitleIsRejectedAndSpacesAreRemoved(TitleTest.java:7)\n\n[INFO] \n[INFO] Results:\n[INFO] \n[ERROR] Failures: \n[ERROR]   TitleTest.blankTitleIsRejectedAndSpacesAreRemoved:7 Expected org.springframework.web.server.ResponseStatusException to be thrown, but nothing was thrown.\n[INFO] \n[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0\n[INFO] \n[INFO] ------------------------------------------------------------------------\n[INFO] BUILD FAILURE\n[INFO] ------------------------------------------------------------------------\n[INFO] Total time:  4.205 s\n[INFO] Finished at: 2026-11-12T06:38:53Z\n[INFO] ------------------------------------------------------------------------\n[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.6:test (default-test) on project boot-lab: There are test failures.\n[ERROR] \n[ERROR] See /tmp/mutation/target/surefire-reports for the individual test results.\n[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.\n[ERROR] -> [Help 1]\n[ERROR] \n[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.\n[ERROR] Re-run Maven using the -X switch to enable full debug logging.\n[ERROR] \n[ERROR] For more information about the errors and possible solutions, please read the following articles:\n[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException\n"
+    } ],
+    "log" : "\n  .   ____          _            __ _ _\n /\\\\ / ___'_ __ _ _(_)_ __  __ _ \\ \\ \\ \\\n( ( )\\___ | '_ | '_| | '_ \\/ _` | \\ \\ \\ \\\n \\\\/  ___)| |_)| | | | | || (_| |  ) ) ) )\n  '  |____| .__|_| |_|_| |_\\__, | / / / /\n =========|_|==============|___/=/_/_/_/\n\n :: Spring Boot ::                (v4.1.2)\n\n2026-11-12T06:38:37.268Z  INFO 635 --- [           main] dev.codesomething.lab.Application        : Starting Application v1.0.0 using Java 21.0.13 with PID 635 (/tmp/project/target/boot-lab.jar started by nobody in /tmp/project)\n2026-11-12T06:38:37.273Z  INFO 635 --- [           main] dev.codesomething.lab.Application        : No active profile set, falling back to 1 default profile: \"default\"\n2026-11-12T06:38:39.588Z  INFO 635 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)\n2026-11-12T06:38:39.656Z  INFO 635 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]\n2026-11-12T06:38:39.657Z  INFO 635 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.27]\n2026-11-12T06:38:39.757Z  INFO 635 --- [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 2289 ms\n2026-11-12T06:38:40.763Z  INFO 635 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'\n2026-11-12T06:38:40.855Z  INFO 635 --- [           main] dev.codesomething.lab.Application        : Started Application in 4.923 seconds (process running for 5.97)\n2026-11-12T06:38:40.964Z  INFO 635 --- [0.1-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'\n2026-11-12T06:38:40.964Z  INFO 635 --- [0.1-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'\n2026-11-12T06:38:40.965Z  INFO 635 --- [0.1-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms\n2026-11-12T06:38:40.995Z  INFO 635 --- [0.1-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...\n2026-11-12T06:38:41.277Z  INFO 635 --- [0.1-8080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@167dd0ec\n2026-11-12T06:38:41.278Z  INFO 635 --- [0.1-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.\n",
+    "finishedAt" : "2026-11-12T06:38:54.794203300Z"
+  }
+}

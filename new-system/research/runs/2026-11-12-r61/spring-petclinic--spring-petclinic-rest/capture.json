@@ -1,0 +1,56 @@
+{
+  "repository": "spring-petclinic/spring-petclinic-rest",
+  "status": "captured",
+  "commit": "a4cb2c86272265c2916023074a771463f7114104",
+  "commitDate": "2026-11-09T18:59:16Z",
+  "records": [
+    {
+      "url": "https://api.github.com/repos/spring-petclinic/spring-petclinic-rest",
+      "file": "repository.json",
+      "sha256": "0b20bf93c33c1e900c7634d3424f32eb62a593d30595c22984d8e83929860ea4",
+      "bytes": 7511
+    },
+    {
+      "url": "https://api.github.com/repos/spring-petclinic/spring-petclinic-rest/commits/master",
+      "file": "commit.json",
+      "sha256": "fb81e3d28226018ff9331a5f34c75c73e0ddb27004769913f661966b76e7b46d",
+      "bytes": 15397
+    },
+    {
+      "url": "https://api.github.com/repos/spring-petclinic/spring-petclinic-rest/git/trees/a4cb2c86272265c2916023074a771463f7114104?recursive=1",
+      "file": "tree.json",
+      "sha256": "c4d59a1643726e341298482d21d5888f3e8ad13c9ffa43df587c099a4ccea34f",
+      "bytes": 59889
+    },
+    {
+      "url": "https://raw.githubusercontent.com/spring-petclinic/spring-petclinic-rest/a4cb2c86272265c2916023074a771463f7114104/LICENSE.txt",
+      "file": "LICENSE.txt",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "bytes": 11357
+    },
+    {
+      "url": "https://raw.githubusercontent.com/spring-petclinic/spring-petclinic-rest/a4cb2c86272265c2916023074a771463f7114104/pom.xml",
+      "file": "pom.xml",
+      "sha256": "f82847d93ff9e6ea3c56865dc10d0e094200f8b3d3c41e07c17381bc2377b344",
+      "bytes": 21211
+    },
+    {
+      "url": "https://raw.githubusercontent.com/spring-petclinic/spring-petclinic-rest/a4cb2c86272265c2916023074a771463f7114104/readme.md",
+      "file": "readme.md",
+      "sha256": "e9ad143fca3cc2e0a1c9d90e1d3ecd17d64ec597a1aa0733824dbe497030f5c4",
+      "bytes": 15102
+    },
+    {
+      "url": "https://raw.githubusercontent.com/spring-petclinic/spring-petclinic-rest/a4cb2c86272265c2916023074a771463f7114104/src/main/java/org/springframework/samples/petclinic/repository/OwnerRepository.java",
+      "file": "src--main--java--org--springframework--samples--petclinic--repository--OwnerRepository.java",
+      "sha256": "760ad493ee13cb05e4abd89300aa90b2e1c5b55f7ff4106e5dc63d5ba69161a2",
+      "bytes": 3134
+    },
+    {
+      "url": "https://raw.githubusercontent.com/spring-petclinic/spring-petclinic-rest/a4cb2c86272265c2916023074a771463f7114104/src/main/java/org/springframework/samples/petclinic/service/ClinicServiceImpl.java",
+      "file": "src--main--java--org--springframework--samples--petclinic--service--ClinicServiceImpl.java",
+      "sha256": "a48e709406b6d963db3292d82612a096e132967973b18aa7fef4651c35d52509",
+      "bytes": 8220
+    }
+  ]
+}

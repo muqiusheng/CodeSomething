@@ -1,0 +1,17 @@
+import {spawnSync} from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+const bin=process.env.CS_BROWSER_BIN,session='cs-unified-details',out=path.resolve('new-system/docs/acceptance/unified-workspace');
+const checks=[];
+function run(...args){const r=spawnSync(bin,['--session',session,...args],{encoding:'utf8',windowsHide:true,timeout:30000});assert.equal(r.status,0,r.stdout+r.stderr);return r.stdout.trim()}
+function ev(code){const r=spawnSync(bin,['--session',session,'eval','--stdin'],{input:code,encoding:'utf8',windowsHide:true,timeout:15000});assert.equal(r.status,0,r.stdout+r.stderr);return JSON.parse(r.stdout)}
+const wait=text=>run('wait','--text',text,'--timeout','15000'),click=name=>run('find','role','button','click','--name',name,'--exact');
+try{
+ run('open','http://127.0.0.1:5179/learn/http-json/1.1/run-server');wait('选择项目根目录');
+ ev(`(async()=>{const parent=await navigator.storage.getDirectory();const platform=await parent.getDirectoryHandle('website',{create:true});await platform.getDirectoryHandle('new-system',{create:true});await platform.getFileHandle('PRODUCT.md',{create:true});window.showDirectoryPicker=async()=>platform;return true})()`);click('选择项目根目录');wait('这是网站自身的工程目录');checks.push('The website repository root is rejected before connecting or writing');
+ ev(`(async()=>{const parent=await navigator.storage.getDirectory();const root=await parent.getDirectoryHandle('learner',{create:true});for(const [name,text]of [['notes.md','A local note'],['TaskServer.java','class TaskServer {}']]){const h=await root.getFileHandle(name,{create:true});const w=await h.createWritable();await w.write(text);await w.close()}window.testRoot=root;window.showDirectoryPicker=async()=>root;return true})()`);click('选择项目根目录');wait('工程已连接');wait('notes.md');click('notes.md');run('wait','--fn','document.querySelector(".monaco-editor [role=textbox]")!==null');run('focus','.monaco-editor [role=textbox]');run('press','Control+End');run('type','.monaco-editor [role=textbox]','\nDraft to recover');wait('保存到本地（1）');
+ ev("history.pushState({},'', '/learn/boot-foundations/1.0/boot-start');window.dispatchEvent(new PopStateEvent('popstate'));true");wait('选择项目根目录');ev("history.pushState({},'', '/learn/http-json/1.1/run-server');window.dispatchEvent(new PopStateEvent('popstate'));true");wait('已自动连接上次工程');wait('notes.md *');click('notes.md *');run('wait','--fn','document.querySelector(".monaco-editor [role=textbox]")!==null');checks.push('Unsaved drafts recover when leaving the task and returning to the same local project');
+ click('丢弃此文件网页修改并重新读取');wait('恢复刚才的网页修改');click('恢复刚才的网页修改');wait('保存到本地（1）');click('保存到本地（1）');wait('网页修改已保存到本地工程');assert(ev('(async()=>await(await window.testRoot.getFileHandle("notes.md")).getFile().then(f=>f.text()))()').includes('Draft to recover'));checks.push('Discarding an editor draft can be undone and the recovered content saves to the same file');
+ run('set','viewport','1440','900');run('scrollintoview','.folder-project-content');run('screenshot',path.join(out,'workspace-final.png'));const audit=JSON.parse(run('a11y','--tags','wcag2a,wcag2aa','--json'));fs.writeFileSync(path.join(out,'a11y-final.json'),JSON.stringify(audit,null,2));console.log(JSON.stringify({checks},null,2));
+}catch(e){console.log(run('get','text','body'));throw e}finally{fs.writeFileSync(path.join(out,'browser-details.json'),JSON.stringify({checks},null,2));run('close')}

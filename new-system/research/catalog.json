@@ -1,0 +1,408 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "r61-public-projects-20261112",
+  "status": "research-only",
+  "researchedOn": "2026-11-12",
+  "timezone": "Asia/Shanghai",
+  "question": "哪些公开Java后端样例能为项目A之后的小练习与业务项目提供可追溯的教学参考？",
+  "capabilities": [
+    "mcp__codex_apps__search_service_web_run",
+    "Python urllib HTTPS / GitHub REST and raw files"
+  ],
+  "unavailableCapabilities": [
+    "web.web__run: 404"
+  ],
+  "selectionPolicy": "优先第一方Java/Spring样例，首轮三项；同源Petclinic分支按一个来源家族记录；不是全网排名。",
+  "sources": [
+    {
+      "id": "petclinic-mvc",
+      "title": "宠物诊所：服务端页面",
+      "repository": "spring-projects/spring-petclinic",
+      "url": "https://github.com/spring-projects/spring-petclinic",
+      "sourceFamily": "petclinic",
+      "revision": "500158f732419217507c7656904b8e6aa1bcc0d6",
+      "upstreamCommitDate": "2026-09-29T15:37:54Z",
+      "retrievedAt": "2026-11-12T14:17:14.204783+00:00",
+      "status": "research-only",
+      "license": {
+        "spdx": "Apache-2.0",
+        "evidenceId": "petclinic-mvc-e4",
+        "scope": "已读取仓库根许可；各文件声明、素材、商标和依赖在实际复用时逐项复核。",
+        "reusePolicy": "复用时保留LICENSE、适用的NOTICE与版权归属，并标明修改；当前只做研究归档。"
+      },
+      "stack": {
+        "springBoot": "4.1.0",
+        "pomEvidenceId": "petclinic-mvc-e6"
+      },
+      "observation": {
+        "read": [
+          "README",
+          "LICENSE",
+          "POM",
+          "selected-java-files",
+          "git-tree"
+        ],
+        "notObserved": [
+          "isolated-build",
+          "runtime-behavior",
+          "test-effectiveness",
+          "learning-effectiveness"
+        ],
+        "buildStatus": "not-run",
+        "treeFileCount": 132,
+        "testFileCount": 21
+      },
+      "adaptation": {
+        "kind": "inference",
+        "idea": "服务端页面、关系实体和分页检索的业务参考；改编时需重写REST契约并缩小范围。",
+        "extraLearning": "Thymeleaf与JPA超出当前JDBC主线；作为后续业务题材参考。",
+        "requiredBeforePublish": [
+          "能力匹配与方案确认",
+          "当前固定环境适配",
+          "参考实现与错误变式检查",
+          "教学抽查与发布门禁"
+        ]
+      },
+      "capabilityMappings": [
+        {
+          "stageId": "boot-layers",
+          "courseId": "boot-foundations",
+          "courseVersion": "1.0.0",
+          "label": "分层与依赖注入",
+          "kind": "inference",
+          "evidenceId": "petclinic-mvc-e7",
+          "anchor": "class OwnerController",
+          "reason": "代码具备该能力相关结构；对应标签用于后续匹配，不能视为学习者已掌握。"
+        },
+        {
+          "stageId": "a-pagination",
+          "courseId": "task-manager",
+          "courseVersion": "1.0.0",
+          "label": "分页查询",
+          "kind": "inference",
+          "evidenceId": "petclinic-mvc-e8",
+          "anchor": "Page<Owner>",
+          "reason": "代码具备该能力相关结构；对应标签用于后续匹配，不能视为学习者已掌握。"
+        }
+      ],
+      "evidence": [
+        {
+          "url": "https://api.github.com/repos/spring-projects/spring-petclinic",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-projects--spring-petclinic/repository.json",
+          "sha256": "37b265b06d322a859edaae7885c306ad8812a0fc0bf05dde65b86a97fe118b29",
+          "bytes": 7009,
+          "id": "petclinic-mvc-e1"
+        },
+        {
+          "url": "https://api.github.com/repos/spring-projects/spring-petclinic/commits/main",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-projects--spring-petclinic/commit.json",
+          "sha256": "7239d841fc69029f29a6086548148df6de921d8f7f5762b23ce803b39d089e2b",
+          "bytes": 10638,
+          "id": "petclinic-mvc-e2"
+        },
+        {
+          "url": "https://api.github.com/repos/spring-projects/spring-petclinic/git/trees/500158f732419217507c7656904b8e6aa1bcc0d6?recursive=1",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-projects--spring-petclinic/tree.json",
+          "sha256": "f4025f8f785f8be7df83cabe9ea108bcf83a631a59e4f3d0adc8648084b8f0de",
+          "bytes": 48735,
+          "id": "petclinic-mvc-e3"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/spring-projects/spring-petclinic/500158f732419217507c7656904b8e6aa1bcc0d6/LICENSE.txt",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-projects--spring-petclinic/LICENSE.txt",
+          "sha256": "56dfc19e0dc836e30177332f73e8e6fbc297941acf3d906eec6eaaa46c2c452a",
+          "bytes": 11360,
+          "id": "petclinic-mvc-e4"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/spring-projects/spring-petclinic/500158f732419217507c7656904b8e6aa1bcc0d6/README.md",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-projects--spring-petclinic/README.md",
+          "sha256": "b53440fdf1a73969b7dcf3b3f1801dda2de31d5935439a739971b42f27e4f5bc",
+          "bytes": 10547,
+          "id": "petclinic-mvc-e5"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/spring-projects/spring-petclinic/500158f732419217507c7656904b8e6aa1bcc0d6/pom.xml",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-projects--spring-petclinic/pom.xml",
+          "sha256": "7e61df0a43d538a5404e8130a55b8085541ec8e841fcf39f81bb6d3d81dcd2f4",
+          "bytes": 15955,
+          "id": "petclinic-mvc-e6"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/spring-projects/spring-petclinic/500158f732419217507c7656904b8e6aa1bcc0d6/src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-projects--spring-petclinic/src--main--java--org--springframework--samples--petclinic--owner--OwnerController.java",
+          "sha256": "611115841f671065ca2796fbb096102d56ce6aafd20bfe9a264f0a6968cca3ff",
+          "bytes": 6600,
+          "id": "petclinic-mvc-e7"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/spring-projects/spring-petclinic/500158f732419217507c7656904b8e6aa1bcc0d6/src/main/java/org/springframework/samples/petclinic/owner/OwnerRepository.java",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-projects--spring-petclinic/src--main--java--org--springframework--samples--petclinic--owner--OwnerRepository.java",
+          "sha256": "654cc5a38b2806748116caf4fbd6a99010a35605db32a12707078c34ccec2cd9",
+          "bytes": 2298,
+          "id": "petclinic-mvc-e8"
+        }
+      ]
+    },
+    {
+      "id": "petclinic-rest",
+      "title": "宠物诊所：REST后端",
+      "repository": "spring-petclinic/spring-petclinic-rest",
+      "url": "https://github.com/spring-petclinic/spring-petclinic-rest",
+      "sourceFamily": "petclinic",
+      "revision": "a4cb2c86272265c2916023074a771463f7114104",
+      "upstreamCommitDate": "2026-11-09T18:59:16Z",
+      "retrievedAt": "2026-11-12T14:17:14.204783+00:00",
+      "status": "research-only",
+      "license": {
+        "spdx": "Apache-2.0",
+        "evidenceId": "petclinic-rest-e4",
+        "scope": "已读取仓库根许可；各文件声明、素材、商标和依赖在实际复用时逐项复核。",
+        "reusePolicy": "复用时保留LICENSE、适用的NOTICE与版权归属，并标明修改；当前只做研究归档。"
+      },
+      "stack": {
+        "springBoot": "4.1.2",
+        "pomEvidenceId": "petclinic-rest-e5"
+      },
+      "observation": {
+        "read": [
+          "README",
+          "LICENSE",
+          "POM",
+          "selected-java-files",
+          "git-tree"
+        ],
+        "notObserved": [
+          "isolated-build",
+          "runtime-behavior",
+          "test-effectiveness",
+          "learning-effectiveness"
+        ],
+        "buildStatus": "not-run",
+        "treeFileCount": 154,
+        "testFileCount": 28
+      },
+      "adaptation": {
+        "kind": "inference",
+        "idea": "多实体REST业务与服务层事务参考；前端需要另行实现。",
+        "extraLearning": "JPA、映射器、OpenAPI生成和可选安全配置需要额外教学与隔离适配。",
+        "requiredBeforePublish": [
+          "能力匹配与方案确认",
+          "当前固定环境适配",
+          "参考实现与错误变式检查",
+          "教学抽查与发布门禁"
+        ]
+      },
+      "capabilityMappings": [
+        {
+          "stageId": "boot-layers",
+          "courseId": "boot-foundations",
+          "courseVersion": "1.0.0",
+          "label": "服务分层",
+          "kind": "inference",
+          "evidenceId": "petclinic-rest-e8",
+          "anchor": "class ClinicServiceImpl",
+          "reason": "代码具备该能力相关结构；对应标签用于后续匹配，不能视为学习者已掌握。"
+        },
+        {
+          "stageId": "a-pagination",
+          "courseId": "task-manager",
+          "courseVersion": "1.0.0",
+          "label": "分页查询",
+          "kind": "inference",
+          "evidenceId": "petclinic-rest-e7",
+          "anchor": "Page<Owner>",
+          "reason": "代码具备该能力相关结构；对应标签用于后续匹配，不能视为学习者已掌握。"
+        }
+      ],
+      "evidence": [
+        {
+          "url": "https://api.github.com/repos/spring-petclinic/spring-petclinic-rest",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-petclinic--spring-petclinic-rest/repository.json",
+          "sha256": "0b20bf93c33c1e900c7634d3424f32eb62a593d30595c22984d8e83929860ea4",
+          "bytes": 7511,
+          "id": "petclinic-rest-e1"
+        },
+        {
+          "url": "https://api.github.com/repos/spring-petclinic/spring-petclinic-rest/commits/master",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-petclinic--spring-petclinic-rest/commit.json",
+          "sha256": "fb81e3d28226018ff9331a5f34c75c73e0ddb27004769913f661966b76e7b46d",
+          "bytes": 15397,
+          "id": "petclinic-rest-e2"
+        },
+        {
+          "url": "https://api.github.com/repos/spring-petclinic/spring-petclinic-rest/git/trees/a4cb2c86272265c2916023074a771463f7114104?recursive=1",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-petclinic--spring-petclinic-rest/tree.json",
+          "sha256": "c4d59a1643726e341298482d21d5888f3e8ad13c9ffa43df587c099a4ccea34f",
+          "bytes": 59889,
+          "id": "petclinic-rest-e3"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/spring-petclinic/spring-petclinic-rest/a4cb2c86272265c2916023074a771463f7114104/LICENSE.txt",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-petclinic--spring-petclinic-rest/LICENSE.txt",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "bytes": 11357,
+          "id": "petclinic-rest-e4"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/spring-petclinic/spring-petclinic-rest/a4cb2c86272265c2916023074a771463f7114104/pom.xml",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-petclinic--spring-petclinic-rest/pom.xml",
+          "sha256": "f82847d93ff9e6ea3c56865dc10d0e094200f8b3d3c41e07c17381bc2377b344",
+          "bytes": 21211,
+          "id": "petclinic-rest-e5"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/spring-petclinic/spring-petclinic-rest/a4cb2c86272265c2916023074a771463f7114104/readme.md",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-petclinic--spring-petclinic-rest/readme.md",
+          "sha256": "e9ad143fca3cc2e0a1c9d90e1d3ecd17d64ec597a1aa0733824dbe497030f5c4",
+          "bytes": 15102,
+          "id": "petclinic-rest-e6"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/spring-petclinic/spring-petclinic-rest/a4cb2c86272265c2916023074a771463f7114104/src/main/java/org/springframework/samples/petclinic/repository/OwnerRepository.java",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-petclinic--spring-petclinic-rest/src--main--java--org--springframework--samples--petclinic--repository--OwnerRepository.java",
+          "sha256": "760ad493ee13cb05e4abd89300aa90b2e1c5b55f7ff4106e5dc63d5ba69161a2",
+          "bytes": 3134,
+          "id": "petclinic-rest-e7"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/spring-petclinic/spring-petclinic-rest/a4cb2c86272265c2916023074a771463f7114104/src/main/java/org/springframework/samples/petclinic/service/ClinicServiceImpl.java",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-petclinic--spring-petclinic-rest/src--main--java--org--springframework--samples--petclinic--service--ClinicServiceImpl.java",
+          "sha256": "a48e709406b6d963db3292d82612a096e132967973b18aa7fef4651c35d52509",
+          "bytes": 8220,
+          "id": "petclinic-rest-e8"
+        }
+      ]
+    },
+    {
+      "id": "jdbc-customers",
+      "title": "客户数据：JDBC小练习",
+      "repository": "spring-guides/gs-relational-data-access",
+      "url": "https://github.com/spring-guides/gs-relational-data-access",
+      "sourceFamily": "spring-guides",
+      "revision": "39ee6416cdc511d5d92cdeb63b2b73129013888e",
+      "upstreamCommitDate": "2026-11-01T11:24:29Z",
+      "retrievedAt": "2026-11-12T14:17:14.204783+00:00",
+      "status": "research-only",
+      "license": {
+        "spdx": "Apache-2.0",
+        "evidenceId": "jdbc-customers-e4",
+        "scope": "已读取仓库根许可；各文件声明、素材、商标和依赖在实际复用时逐项复核。",
+        "reusePolicy": "复用时保留LICENSE、适用的NOTICE与版权归属，并标明修改；当前只做研究归档。"
+      },
+      "stack": {
+        "springBoot": "4.0.9",
+        "pomEvidenceId": "jdbc-customers-e6"
+      },
+      "observation": {
+        "read": [
+          "README",
+          "LICENSE",
+          "POM",
+          "selected-java-files",
+          "git-tree"
+        ],
+        "notObserved": [
+          "isolated-build",
+          "runtime-behavior",
+          "test-effectiveness",
+          "learning-effectiveness"
+        ],
+        "buildStatus": "not-run",
+        "treeFileCount": 48,
+        "testFileCount": 0
+      },
+      "adaptation": {
+        "kind": "inference",
+        "idea": "适合从参数绑定和结果映射改编小练习，再加入HTTP契约与MySQL持久化。",
+        "extraLearning": "上游示例启动时删除并重建customers表；改编必须使用隔离种子和显式重置。",
+        "requiredBeforePublish": [
+          "能力匹配与方案确认",
+          "当前固定环境适配",
+          "参考实现与错误变式检查",
+          "教学抽查与发布门禁"
+        ]
+      },
+      "capabilityMappings": [
+        {
+          "stageId": "boot-jdbc",
+          "courseId": "boot-foundations",
+          "courseVersion": "1.0.0",
+          "label": "参数化JDBC",
+          "kind": "inference",
+          "evidenceId": "jdbc-customers-e8",
+          "anchor": "VALUES (?,?)",
+          "reason": "代码具备该能力相关结构；对应标签用于后续匹配，不能视为学习者已掌握。"
+        },
+        {
+          "stageId": "sql-write",
+          "courseId": "sql-foundations",
+          "courseVersion": "1.0.0",
+          "label": "批量写入",
+          "kind": "inference",
+          "evidenceId": "jdbc-customers-e8",
+          "anchor": "jdbcTemplate.batchUpdate",
+          "reason": "代码具备该能力相关结构；对应标签用于后续匹配，不能视为学习者已掌握。"
+        }
+      ],
+      "evidence": [
+        {
+          "url": "https://api.github.com/repos/spring-guides/gs-relational-data-access",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-guides--gs-relational-data-access/repository.json",
+          "sha256": "c6315693b1bcb740c8a49515ea1f63e9c55c2e4d3864d9329795dad5f7a6ce7b",
+          "bytes": 7381,
+          "id": "jdbc-customers-e1"
+        },
+        {
+          "url": "https://api.github.com/repos/spring-guides/gs-relational-data-access/commits/main",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-guides--gs-relational-data-access/commit.json",
+          "sha256": "b8ae5e3b8f70fa2b598944b41e5e6431b653386bd006c496deee19be493549fe",
+          "bytes": 7063,
+          "id": "jdbc-customers-e2"
+        },
+        {
+          "url": "https://api.github.com/repos/spring-guides/gs-relational-data-access/git/trees/39ee6416cdc511d5d92cdeb63b2b73129013888e?recursive=1",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-guides--gs-relational-data-access/tree.json",
+          "sha256": "3b992a6f692b1870ce5b306b625f36fd028fd2c5715e2b1c0739004d83a19d6a",
+          "bytes": 23441,
+          "id": "jdbc-customers-e3"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/spring-guides/gs-relational-data-access/39ee6416cdc511d5d92cdeb63b2b73129013888e/LICENSE.txt",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-guides--gs-relational-data-access/LICENSE.txt",
+          "sha256": "56dfc19e0dc836e30177332f73e8e6fbc297941acf3d906eec6eaaa46c2c452a",
+          "bytes": 11360,
+          "id": "jdbc-customers-e4"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/spring-guides/gs-relational-data-access/39ee6416cdc511d5d92cdeb63b2b73129013888e/README.adoc",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-guides--gs-relational-data-access/README.adoc",
+          "sha256": "a1ed833101242403dce4cd26cd8565da6e528244bf245e2848136635e37fe417",
+          "bytes": 8206,
+          "id": "jdbc-customers-e5"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/spring-guides/gs-relational-data-access/39ee6416cdc511d5d92cdeb63b2b73129013888e/complete/pom.xml",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-guides--gs-relational-data-access/complete--pom.xml",
+          "sha256": "5aaa3bab88fd66921843c0620e7fb1e8cc3f5d45df659fbad084deac13a27ad7",
+          "bytes": 1304,
+          "id": "jdbc-customers-e6"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/spring-guides/gs-relational-data-access/39ee6416cdc511d5d92cdeb63b2b73129013888e/complete/src/main/java/com/example/relationaldataaccess/Customer.java",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-guides--gs-relational-data-access/complete--src--main--java--com--example--relationaldataaccess--Customer.java",
+          "sha256": "270c7a38906d7fb38dde8321a0fc4d8344134d93c00c7bbd419cc6a01d85b111",
+          "bytes": 265,
+          "id": "jdbc-customers-e7"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/spring-guides/gs-relational-data-access/39ee6416cdc511d5d92cdeb63b2b73129013888e/complete/src/main/java/com/example/relationaldataaccess/RelationalDataAccessApplication.java",
+          "file": "new-system/research/runs/2026-11-12-r61/spring-guides--gs-relational-data-access/complete--src--main--java--com--example--relationaldataaccess--RelationalDataAccessApplication.java",
+          "sha256": "ad9a328aef906c92677391807990aa7c1f61a51f1c5c28eb720184d9de9b2017",
+          "bytes": 2071,
+          "id": "jdbc-customers-e8"
+        }
+      ]
+    }
+  ]
+}

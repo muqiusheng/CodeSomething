@@ -1,0 +1,10 @@
+{
+  "image": "sha256:ed231f8aa9ebb2e48df58330e80692ecc5ca67717ee3c11dc0ab8ffabe3c3dc5",
+  "baseImage": "eclipse-temurin@sha256:4b1a74fbffbe6b4e7b6f0171a472478282fb463790a51edf10e465d578f22b69",
+  "java": 21,
+  "maven": "3.9.14",
+  "springBoot": "4.1.2",
+  "pomDigest": "9244375234bb2a2d10a2febfb4cc22f2dbf1da023732dbdcc2598686259f8154",
+  "dependencyManifestDigest": "dd2e3ed02e2c2776caf89591bd50d8d639b020e04e7d0ff3992ab25056709aa5",
+  "repositoryFiles": 1315
+}

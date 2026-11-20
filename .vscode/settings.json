@@ -1,0 +1,30 @@
+{
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.npm-cache": true,
+    "**/target": true,
+    "**/dist": true,
+    "**/*.tsbuildinfo": true,
+    ".cache": true,
+    "new-system/runtime": true,
+    "new-system/idea-plugin/build": true,
+    "new-system/idea-plugin/.gradle": true,
+    "new-system/idea-plugin/.intellijPlatform": true
+  },
+  "search.exclude": {
+    "new-system/runtime": true,
+    "new-system/docs/acceptance": true,
+    "docs/references": true,
+    ".cache": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/target/**": true,
+    "**/dist/**": true,
+    "**/.npm-cache/**": true,
+    "**/.cache/**": true,
+    "**/new-system/runtime/**": true,
+    "**/idea-plugin/build/**": true,
+    "**/idea-plugin/.gradle/**": true
+  }
+}

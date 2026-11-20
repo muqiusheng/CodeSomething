@@ -1,0 +1,40 @@
+{
+  "status" : "business_error",
+  "report" : {
+    "snapshotDigest" : "22ef2c7fbbb033ceb74213d1235385efeabf4832ab44528b23f2867792953db8",
+    "courseVersion" : "1.0.0",
+    "stageId" : "boot-http",
+    "policy" : "boot-http-v1",
+    "image" : "sha256:1d8c33dc7ce617e0cbf115ac2fdafbbbf95b081aae77d0b644d70b9bb3ed93a4",
+    "harnessDigest" : "58ed1b9576b4c338f7ef0672e688b8ffaacc4489861f9a684b60a9442268c5b1",
+    "functionalPassed" : false,
+    "assertions" : [ {
+      "name" : "离线Maven构建",
+      "passed" : true,
+      "expected" : "固定依赖构建成功",
+      "actual" : "多文件工程已离线编译并生成可执行JAR。"
+    }, {
+      "name" : "路径与查询参数",
+      "passed" : true,
+      "expected" : "id=7，name=Java",
+      "actual" : "HTTP 200 {\"name\":\"Java\",\"id\":7}"
+    }, {
+      "name" : "DTO与201",
+      "passed" : false,
+      "expected" : "201，title与布尔completed",
+      "actual" : "HTTP 200 {\"title\":\"新任务\",\"completed\":false}"
+    }, {
+      "name" : "拒绝错误类型或缺字段",
+      "passed" : true,
+      "expected" : "400 JSON",
+      "actual" : "HTTP 400 {\"message\":\"title与布尔completed必填\"}"
+    }, {
+      "name" : "拒绝错误类型或缺字段",
+      "passed" : true,
+      "expected" : "400 JSON",
+      "actual" : "HTTP 400 {\"message\":\"title与布尔completed必填\"}"
+    } ],
+    "log" : "\n  .   ____          _            __ _ _\n /\\\\ / ___'_ __ _ _(_)_ __  __ _ \\ \\ \\ \\\n( ( )\\___ | '_ | '_| | '_ \\/ _` | \\ \\ \\ \\\n \\\\/  ___)| |_)| | | | | || (_| |  ) ) ) )\n  '  |____| .__|_| |_|_| |_\\__, | / / / /\n =========|_|==============|___/=/_/_/_/\n\n :: Spring Boot ::                (v4.1.2)\n\n2026-11-12T06:28:50.632Z  INFO 60 --- [           main] dev.codesomething.lab.Application        : Starting Application v1.0.0 using Java 21.0.13 with PID 60 (/tmp/project/target/boot-lab.jar started by nobody in /tmp/project)\n2026-11-12T06:28:50.634Z  INFO 60 --- [           main] dev.codesomething.lab.Application        : No active profile set, falling back to 1 default profile: \"default\"\n2026-11-12T06:28:52.743Z  INFO 60 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)\n2026-11-12T06:28:52.753Z  INFO 60 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]\n2026-11-12T06:28:52.753Z  INFO 60 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.27]\n2026-11-12T06:28:52.854Z  INFO 60 --- [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 2019 ms\n2026-11-12T06:28:53.738Z  INFO 60 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'\n2026-11-12T06:28:53.745Z  INFO 60 --- [           main] dev.codesomething.lab.Application        : Started Application in 4.405 seconds (process running for 5.312)\n2026-11-12T06:28:53.841Z  INFO 60 --- [0.1-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'\n2026-11-12T06:28:53.841Z  INFO 60 --- [0.1-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'\n2026-11-12T06:28:53.842Z  INFO 60 --- [0.1-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms\n",
+    "finishedAt" : "2026-11-12T06:28:59.582058800Z"
+  }
+}

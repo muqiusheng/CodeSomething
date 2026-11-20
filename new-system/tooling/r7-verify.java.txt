@@ -1,0 +1,80 @@
+    private String login(String app,long deadline,BooleanSupplier cancel,String username,List<CheckReport.Assertion> checks) throws Exception {
+        var r=request(app,deadline,cancel,"POST","/api/auth/login","{\"username\":\""+username+"\",\"password\":\"Learn-2026!\"}");
+        String token=body(r).path("token").asText();
+        assertion(checks,"登录 "+username,json(r,200)&&token.matches("[a-f0-9]{64}")&&body(r).path("expiresAt").asLong()>System.currentTimeMillis()/1000,"200与随机有时限令牌",new Response(r.status(),r.type(),"<login credentials redacted>"));
+        return token.matches("[a-f0-9]{64}")?token:null;
+    }
+    private void verify(String app,String db,long deadline,BooleanSupplier cancel,String stage,List<CheckReport.Assertion> checks) throws Exception {
+        int level=BootCourses.COLLAB.indexOf(stage);
+        var r=request(app,deadline,cancel,"POST","/api/auth/login","{\"username\":\"alice\",\"password\":\"wrong\"}");
+        assertion(checks,"错误密码拒绝",json(r,401),"401 JSON",r);
+        for(String token:new String[]{null,"0".repeat(64)}){r=request(app,deadline,cancel,"GET","/api/auth/me",null,token);assertion(checks,"无效身份拒绝",json(r,401),"401 JSON",r);}
+        String alice=login(app,deadline,cancel,"alice",checks),bob=login(app,deadline,cancel,"bob",checks),eve=login(app,deadline,cancel,"eve",checks),admin=login(app,deadline,cancel,"admin",checks);
+        if(alice==null||bob==null||eve==null||admin==null)return;
+        r=request(app,deadline,cancel,"GET","/api/auth/me",null,alice);assertion(checks,"会话身份不泄露摘要",json(r,200)&&body(r).path("id").asLong()==1&&body(r).path("role").asText().equals("USER")&&!r.body().contains("password")&&!r.body().contains("salt")&&!r.body().contains("token"),"alice身份，隐藏密码/令牌摘要",r);
+        r=request(app,deadline,cancel,"DELETE","/api/auth/session",null,bob);assertion(checks,"注销204",r.status()==204&&r.body().isEmpty(),"204空体",r);
+        r=request(app,deadline,cancel,"GET","/api/auth/me",null,bob);assertion(checks,"重放已注销令牌",json(r,401),"401",r);
+        require(cmd(deadline,cancel,"exec",db,"mysql","-uroot","-e","UPDATE cs_lab.sessions SET expires_at=0 WHERE user_id=3;"));
+        r=request(app,deadline,cancel,"GET","/api/auth/me",null,eve);assertion(checks,"会话到期",json(r,401),"401",r);
+        if(level==0)return;
+        bob=login(app,deadline,cancel,"bob",checks);eve=login(app,deadline,cancel,"eve",checks);
+        r=request(app,deadline,cancel,"GET","/api/plans/1",null,bob);assertion(checks,"成员可读",json(r,200)&&body(r).path("id").asLong()==1,"bob可以读计划1",r);
+        r=request(app,deadline,cancel,"GET","/api/plans/1",null,eve);assertion(checks,"跨计划越权拒绝",json(r,403),"eve不能读计划1",r);
+        r=request(app,deadline,cancel,"GET","/api/plans/1/tasks",null,eve);assertion(checks,"任务数据越权拒绝",json(r,403),"403",r);
+        r=request(app,deadline,cancel,"GET","/api/plans/1",null,admin);assertion(checks,"管理员不绕过成员边界",json(r,403),"403",r);
+        r=request(app,deadline,cancel,"POST","/api/plans/1/tasks/batch","[{\"title\":\"禁止\",\"assigneeId\":2}]",bob);assertion(checks,"成员无分配权限",json(r,403),"403",r);
+        r=request(app,deadline,cancel,"GET","/api/admin/audit",null,bob);assertion(checks,"普通用户无审计权限",json(r,403),"403",r);
+        r=request(app,deadline,cancel,"GET","/api/admin/audit",null,admin);assertion(checks,"管理员可读审计",json(r,200)&&body(r).isArray(),"200数组",r);
+        if(level==1)return;
+        r=request(app,deadline,cancel,"GET","/api/plans",null,bob);assertion(checks,"计划列表按成员隔离",json(r,200)&&body(r).isArray()&&body(r).size()==1&&body(r).get(0).path("id").asLong()==1,"仅计划1",r);
+        r=request(app,deadline,cancel,"POST","/api/plans","{\"title\":\" O'Reilly <script> \",\"ownerId\":3}",alice);long plan=body(r).path("id").asLong(-1);
+        assertion(checks,"创建计划与可信负责人",json(r,201)&&plan>2&&body(r).path("ownerId").asLong()==1&&body(r).path("title").asText().equals("O'Reilly <script>"),"201，ownerId=1且引号与HTML保留为数据",r);
+        if(plan>0){r=request(app,deadline,cancel,"GET","/api/plans/"+plan,null,alice);assertion(checks,"负责人自动成为成员",json(r,200),"200",r);}
+        r=request(app,deadline,cancel,"POST","/api/plans","{\"title\":\" \"}",alice);assertion(checks,"拒绝空计划标题",json(r,400),"400",r);
+        if(level==2)return;
+        for(int page=0;page<3;page++){
+            r=request(app,deadline,cancel,"GET","/api/plans/1/tasks?status=todo&size=2&page="+page,null,alice);
+            var items=body(r).path("items");boolean valid=json(r,200)&&body(r).path("total").asInt()==3&&body(r).path("page").asInt(-1)==page&&body(r).path("size").asInt()==2&&items.isArray()&&items.size()==(page==0?2:page==1?1:0);
+            if(page==0)valid&=items.path(0).path("id").asInt()==1&&items.path(1).path("id").asInt()==3;
+            if(page==1)valid&=items.path(0).path("id").asInt()==5;
+            assertion(checks,"稳定筛选分页"+page,valid,"todo三条，按id稳定分页",r);
+        }
+        for(String query:List.of("page=-1","page=100001","size=0","size=51","page=bad","status=unknown")){r=request(app,deadline,cancel,"GET","/api/plans/1/tasks?"+query,null,alice);assertion(checks,"分页边界 "+query,json(r,400),"400",r);}
+        if(level==3)return;
+        String before=require(cmd(deadline,cancel,"exec",db,"mysql","-uroot","-N","-e","SELECT (SELECT COUNT(*) FROM cs_lab.plan_tasks),(SELECT COUNT(*) FROM cs_lab.audit_events);"));
+        for(String invalid:List.of("{\"title\":\" \",\"assigneeId\":2}","{\"title\":\"局外\",\"assigneeId\":3}")){
+            r=request(app,deadline,cancel,"POST","/api/plans/1/tasks/batch","[{\"title\":\"必须回滚\",\"assigneeId\":2},"+invalid+"]",alice);assertion(checks,"批量后项失败返回400",json(r,400),"400",r);
+            String after=require(cmd(deadline,cancel,"exec",db,"mysql","-uroot","-N","-e","SELECT (SELECT COUNT(*) FROM cs_lab.plan_tasks),(SELECT COUNT(*) FROM cs_lab.audit_events);"));checks.add(new CheckReport.Assertion("任务与审计整体回滚",before.equals(after),before,after));
+        }
+        r=request(app,deadline,cancel,"POST","/api/plans/1/tasks/batch","[{\"title\":\"O'Reilly\",\"assigneeId\":2},{\"title\":\"第二条\",\"assigneeId\":1}]",alice);
+        long task=body(r).path("ids").path(0).asLong(-1);assertion(checks,"批量成功提交",json(r,201)&&body(r).path("created").asInt()==2&&task>6&&body(r).path("ids").path(1).asLong()>task,"201及两个真实不同id",r);
+        r=request(app,deadline,cancel,"PUT","/api/plans/1/tasks/1/complete",null,bob);assertion(checks,"成员不能修改他人任务",json(r,403),"403",r);
+        r=request(app,deadline,cancel,"PUT","/api/plans/1/tasks/6/complete",null,alice);assertion(checks,"跨计划任务编号拒绝",json(r,404),"404",r);
+        r=request(app,deadline,cancel,"PUT","/api/plans/1/tasks/"+task+"/complete",null,bob);assertion(checks,"被分配者完成任务",json(r,200)&&body(r).path("status").asText().equals("done"),"done",r);
+        if(level==4)return;
+        for(String[] req:List.of(new String[]{"GET","/api/plans/1",null,eve},new String[]{"GET","/api/plans/1/tasks?page=bad",null,alice},new String[]{"POST","/api/plans","{broken",alice},new String[]{"PUT","/api/plans/1/tasks/99999/complete",null,alice})){
+            r=request(app,deadline,cancel,req[0],req[1],req[2],req[3]);assertion(checks,"统一错误契约",r.status()>=400&&body(r).path("requestId").asText().matches("[a-f0-9-]{36}")&&r.requestId().equals(body(r).path("requestId").asText())&&!body(r).path("message").asText().isBlank()&&!body(r).path("code").asText().isBlank()&&!r.body().contains("SQLException"),"错误code/message/requestId与响应头编号一致，无内部SQL异常",r);
+        }
+        var logs=cmd(deadline,cancel,"exec",app,"cat","/tmp/server.log");checks.add(new CheckReport.Assertion("请求日志与凭据保护",logs.output().contains("requestId=")&&!logs.output().contains("Learn-2026!")&&!logs.output().contains(alice)&&!logs.output().contains(bob),"日志包含请求编号、不含密码/令牌",logs.output().contains("requestId=")?"已检查请求编号和敏感字段":"未发现请求编号"));
+        if(level<7)return;
+        r=request(app,deadline,cancel,"GET","/",null);assertion(checks,"配套前端与同源API",r.status()==200&&r.type().startsWith("text/html")&&r.body().contains("id=\"login-form\"")&&r.body().contains("/tasks/batch")&&r.body().contains("textContent"),"登录/任务/权限演示HTML，动态文本安全输出",new Response(r.status(),r.type(),"HTML checked"));
+        restartApplication(app,deadline,cancel);
+        r=request(app,deadline,cancel,"GET","/api/plans/"+plan,null,alice);assertion(checks,"部署重启后计划与会话持久",json(r,200)&&body(r).path("title").asText().equals("O'Reilly <script>"),"重启后原身份和计划保留",r);
+    }
+    private void verifyTests(String app,Path input,long deadline,BooleanSupplier cancel,List<CheckReport.Assertion> checks) throws Exception {
+        Path project=input.resolve("project");boolean documented=Files.isRegularFile(project.resolve("RUN.md"))&&Files.readString(project.resolve("RUN.md")).strip().length()>=80;
+        checks.add(new CheckReport.Assertion("可复现运行与表关系说明",documented,"RUN.md至少80字符，说明环境与业务边界",documented?"已提交":"缺少有效RUN.md"));
+        var test=maven(app,deadline,cancel,"-DfailIfNoTests=true","test");checks.add(new CheckReport.Assertion("真实API集成测试",test.code()==0&&test.output().matches("(?s).*Tests run: [1-9][0-9]*.*"),"至少一个JUnit测试通过",test.output()));
+        // A fixed faulty implementation is independent of the learner's chosen classes.
+        // Submitted tests must catch cross-plan reads being incorrectly allowed.
+        Path mutation=input.resolve("mutation");
+        try(var paths=Files.walk(project)){for(Path path:paths.filter(Files::isRegularFile).toList())if(path.toString().contains("src\\test")||path.toString().contains("src/test")||path.getFileName().toString().equals("pom.xml")){Path out=mutation.resolve(project.relativize(path));Files.createDirectories(out.getParent());Files.copy(path,out);}}
+        for(String name:List.of("Application","AuthService","PlanService","BusinessController","Problem","ApiErrors","RequestLog")){
+            Path out=mutation.resolve(BootProjectSnapshot.SOURCE_DIRECTORY+"/"+name+".java");Files.createDirectories(out.getParent());String source;
+            try(var in=getClass().getResourceAsStream("/runner/collaboration/mutation/"+name+".java")){source=new String(Objects.requireNonNull(in).readAllBytes(),StandardCharsets.UTF_8);}
+            Files.writeString(out,source);
+        }
+        require(cmd(deadline,cancel,"exec",app,"cp","-R","/input/mutation","/tmp/mutation"));
+        var bad=cmd(deadline,cancel,"exec","--workdir=/tmp/mutation",app,"sh","/opt/maven/bin/mvn","-B","-ntp","-o","-s","/opt/settings.xml","-Dmaven.repo.local=/opt/repository","-Dmaven.compiler.proc=none","-DfailIfNoTests=true","test");
+        checks.add(new CheckReport.Assertion("越权变式检测",bad.code()!=0&&bad.output().contains("Failures:")&&!bad.output().contains("COMPILATION ERROR"),"移除成员检查后，提交测试出现断言失败",bad.output()));
+    }

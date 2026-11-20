@@ -1,0 +1,60 @@
+{
+  "status" : "business_error",
+  "report" : {
+    "snapshotDigest" : "b692a367ba5adaedf47373429602f0c56d90a41605d2092556b1e039d074c4af",
+    "courseVersion" : "1.0.0",
+    "stageId" : "boot-jdbc",
+    "policy" : "boot-jdbc-v1",
+    "image" : "sha256:ed231f8aa9ebb2e48df58330e80692ecc5ca67717ee3c11dc0ab8ffabe3c3dc5",
+    "harnessDigest" : "cf5cb143fc695c9b4b2314af3ae43ad438fabbc3b14453b5b320ee1c7cd796a4",
+    "functionalPassed" : false,
+    "assertions" : [ {
+      "name" : "离线Maven构建",
+      "passed" : true,
+      "expected" : "固定依赖构建成功",
+      "actual" : "多文件工程已离线编译并生成可执行JAR。"
+    }, {
+      "name" : "读取单条与JSON类型",
+      "passed" : false,
+      "expected" : "id=1，初始标题与布尔字段",
+      "actual" : "HTTP 404 {\"message\":\"wrong\"}"
+    }, {
+      "name" : "未知编号404",
+      "passed" : true,
+      "expected" : "404与非空message",
+      "actual" : "HTTP 404 {\"message\":\"wrong\"}"
+    }, {
+      "name" : "列表",
+      "passed" : true,
+      "expected" : "5项JSON数组",
+      "actual" : "HTTP 200 [{\"id\":1,\"title\":\"学习 HTTP\",\"completed\":false},{\"id\":2,\"title\":\"复习 SQL\",\"completed\":true},{\"id\":3,\"title\":\"练习 JDBC\",\"completed\":false},{\"id\":4,\"title\":\"阅读 Java\",\"completed\":true},{\"id\":5,\"title\":\"完成项目\",\"completed\":false}]"
+    }, {
+      "name" : "新增与生成键",
+      "passed" : true,
+      "expected" : "201，自动编号与原样引号标题",
+      "actual" : "HTTP 201 {\"id\":6,\"title\":\"O'Reilly\",\"completed\":false}"
+    }, {
+      "name" : "连续生成不同编号",
+      "passed" : true,
+      "expected" : "第二个新编号不同",
+      "actual" : "HTTP 201 {\"id\":7,\"title\":\"第二条\",\"completed\":true}"
+    }, {
+      "name" : "写入后读取",
+      "passed" : false,
+      "expected" : "引号标题已持久化",
+      "actual" : "HTTP 404 {\"message\":\"wrong\"}"
+    }, {
+      "name" : "真实数据库记录",
+      "passed" : true,
+      "expected" : "O'Reilly",
+      "actual" : "O'Reilly\n"
+    }, {
+      "name" : "重启后持久",
+      "passed" : false,
+      "expected" : "重启应用仍读到引号标题",
+      "actual" : "HTTP 404 {\"message\":\"wrong\"}"
+    } ],
+    "log" : "\n  .   ____          _            __ _ _\n /\\\\ / ___'_ __ _ _(_)_ __  __ _ \\ \\ \\ \\\n( ( )\\___ | '_ | '_| | '_ \\/ _` | \\ \\ \\ \\\n \\\\/  ___)| |_)| | | | | || (_| |  ) ) ) )\n  '  |____| .__|_| |_|_| |_\\__, | / / / /\n =========|_|==============|___/=/_/_/_/\n\n :: Spring Boot ::                (v4.1.2)\n\n2026-11-12T06:30:34.802Z  INFO 242 --- [           main] dev.codesomething.lab.Application        : Starting Application v1.0.0 using Java 21.0.13 with PID 242 (/tmp/project/target/boot-lab.jar started by nobody in /tmp/project)\n2026-11-12T06:30:34.884Z  INFO 242 --- [           main] dev.codesomething.lab.Application        : No active profile set, falling back to 1 default profile: \"default\"\n2026-11-12T06:30:36.905Z  INFO 242 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)\n2026-11-12T06:30:36.914Z  INFO 242 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]\n2026-11-12T06:30:36.914Z  INFO 242 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.27]\n2026-11-12T06:30:37.013Z  INFO 242 --- [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1919 ms\n2026-11-12T06:30:38.101Z  INFO 242 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'\n2026-11-12T06:30:38.109Z  INFO 242 --- [           main] dev.codesomething.lab.Application        : Started Application in 5.018 seconds (process running for 6.02)\n2026-11-12T06:30:38.197Z  INFO 242 --- [0.1-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'\n2026-11-12T06:30:38.198Z  INFO 242 --- [0.1-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'\n2026-11-12T06:30:38.199Z  INFO 242 --- [0.1-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms\n",
+    "finishedAt" : "2026-11-12T06:30:40.119085600Z"
+  }
+}

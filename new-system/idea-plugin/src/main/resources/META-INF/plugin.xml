@@ -1,0 +1,14 @@
+<idea-plugin>
+    <id>dev.codesomething.idea</id>
+    <name>CodeSomething</name>
+    <version>0.3.1</version>
+    <idea-version since-build="262" until-build="262.*"/>
+    <vendor>CodeSomething</vendor>
+    <description><![CDATA[
+        CodeSomething connects IDEA learning projects to local courses, checks and reports. 在IDEA中配对、提交、检查、恢复作业并在网页继续理解验证。
+    ]]></description>
+    <depends>com.intellij.modules.platform</depends>
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="CodeSomething" anchor="right" factoryClass="dev.codesomething.idea.LearningToolWindowFactory"/>
+    </extensions>
+</idea-plugin>

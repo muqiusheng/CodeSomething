@@ -1,0 +1,13 @@
+import {writeProjectFiles} from './local-project-files.mjs';
+import {useState} from 'react';
+import {FolderDown} from 'lucide-react';
+import {Modal} from '../ui/modal';
+type Directory={name:string;getDirectoryHandle:(name:string,options?:{create:boolean})=>Promise<Directory>;getFileHandle:(name:string,options?:{create:boolean})=>Promise<{createWritable:()=>Promise<{write:(content:string)=>Promise<void>;close:()=>Promise<void>}>}>};
+type PickerWindow=Window&{showDirectoryPicker?:(options:{mode:string;id:string})=>Promise<Directory>};
+/** The handle comes only from the browser's explicit user-selected directory. */
+export function LocalDirectorySave({files,disabled=false}:{files:Record<string,string>;disabled?:boolean}){
+ const [directory,setDirectory]=useState<Directory|null>(null),[open,setOpen]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[error,setError]=useState('');
+ async function choose(){setError('');setMessage('');try{const picker=(window as PickerWindow).showDirectoryPicker;if(!picker){setError('此浏览器不支持保存文件夹，请使用Chrome或Edge；也可先导出当前文件。');return}const selected=await picker.call(window,{mode:'readwrite',id:'codesomething-project'});setDirectory(selected);setOpen(true)}catch(e){if((e as Error).name!=='AbortError')setError('无法选择目录：'+(e as Error).message)}}
+ async function save(){setBusy(true);setError('');let written=0;try{await writeProjectFiles(directory,files,count=>{written=count});setMessage('已将'+written+'个文件保存到 '+directory!.name);setOpen(false)}catch(e){setError('已保存'+written+'个文件；其余未完成：'+(e as Error).message)}finally{setBusy(false)}}
+ return <div className="local-directory-save"><button className="text-button" disabled={disabled||busy||Object.keys(files).length===0} onClick={()=>directory?setOpen(true):void choose()}><FolderDown size={15} aria-hidden="true"/>保存到本地目录</button>{message&&<span role="status">{message}</span>}{error&&!open&&<p role="alert">{error}</p>}<Modal open={open} onOpenChange={value=>{if(!busy)setOpen(value)}} title="保存工程到本地" description={'目标文件夹：'+(directory?.name||'')}><p>保存以下文件及目录结构，同名文件将被覆盖。文件夹中的其他文件会保留。</p><ul className="local-save-files">{Object.keys(files).map(path=><li key={path}><code>{path}</code></li>)}</ul>{error&&<p role="alert">{error}</p>}<div className="button-row"><button className="button primary" disabled={busy} onClick={()=>void save()}>{busy?'正在保存…':'保存这些文件'}</button><button className="button secondary" disabled={busy} onClick={()=>void choose()}>更换目录</button><button className="button secondary" disabled={busy} onClick={()=>setOpen(false)}>取消</button></div></Modal></div>;
+}

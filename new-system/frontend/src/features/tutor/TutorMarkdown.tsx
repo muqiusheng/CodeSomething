@@ -1,0 +1,3 @@
+import {markdownBlocks} from './tutor-markdown.mjs';
+function Inline({text}:{text:string}){return <>{text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((part,i)=>part.startsWith('**')?<strong key={i}>{part.slice(2,-2)}</strong>:part.startsWith('`')?<code key={i}>{part.slice(1,-1)}</code>:part)}</>}
+export function TutorMarkdown({text}:{text:string}){return <>{markdownBlocks(text).map((block,i)=>block.kind==='code'?<pre key={i} tabIndex={0} aria-label={block.language||'代码'}><code>{block.text}</code></pre>:block.kind==='list'?<ul key={i}>{block.items.map((item,j)=><li key={j}><Inline text={item}/></li>)}</ul>:<p key={i}><Inline text={block.text}/></p>)}</>}

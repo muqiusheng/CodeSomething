@@ -1,0 +1,55 @@
+{
+  "status" : "passed",
+  "report" : {
+    "snapshotDigest" : "cf5e40264969df0c450e765f524a165bfb111f1e3dcffd139b099f6d478379b3",
+    "courseVersion" : "1.0.0",
+    "stageId" : "a-create",
+    "policy" : "a-create-v1",
+    "image" : "sha256:ed231f8aa9ebb2e48df58330e80692ecc5ca67717ee3c11dc0ab8ffabe3c3dc5",
+    "harnessDigest" : "e32ad2985d68f39189753090d6cd6e8120e308cc4e7179caaa48e1da2cee9440",
+    "functionalPassed" : true,
+    "assertions" : [ {
+      "name" : "离线Maven构建",
+      "passed" : true,
+      "expected" : "固定依赖构建成功",
+      "actual" : "多文件工程已离线编译并生成可执行JAR。"
+    }, {
+      "name" : "读取单条与JSON类型",
+      "passed" : true,
+      "expected" : "id=1，初始标题与布尔字段",
+      "actual" : "HTTP 200 {\"id\":1,\"title\":\"学习 HTTP\",\"completed\":false}"
+    }, {
+      "name" : "未知编号404",
+      "passed" : true,
+      "expected" : "404与非空message",
+      "actual" : "HTTP 404 {\"message\":\"资源不存在\"}"
+    }, {
+      "name" : "列表",
+      "passed" : true,
+      "expected" : "5项JSON数组",
+      "actual" : "HTTP 200 [{\"id\":1,\"title\":\"学习 HTTP\",\"completed\":false},{\"id\":2,\"title\":\"复习 SQL\",\"completed\":true},{\"id\":3,\"title\":\"练习 JDBC\",\"completed\":false},{\"id\":4,\"title\":\"阅读 Java\",\"completed\":true},{\"id\":5,\"title\":\"完成项目\",\"completed\":false}]"
+    }, {
+      "name" : "新增与生成键",
+      "passed" : true,
+      "expected" : "201，自动编号与原样引号标题",
+      "actual" : "HTTP 201 {\"id\":6,\"title\":\"O'Reilly\",\"completed\":false}"
+    }, {
+      "name" : "连续生成不同编号",
+      "passed" : true,
+      "expected" : "第二个新编号不同",
+      "actual" : "HTTP 201 {\"id\":7,\"title\":\"第二条\",\"completed\":true}"
+    }, {
+      "name" : "写入后读取",
+      "passed" : true,
+      "expected" : "引号标题已持久化",
+      "actual" : "HTTP 200 {\"id\":6,\"title\":\"O'Reilly\",\"completed\":false}"
+    }, {
+      "name" : "真实数据库记录",
+      "passed" : true,
+      "expected" : "O'Reilly",
+      "actual" : "O'Reilly\n"
+    } ],
+    "log" : "\n  .   ____          _            __ _ _\n /\\\\ / ___'_ __ _ _(_)_ __  __ _ \\ \\ \\ \\\n( ( )\\___ | '_ | '_| | '_ \\/ _` | \\ \\ \\ \\\n \\\\/  ___)| |_)| | | | | || (_| |  ) ) ) )\n  '  |____| .__|_| |_|_| |_\\__, | / / / /\n =========|_|==============|___/=/_/_/_/\n\n :: Spring Boot ::                (v4.1.2)\n\n2026-11-12T06:31:53.403Z  INFO 61 --- [           main] dev.codesomething.lab.Application        : Starting Application v1.0.0 using Java 21.0.13 with PID 61 (/tmp/project/target/boot-lab.jar started by nobody in /tmp/project)\n2026-11-12T06:31:53.407Z  INFO 61 --- [           main] dev.codesomething.lab.Application        : No active profile set, falling back to 1 default profile: \"default\"\n2026-11-12T06:31:55.402Z  INFO 61 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)\n2026-11-12T06:31:55.412Z  INFO 61 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]\n2026-11-12T06:31:55.412Z  INFO 61 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.27]\n2026-11-12T06:31:55.507Z  INFO 61 --- [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1906 ms\n2026-11-12T06:31:56.507Z  INFO 61 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'\n2026-11-12T06:31:56.513Z  INFO 61 --- [           main] dev.codesomething.lab.Application        : Started Application in 4.415 seconds (process running for 5.412)\n2026-11-12T06:31:56.605Z  INFO 61 --- [0.1-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'\n2026-11-12T06:31:56.605Z  INFO 61 --- [0.1-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'\n2026-11-12T06:31:56.606Z  INFO 61 --- [0.1-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms\n2026-11-12T06:31:56.634Z  INFO 61 --- [0.1-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...\n2026-11-12T06:31:56.917Z  INFO 61 --- [0.1-8080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@56665533\n2026-11-12T06:31:56.919Z  INFO 61 --- [0.1-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.\n",
+    "finishedAt" : "2026-11-12T06:32:07.313262200Z"
+  }
+}

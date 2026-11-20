@@ -1,0 +1,275 @@
+{
+  "status" : "business_error",
+  "report" : {
+    "snapshotDigest" : "056c3dd046e12ab2f2e68e81d74b0c0644a4e6aa4ac6ed418746c077382f8146",
+    "courseVersion" : "1.0.0",
+    "stageId" : "b-deploy",
+    "policy" : "b-deploy-v1",
+    "image" : "sha256:ed231f8aa9ebb2e48df58330e80692ecc5ca67717ee3c11dc0ab8ffabe3c3dc5",
+    "harnessDigest" : "7d2e73d7e4c6442c53df9c3b18f9753d481e9e235cb4ddd1424612711d6602a3",
+    "functionalPassed" : false,
+    "assertions" : [ {
+      "name" : "离线Maven构建",
+      "passed" : true,
+      "expected" : "固定依赖构建成功",
+      "actual" : "多文件工程已离线编译并生成可执行JAR。"
+    }, {
+      "name" : "错误密码拒绝",
+      "passed" : true,
+      "expected" : "401 JSON",
+      "actual" : "HTTP 401 {\"code\":\"BAD_CREDENTIALS\",\"message\":\"账号或密码不正确\",\"requestId\":\"e1bab898-f36d-4465-91ec-1ef2913d7f87\"}"
+    }, {
+      "name" : "无效身份拒绝",
+      "passed" : true,
+      "expected" : "401 JSON",
+      "actual" : "HTTP 401 {\"code\":\"LOGIN_REQUIRED\",\"message\":\"请先登录\",\"requestId\":\"dbe2639b-a159-41de-955b-8a4329e861f5\"}"
+    }, {
+      "name" : "无效身份拒绝",
+      "passed" : true,
+      "expected" : "401 JSON",
+      "actual" : "HTTP 401 {\"code\":\"SESSION_EXPIRED\",\"message\":\"登录已失效，请重新登录\",\"requestId\":\"d0c175b2-a435-4be9-ad3b-006d4c520ae4\"}"
+    }, {
+      "name" : "登录 alice",
+      "passed" : true,
+      "expected" : "200与随机有时限令牌",
+      "actual" : "HTTP 200 <login credentials redacted>"
+    }, {
+      "name" : "登录 bob",
+      "passed" : true,
+      "expected" : "200与随机有时限令牌",
+      "actual" : "HTTP 200 <login credentials redacted>"
+    }, {
+      "name" : "登录 eve",
+      "passed" : true,
+      "expected" : "200与随机有时限令牌",
+      "actual" : "HTTP 200 <login credentials redacted>"
+    }, {
+      "name" : "登录 admin",
+      "passed" : true,
+      "expected" : "200与随机有时限令牌",
+      "actual" : "HTTP 200 <login credentials redacted>"
+    }, {
+      "name" : "会话身份不泄露摘要",
+      "passed" : true,
+      "expected" : "alice身份，隐藏密码/令牌摘要",
+      "actual" : "HTTP 200 {\"id\":1,\"username\":\"alice\",\"role\":\"USER\"}"
+    }, {
+      "name" : "注销204",
+      "passed" : true,
+      "expected" : "204空体",
+      "actual" : "HTTP 204 "
+    }, {
+      "name" : "重放已注销令牌",
+      "passed" : true,
+      "expected" : "401",
+      "actual" : "HTTP 401 {\"code\":\"SESSION_EXPIRED\",\"message\":\"登录已失效，请重新登录\",\"requestId\":\"1ca20740-a203-486f-b6e7-ffe60026444b\"}"
+    }, {
+      "name" : "会话到期",
+      "passed" : true,
+      "expected" : "401",
+      "actual" : "HTTP 401 {\"code\":\"SESSION_EXPIRED\",\"message\":\"登录已失效，请重新登录\",\"requestId\":\"f34d26bb-6509-4f06-bb68-c56bf9b4c419\"}"
+    }, {
+      "name" : "登录 bob",
+      "passed" : true,
+      "expected" : "200与随机有时限令牌",
+      "actual" : "HTTP 200 <login credentials redacted>"
+    }, {
+      "name" : "登录 eve",
+      "passed" : true,
+      "expected" : "200与随机有时限令牌",
+      "actual" : "HTTP 200 <login credentials redacted>"
+    }, {
+      "name" : "成员可读",
+      "passed" : true,
+      "expected" : "bob可以读计划1",
+      "actual" : "HTTP 200 {\"id\":1,\"title\":\"Java学习计划\",\"ownerId\":1}"
+    }, {
+      "name" : "跨计划越权拒绝",
+      "passed" : true,
+      "expected" : "eve不能读计划1",
+      "actual" : "HTTP 403 {\"code\":\"PLAN_FORBIDDEN\",\"message\":\"你不是这个计划的成员\",\"requestId\":\"7a9ca6cc-38e9-4077-be56-5751a70507f4\"}"
+    }, {
+      "name" : "任务数据越权拒绝",
+      "passed" : true,
+      "expected" : "403",
+      "actual" : "HTTP 403 {\"code\":\"PLAN_FORBIDDEN\",\"message\":\"你不是这个计划的成员\",\"requestId\":\"1ee92542-dbb0-4f55-b677-6a3a1461323c\"}"
+    }, {
+      "name" : "管理员不绕过成员边界",
+      "passed" : true,
+      "expected" : "403",
+      "actual" : "HTTP 403 {\"code\":\"PLAN_FORBIDDEN\",\"message\":\"你不是这个计划的成员\",\"requestId\":\"f9ac4651-fd23-4408-be02-305e4decbb27\"}"
+    }, {
+      "name" : "成员无分配权限",
+      "passed" : true,
+      "expected" : "403",
+      "actual" : "HTTP 403 {\"code\":\"OWNER_REQUIRED\",\"message\":\"只有计划负责人可执行此操作\",\"requestId\":\"74a32458-599b-49bb-a0b3-9621603db274\"}"
+    }, {
+      "name" : "普通用户无审计权限",
+      "passed" : true,
+      "expected" : "403",
+      "actual" : "HTTP 403 {\"code\":\"ADMIN_REQUIRED\",\"message\":\"仅管理员可查看审计记录\",\"requestId\":\"d59e33a4-4fa3-46b6-b8de-33797b065717\"}"
+    }, {
+      "name" : "管理员可读审计",
+      "passed" : true,
+      "expected" : "200数组",
+      "actual" : "HTTP 200 []"
+    }, {
+      "name" : "计划列表按成员隔离",
+      "passed" : true,
+      "expected" : "仅计划1",
+      "actual" : "HTTP 200 [{\"id\":1,\"title\":\"Java学习计划\",\"ownerId\":1}]"
+    }, {
+      "name" : "创建计划与可信负责人",
+      "passed" : true,
+      "expected" : "201，ownerId=1且引号与HTML保留为数据",
+      "actual" : "HTTP 201 {\"id\":3,\"title\":\"O'Reilly <script>\",\"ownerId\":1}"
+    }, {
+      "name" : "负责人自动成为成员",
+      "passed" : true,
+      "expected" : "200",
+      "actual" : "HTTP 200 {\"id\":3,\"title\":\"O'Reilly <script>\",\"ownerId\":1}"
+    }, {
+      "name" : "拒绝空计划标题",
+      "passed" : true,
+      "expected" : "400",
+      "actual" : "HTTP 400 {\"code\":\"INVALID_TITLE\",\"message\":\"标题须为1至100个字符\",\"requestId\":\"d88b3b62-b69c-4ea9-b27a-4dab048781ad\"}"
+    }, {
+      "name" : "稳定筛选分页0",
+      "passed" : true,
+      "expected" : "todo三条，按id稳定分页",
+      "actual" : "HTTP 200 {\"total\":3,\"size\":2,\"items\":[{\"id\":1,\"title\":\"学习 HTTP\",\"status\":\"todo\",\"assigneeId\":1},{\"id\":3,\"title\":\"练习 JDBC\",\"status\":\"todo\",\"assigneeId\":2}],\"page\":0}"
+    }, {
+      "name" : "稳定筛选分页1",
+      "passed" : true,
+      "expected" : "todo三条，按id稳定分页",
+      "actual" : "HTTP 200 {\"total\":3,\"size\":2,\"items\":[{\"id\":5,\"title\":\"完成项目\",\"status\":\"todo\",\"assigneeId\":2}],\"page\":1}"
+    }, {
+      "name" : "稳定筛选分页2",
+      "passed" : true,
+      "expected" : "todo三条，按id稳定分页",
+      "actual" : "HTTP 200 {\"total\":3,\"size\":2,\"items\":[],\"page\":2}"
+    }, {
+      "name" : "分页边界 page=-1",
+      "passed" : true,
+      "expected" : "400",
+      "actual" : "HTTP 400 {\"code\":\"INVALID_PAGE\",\"message\":\"page须为0至100000，size须为1至50，status为all/todo/done\",\"requestId\":\"c67607da-5d63-48f0-bcb4-1a796d7a31fb\"}"
+    }, {
+      "name" : "分页边界 page=100001",
+      "passed" : true,
+      "expected" : "400",
+      "actual" : "HTTP 400 {\"code\":\"INVALID_PAGE\",\"message\":\"page须为0至100000，size须为1至50，status为all/todo/done\",\"requestId\":\"0833fcd7-4c74-486f-8f44-e628f680ca05\"}"
+    }, {
+      "name" : "分页边界 size=0",
+      "passed" : true,
+      "expected" : "400",
+      "actual" : "HTTP 400 {\"code\":\"INVALID_PAGE\",\"message\":\"page须为0至100000，size须为1至50，status为all/todo/done\",\"requestId\":\"67745996-6f00-49ed-be22-ba244aee76c9\"}"
+    }, {
+      "name" : "分页边界 size=51",
+      "passed" : true,
+      "expected" : "400",
+      "actual" : "HTTP 400 {\"code\":\"INVALID_PAGE\",\"message\":\"page须为0至100000，size须为1至50，status为all/todo/done\",\"requestId\":\"863de472-8e5a-4f5e-a55c-80d742b39e3e\"}"
+    }, {
+      "name" : "分页边界 page=bad",
+      "passed" : true,
+      "expected" : "400",
+      "actual" : "HTTP 400 {\"code\":\"INVALID_INPUT\",\"message\":\"请求格式或参数不正确\",\"requestId\":\"4b82697f-118e-49cc-bd35-ab5e94ba2bb7\"}"
+    }, {
+      "name" : "分页边界 status=unknown",
+      "passed" : true,
+      "expected" : "400",
+      "actual" : "HTTP 400 {\"code\":\"INVALID_PAGE\",\"message\":\"page须为0至100000，size须为1至50，status为all/todo/done\",\"requestId\":\"078fb2bc-040f-4f7b-92e5-421cba625a0a\"}"
+    }, {
+      "name" : "批量后项失败返回400",
+      "passed" : true,
+      "expected" : "400",
+      "actual" : "HTTP 400 {\"code\":\"INVALID_TITLE\",\"message\":\"标题须为1至100个字符\",\"requestId\":\"d18750a4-3397-44ad-9bc9-64bc4d7fb012\"}"
+    }, {
+      "name" : "任务与审计整体回滚",
+      "passed" : true,
+      "expected" : "6\t1\n",
+      "actual" : "6\t1\n"
+    }, {
+      "name" : "批量后项失败返回400",
+      "passed" : true,
+      "expected" : "400",
+      "actual" : "HTTP 400 {\"code\":\"INVALID_ASSIGNEE\",\"message\":\"被分配者不是计划成员\",\"requestId\":\"f88e5dc9-0867-4042-ab88-3859ac2734e8\"}"
+    }, {
+      "name" : "任务与审计整体回滚",
+      "passed" : true,
+      "expected" : "6\t1\n",
+      "actual" : "6\t1\n"
+    }, {
+      "name" : "批量成功提交",
+      "passed" : true,
+      "expected" : "201及两个真实不同id",
+      "actual" : "HTTP 201 {\"created\":2,\"ids\":[9,10]}"
+    }, {
+      "name" : "成员不能修改他人任务",
+      "passed" : true,
+      "expected" : "403",
+      "actual" : "HTTP 403 {\"code\":\"OWNER_REQUIRED\",\"message\":\"只有计划负责人可执行此操作\",\"requestId\":\"03012fc0-f02a-4c1f-8e80-44641d66b668\"}"
+    }, {
+      "name" : "跨计划任务编号拒绝",
+      "passed" : true,
+      "expected" : "404",
+      "actual" : "HTTP 404 {\"code\":\"TASK_NOT_FOUND\",\"message\":\"任务不存在\",\"requestId\":\"ec8025aa-be17-42c0-a9eb-df20d8c2b24c\"}"
+    }, {
+      "name" : "被分配者完成任务",
+      "passed" : true,
+      "expected" : "done",
+      "actual" : "HTTP 200 {\"status\":\"done\",\"id\":9}"
+    }, {
+      "name" : "统一错误契约",
+      "passed" : true,
+      "expected" : "错误code/message/requestId与响应头编号一致，无内部SQL异常",
+      "actual" : "HTTP 403 {\"code\":\"PLAN_FORBIDDEN\",\"message\":\"你不是这个计划的成员\",\"requestId\":\"0eb2383b-d4d6-4c62-8b1b-8240c064f7c2\"}"
+    }, {
+      "name" : "统一错误契约",
+      "passed" : true,
+      "expected" : "错误code/message/requestId与响应头编号一致，无内部SQL异常",
+      "actual" : "HTTP 400 {\"code\":\"INVALID_INPUT\",\"message\":\"请求格式或参数不正确\",\"requestId\":\"bffef1cb-ede2-4d44-824b-ba175d0750ff\"}"
+    }, {
+      "name" : "统一错误契约",
+      "passed" : true,
+      "expected" : "错误code/message/requestId与响应头编号一致，无内部SQL异常",
+      "actual" : "HTTP 400 {\"code\":\"INVALID_INPUT\",\"message\":\"请求格式或参数不正确\",\"requestId\":\"27d40792-593a-4928-b686-b1ab81e727bd\"}"
+    }, {
+      "name" : "统一错误契约",
+      "passed" : true,
+      "expected" : "错误code/message/requestId与响应头编号一致，无内部SQL异常",
+      "actual" : "HTTP 404 {\"code\":\"TASK_NOT_FOUND\",\"message\":\"任务不存在\",\"requestId\":\"9e1292b5-e11f-49fe-b417-59229466e0f2\"}"
+    }, {
+      "name" : "请求日志与凭据保护",
+      "passed" : true,
+      "expected" : "日志包含请求编号、不含密码/令牌",
+      "actual" : "已检查请求编号和敏感字段"
+    }, {
+      "name" : "配套前端与同源API",
+      "passed" : false,
+      "expected" : "登录/任务/权限演示HTML，动态文本安全输出",
+      "actual" : "HTTP 200 HTML checked"
+    }, {
+      "name" : "部署重启后计划与会话持久",
+      "passed" : true,
+      "expected" : "重启后原身份和计划保留",
+      "actual" : "HTTP 200 {\"id\":3,\"title\":\"O'Reilly <script>\",\"ownerId\":1}"
+    }, {
+      "name" : "可复现运行与表关系说明",
+      "passed" : true,
+      "expected" : "RUN.md至少80字符，说明环境与业务边界",
+      "actual" : "已提交"
+    }, {
+      "name" : "真实API集成测试",
+      "passed" : true,
+      "expected" : "至少一个JUnit测试通过",
+      "actual" : "Failed to load native library:jansi-2.4.2-2f67244c7bf26da6-libjansi.so. The native library file at /tmp/jansi-2.4.2-2f67244c7bf26da6-libjansi.so is not executable, make sure that the directory is mounted on a partition without the noexec flag, or set the jansi.tmpdir system property to point to a proper location.  osinfo: Linux/x86_64\njava.lang.UnsatisfiedLinkError: /tmp/jansi-2.4.2-2f67244c7bf26da6-libjansi.so: /tmp/jansi-2.4.2-2f67244c7bf26da6-libjansi.so: failed to map segment from shared object\n[INFO] Scanning for projects...\n[INFO] \n[INFO] ---------------------< dev.codesomething:boot-lab >---------------------\n[INFO] Building boot-lab 1.0.0\n[INFO]   from pom.xml\n[INFO] --------------------------------[ jar ]---------------------------------\n[INFO] \n[INFO] --- resources:3.5.0:resources (default-resources) @ boot-lab ---\n[INFO] skip non existing resourceDirectory /tmp/project/src/main/resources\n[INFO] skip non existing resourceDirectory /tmp/project/src/main/resources\n[INFO] \n[INFO] --- compiler:3.15.0:compile (default-compile) @ boot-lab ---\n[INFO] Nothing to compile - all classes are up to date.\n[INFO] \n[INFO] --- resources:3.5.0:testResources (default-testResources) @ boot-lab ---\n[INFO] skip non existing resourceDirectory /tmp/project/src/test/resources\n[INFO] \n[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ boot-lab ---\n[INFO] Nothing to compile - all classes are up to date.\n[INFO] \n[INFO] --- surefire:3.5.6:test (default-test) @ boot-lab ---\n[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider\n[INFO] \n[INFO] -------------------------------------------------------\n[INFO]  T E S T S\n[INFO] -------------------------------------------------------\n[INFO] Running dev.codesomething.lab.BusinessTest\n\n  .   ____          _            __ _ _\n /\\\\ / ___'_ __ _ _(_)_ __  __ _ \\ \\ \\ \\\n( ( )\\___ | '_ | '_| | '_ \\/ _` | \\ \\ \\ \\\n \\\\/  ___)| |_)| | | | | || (_| |  ) ) ) )\n  '  |____| .__|_| |_|_| |_\\__, | / / / /\n =========|_|==============|___/=/_/_/_/\n\n :: Spring Boot ::                (v4.1.2)\n\n2026-11-13T05:22:55.190Z  INFO 1206 --- [           main] o.a.maven.surefire.booter.ForkedBooter   : Starting ForkedBooter v3.5.6 using Java 21.0.13 with PID 1206 (started by nobody in /tmp/project)\n2026-11-13T05:22:55.192Z  INFO 1206 --- [           main] o.a.maven.surefire.booter.ForkedBooter   : No active profile set, falling back to 1 default profile: \"default\"\n2026-11-13T05:22:56.301Z  INFO 1206 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 0 (http)\n2026-11-13T05:22:56.312Z  INFO 1206 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]\n2026-11-13T05:22:56.312Z  INFO 1206 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.27]\n2026-11-13T05:22:56.388Z  INFO 1206 --- [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1171 ms\n2026-11-13T05:22:57.113Z  INFO 1206 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 45985 (http) with context path '/'\n2026-11-13T05:22:57.117Z  INFO 1206 --- [           main] o.a.maven.surefire.booter.ForkedBooter   : Started ForkedBooter in 2.239 seconds (process running for 3.717)\n2026-11-13T05:22:57.291Z  INFO 1206 --- [o-auto-1-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'\n2026-11-13T05:22:57.291Z  INFO 1206 --- [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'\n2026-11-13T05:22:57.292Z  INFO 1206 --- [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms\n2026-11-13T05:22:57.386Z  INFO 1206 --- [o-auto-1-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...\n2026-11-13T05:22:57.591Z  INFO 1206 --- [o-auto-1-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4886afe9\n2026-11-13T05:22:57.592Z  INFO 1206 --- [o-auto-1-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.\n2026-11-13T05:22:58.268Z  INFO 1206 --- [o-auto-1-exec-1] dev.codesomething.lab.RequestLog         : requestId=ced38ca3-fb7f-4898-aaac-f8cf3e0de050 method=POST status=200\n2026-11-13T05:22:58.294Z  INFO 1206 --- [o-auto-1-exec-2] dev.codesomething.lab.RequestLog         : requestId=79ba0821-dd7c-460a-8e3a-55d0c8258077 method=DELETE status=204\n2026-11-13T05:22:58.303Z  INFO 1206 --- [o-auto-1-exec-3] dev.codesomething.lab.RequestLog         : requestId=c35eccab-4476-4f96-ac42-c422947458fa method=GET status=401\n2026-11-13T05:22:58.680Z  INFO 1206 --- [o-auto-1-exec-4] dev.codesomething.lab.RequestLog         : requestId=f0f4300b-3f57-4a94-b4bd-5b9f0dc37d70 method=POST status=401\n2026-11-13T05:22:58.908Z  INFO 1206 --- [o-auto-1-exec-5] dev.codesomething.lab.RequestLog         : requestId=c317cc39-d89a-4932-a9d6-eb04eb976c98 method=POST status=200\n2026-11-13T05:22:59.120Z  INFO 1206 --- [o-auto-1-exec-6] dev.codesomething.lab.RequestLog         : requestId=4d1fbf11-356e-433b-a2a1-0593cb63d377 method=POST status=200\n2026-11-13T05:22:59.137Z  INFO 1206 --- [o-auto-1-exec-7] dev.codesomething.lab.RequestLog         : requestId=28c3ca45-210c-406b-8f09-6d068581ce63 method=POST status=201\n2026-11-13T05:22:59.143Z  INFO 1206 --- [o-auto-1-exec-8] dev.codesomething.lab.RequestLog         : requestId=12365996-91be-468f-991c-cca46f0d047e method=GET status=200\n2026-11-13T05:22:59.177Z  INFO 1206 --- [o-auto-1-exec-9] dev.codesomething.lab.RequestLog         : requestId=a7eb181a-86e4-48f1-8e80-04e51f813d09 method=POST status=400\n2026-11-13T05:22:59.187Z  INFO 1206 --- [-auto-1-exec-10] dev.codesomething.lab.RequestLog         : requestId=bc20d114-f9a9-4205-8f89-de5b58ac7aa2 method=GET status=200\n2026-11-13T05:22:59.191Z  INFO 1206 --- [o-auto-1-exec-1] dev.codesomething.lab.RequestLog         : requestId=82b03276-2084-4c39-b68d-04251e28521d method=GET status=200\n2026-11-13T05:22:59.432Z  INFO 1206 --- [o-auto-1-exec-2] dev.codesomething.lab.RequestLog         : requestId=d371863f-fbf2-4090-b833-889ec344db26 method=POST status=200\n2026-11-13T05:22:59.437Z  INFO 1206 --- [o-auto-1-exec-3] dev.codesomething.lab.RequestLog         : requestId=07a17631-d26b-4a7f-a397-29f5074f4417 method=GET status=403\n2026-11-13T05:22:59.581Z  INFO 1206 --- [o-auto-1-exec-4] dev.codesomething.lab.RequestLog         : requestId=dc7e97be-6d9e-42c8-93e5-87f891696d18 method=POST status=200\n2026-11-13T05:22:59.588Z  INFO 1206 --- [o-auto-1-exec-5] dev.codesomething.lab.RequestLog         : requestId=047e71b7-5e53-40e8-b605-8d2a5984d644 method=POST status=403\n2026-11-13T05:22:59.592Z  INFO 1206 --- [o-auto-1-exec-6] dev.codesomething.lab.RequestLog         : requestId=d06749aa-a0a9-4bfd-9d05-b17aaf670010 method=GET status=403\n2026-11-13T05:22:59.596Z  INFO 1206 --- [           main] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete\n2026-11-13T05:22:59.598Z  INFO 1206 --- [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete\n2026-11-13T05:22:59.603Z  INFO 1206 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...\n2026-11-13T05:23:00.812Z  INFO 1206 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.\n[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.636 s -- in dev.codesomething.lab.BusinessTest\n[INFO] \n[INFO] Results:\n[INFO] \n[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0\n[INFO] \n[INFO] ------------------------------------------------------------------------\n[INFO] BUILD SUCCESS\n[INFO] ------------------------------------------------------------------------\n[INFO] Total time:  9.271 s\n[INFO] Finished at: 2026-11-13T05:23:01Z\n[INFO] ------------------------------------------------------------------------\n"
+    }, {
+      "name" : "越权变式检测",
+      "passed" : true,
+      "expected" : "移除成员检查后，提交测试出现断言失败",
+      "actual" : "Failed to load native library:jansi-2.4.2-e6d24069a8dbbdfc-libjansi.so. The native library file at /tmp/jansi-2.4.2-e6d24069a8dbbdfc-libjansi.so is not executable, make sure that the directory is mounted on a partition without the noexec flag, or set the jansi.tmpdir system property to point to a proper location.  osinfo: Linux/x86_64\njava.lang.UnsatisfiedLinkError: /tmp/jansi-2.4.2-e6d24069a8dbbdfc-libjansi.so: /tmp/jansi-2.4.2-e6d24069a8dbbdfc-libjansi.so: failed to map segment from shared object\n[INFO] Scanning for projects...\n[INFO] \n[INFO] ---------------------< dev.codesomething:boot-lab >---------------------\n[INFO] Building boot-lab 1.0.0\n[INFO]   from pom.xml\n[INFO] --------------------------------[ jar ]---------------------------------\n[INFO] \n[INFO] --- resources:3.5.0:resources (default-resources) @ boot-lab ---\n[INFO] skip non existing resourceDirectory /tmp/mutation/src/main/resources\n[INFO] skip non existing resourceDirectory /tmp/mutation/src/main/resources\n[INFO] \n[INFO] --- compiler:3.15.0:compile (default-compile) @ boot-lab ---\n[INFO] Recompiling the module because of changed source code.\n[INFO] Compiling 7 source files with javac [debug parameters release 21] to target/classes\n[INFO] \n[INFO] --- resources:3.5.0:testResources (default-testResources) @ boot-lab ---\n[INFO] skip non existing resourceDirectory /tmp/mutation/src/test/resources\n[INFO] \n[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ boot-lab ---\n[INFO] Recompiling the module because of changed dependency.\n[INFO] Compiling 1 source file with javac [debug parameters release 21] to target/test-classes\n[INFO] /tmp/mutation/src/test/java/dev/codesomething/lab/BusinessTest.java: /tmp/mutation/src/test/java/dev/codesomething/lab/BusinessTest.java uses or overrides a deprecated API.\n[INFO] /tmp/mutation/src/test/java/dev/codesomething/lab/BusinessTest.java: Recompile with -Xlint:deprecation for details.\n[INFO] \n[INFO] --- surefire:3.5.6:test (default-test) @ boot-lab ---\n[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider\n[INFO] \n[INFO] -------------------------------------------------------\n[INFO]  T E S T S\n[INFO] -------------------------------------------------------\n[INFO] Running dev.codesomething.lab.BusinessTest\n\n  .   ____          _            __ _ _\n /\\\\ / ___'_ __ _ _(_)_ __  __ _ \\ \\ \\ \\\n( ( )\\___ | '_ | '_| | '_ \\/ _` | \\ \\ \\ \\\n \\\\/  ___)| |_)| | | | | || (_| |  ) ) ) )\n  '  |____| .__|_| |_|_| |_\\__, | / / / /\n =========|_|==============|___/=/_/_/_/\n\n :: Spring Boot ::                (v4.1.2)\n\n2026-11-13T05:23:08.892Z  INFO 1310 --- [           main] o.a.maven.surefire.booter.ForkedBooter   : Starting ForkedBooter v3.5.6 using Java 21.0.13 with PID 1310 (started by nobody in /tmp/mutation)\n2026-11-13T05:23:08.894Z  INFO 1310 --- [           main] o.a.maven.surefire.booter.ForkedBooter   : No active profile set, falling back to 1 default profile: \"default\"\n2026-11-13T05:23:10.087Z  INFO 1310 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 0 (http)\n2026-11-13T05:23:10.098Z  INFO 1310 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]\n2026-11-13T05:23:10.098Z  INFO 1310 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.27]\n2026-11-13T05:23:10.183Z  INFO 1310 --- [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1211 ms\n2026-11-13T05:23:10.885Z  INFO 1310 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 40335 (http) with context path '/'\n2026-11-13T05:23:10.889Z  INFO 1310 --- [           main] o.a.maven.surefire.booter.ForkedBooter   : Started ForkedBooter in 2.378 seconds (process running for 3.808)\n2026-11-13T05:23:11.067Z  INFO 1310 --- [o-auto-1-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'\n2026-11-13T05:23:11.068Z  INFO 1310 --- [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'\n2026-11-13T05:23:11.068Z  INFO 1310 --- [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms\n2026-11-13T05:23:11.105Z  INFO 1310 --- [o-auto-1-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...\n2026-11-13T05:23:11.292Z  INFO 1310 --- [o-auto-1-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@85ba02b\n2026-11-13T05:23:11.293Z  INFO 1310 --- [o-auto-1-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.\n2026-11-13T05:23:11.996Z  INFO 1310 --- [o-auto-1-exec-1] dev.codesomething.lab.RequestLog         : requestId=adf01bfe-b03c-4211-b9a9-63a2ac1567c6 method=POST status=200\n2026-11-13T05:23:12.068Z  INFO 1310 --- [o-auto-1-exec-2] dev.codesomething.lab.RequestLog         : requestId=10342f7c-c197-4d6c-b580-85a2c7aeb3e9 method=DELETE status=204\n2026-11-13T05:23:12.075Z  INFO 1310 --- [o-auto-1-exec-3] dev.codesomething.lab.RequestLog         : requestId=57ca5cda-4149-45e8-a1ac-4505a1cd6859 method=GET status=401\n2026-11-13T05:23:12.302Z  INFO 1310 --- [o-auto-1-exec-4] dev.codesomething.lab.RequestLog         : requestId=d0010cd1-f49a-4895-b389-3c3155d42adc method=POST status=401\n2026-11-13T05:23:12.444Z  INFO 1310 --- [o-auto-1-exec-5] dev.codesomething.lab.RequestLog         : requestId=9cae075e-aa5a-480f-a5dc-305d767ade4b method=POST status=200\n2026-11-13T05:23:12.572Z  INFO 1310 --- [o-auto-1-exec-6] dev.codesomething.lab.RequestLog         : requestId=e509104d-0dc3-407a-8686-ec0909f4ee5b method=POST status=200\n2026-11-13T05:23:12.587Z  INFO 1310 --- [o-auto-1-exec-7] dev.codesomething.lab.RequestLog         : requestId=81dcc8d3-1816-4f2e-b7a3-a10ccd46fb52 method=POST status=201\n2026-11-13T05:23:12.593Z  INFO 1310 --- [o-auto-1-exec-8] dev.codesomething.lab.RequestLog         : requestId=1a1ca943-01e2-42ad-88dc-a03fdceba53b method=GET status=200\n2026-11-13T05:23:12.609Z  INFO 1310 --- [o-auto-1-exec-9] dev.codesomething.lab.RequestLog         : requestId=712daa51-3a0b-4923-9fc4-af8d2c4ba79d method=POST status=400\n2026-11-13T05:23:12.618Z  INFO 1310 --- [-auto-1-exec-10] dev.codesomething.lab.RequestLog         : requestId=1a67cdfc-dba8-405e-82d4-1e77bdcd1549 method=GET status=200\n2026-11-13T05:23:12.670Z  INFO 1310 --- [o-auto-1-exec-1] dev.codesomething.lab.RequestLog         : requestId=3d2d89b0-c6e3-4ef9-b3f8-a7f3419dd054 method=GET status=200\n2026-11-13T05:23:12.806Z  INFO 1310 --- [o-auto-1-exec-2] dev.codesomething.lab.RequestLog         : requestId=117f6d7b-ad4c-4819-8436-bbe96a7de53d method=POST status=200\n2026-11-13T05:23:12.811Z  INFO 1310 --- [o-auto-1-exec-3] dev.codesomething.lab.RequestLog         : requestId=374beecb-4e36-4942-92fd-31f6ba49113f method=GET status=200\n2026-11-13T05:23:12.946Z  INFO 1310 --- [o-auto-1-exec-4] dev.codesomething.lab.RequestLog         : requestId=f9adb914-7e37-41a8-8bcc-0a0122c59038 method=POST status=200\n2026-11-13T05:23:12.953Z  INFO 1310 --- [o-auto-1-exec-5] dev.codesomething.lab.RequestLog         : requestId=dae28bb9-9886-4ebc-aa1f-460f0c8f27f9 method=POST status=403\n2026-11-13T05:23:12.967Z  INFO 1310 --- [o-auto-1-exec-6] dev.codesomething.lab.RequestLog         : requestId=9caf8aec-0ea5-4eaa-839d-77ff832467de method=GET status=403\n2026-11-13T05:23:12.971Z  INFO 1310 --- [           main] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete\n2026-11-13T05:23:12.975Z  INFO 1310 --- [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete\n2026-11-13T05:23:12.977Z  INFO 1310 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...\n2026-11-13T05:23:13.129Z  INFO 1310 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.\n[ERROR] Tests run: 4, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 5.263 s <<< FAILURE! -- in dev.codesomething.lab.BusinessTest\n[ERROR] dev.codesomething.lab.BusinessTest.outsiderCannotReadAnotherPlansTasks -- Time elapsed: 0.143 s <<< FAILURE!\norg.opentest4j.AssertionFailedError: {\"size\":10,\"total\":7,\"page\":0,\"items\":[{\"id\":1,\"title\":\"学习 HTTP\",\"status\":\"todo\",\"assigneeId\":1},{\"id\":2,\"title\":\"复习 SQL\",\"status\":\"done\",\"assigneeId\":2},{\"id\":3,\"title\":\"练习 JDBC\",\"status\":\"todo\",\"assigneeId\":2},{\"id\":4,\"title\":\"阅读 Java\",\"status\":\"done\",\"assigneeId\":1},{\"id\":5,\"title\":\"完成项目\",\"status\":\"todo\",\"assigneeId\":2},{\"id\":9,\"title\":\"O'Reilly\",\"status\":\"done\",\"assigneeId\":2},{\"id\":10,\"title\":\"第二条\",\"status\":\"todo\",\"assigneeId\":1}]} ==> expected: <403> but was: <200>\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)\n\tat org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)\n\tat org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:201)\n\tat org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:152)\n\tat org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:590)\n\tat dev.codesomething.lab.BusinessTest.outsiderCannotReadAnotherPlansTasks(BusinessTest.java:23)\n\n[INFO] \n[INFO] Results:\n[INFO] \n[ERROR] Failures: \n[ERROR]   BusinessTest.outsiderCannotReadAnotherPlansTasks:23 {\"size\":10,\"total\":7,\"page\":0,\"items\":[{\"id\":1,\"title\":\"学习 HTTP\",\"status\":\"todo\",\"assigneeId\":1},{\"id\":2,\"title\":\"复习 SQL\",\"status\":\"done\",\"assigneeId\":2},{\"id\":3,\"title\":\"练习 JDBC\",\"status\":\"todo\",\"assigneeId\":2},{\"id\":4,\"title\":\"阅读 Java\",\"status\":\"done\",\"assigneeId\":1},{\"id\":5,\"title\":\"完成项目\",\"status\":\"todo\",\"assigneeId\":2},{\"id\":9,\"title\":\"O'Reilly\",\"status\":\"done\",\"assigneeId\":2},{\"id\":10,\"title\":\"第二条\",\"status\":\"todo\",\"assigneeId\":1}]} ==> expected: <403> but was: <200>\n[INFO] \n[ERROR] Tests run: 4, Failures: 1, Errors: 0, Skipped: 0\n[INFO] \n[INFO] ------------------------------------------------------------------------\n[INFO] BUILD FAILURE\n[INFO] ------------------------------------------------------------------------\n[INFO] Total time:  9.690 s\n[INFO] Finished at: 2026-11-13T05:23:13Z\n[INFO] ------------------------------------------------------------------------\n[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.6:test (default-test) on project boot-lab: There are test failures.\n[ERROR] \n[ERROR] See /tmp/mutation/target/surefire-reports for the individual test results.\n[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.\n[ERROR] -> [Help 1]\n[ERROR] \n[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.\n[ERROR] Re-run Maven using the -X switch to enable full debug logging.\n[ERROR] \n[ERROR] For more information about the errors and possible solutions, please read the following articles:\n[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException\n"
+    } ],
+    "log" : "\n  .   ____          _            __ _ _\n /\\\\ / ___'_ __ _ _(_)_ __  __ _ \\ \\ \\ \\\n( ( )\\___ | '_ | '_| | '_ \\/ _` | \\ \\ \\ \\\n \\\\/  ___)| |_)| | | | | || (_| |  ) ) ) )\n  '  |____| .__|_| |_|_| |_\\__, | / / / /\n =========|_|==============|___/=/_/_/_/\n\n :: Spring Boot ::                (v4.1.2)\n\n2026-11-13T05:22:46.697Z  INFO 1098 --- [           main] dev.codesomething.lab.Application        : Starting Application v1.0.0 using Java 21.0.13 with PID 1098 (/tmp/project/target/boot-lab.jar started by nobody in /tmp/project)\n2026-11-13T05:22:46.699Z  INFO 1098 --- [           main] dev.codesomething.lab.Application        : No active profile set, falling back to 1 default profile: \"default\"\n2026-11-13T05:22:48.290Z  INFO 1098 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)\n2026-11-13T05:22:48.303Z  INFO 1098 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]\n2026-11-13T05:22:48.303Z  INFO 1098 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.27]\n2026-11-13T05:22:48.403Z  INFO 1098 --- [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1611 ms\n2026-11-13T05:22:49.405Z  INFO 1098 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'\n2026-11-13T05:22:49.470Z  INFO 1098 --- [           main] dev.codesomething.lab.Application        : Started Application in 3.437 seconds (process running for 4.422)\n2026-11-13T05:22:49.507Z  INFO 1098 --- [0.1-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'\n2026-11-13T05:22:49.507Z  INFO 1098 --- [0.1-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'\n2026-11-13T05:22:49.508Z  INFO 1098 --- [0.1-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms\n2026-11-13T05:22:49.597Z  INFO 1098 --- [0.1-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...\n2026-11-13T05:22:49.808Z  INFO 1098 --- [0.1-8080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@55b9960a\n2026-11-13T05:22:49.814Z  INFO 1098 --- [0.1-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.\n2026-11-13T05:22:49.973Z  INFO 1098 --- [0.1-8080-exec-1] dev.codesomething.lab.RequestLog         : requestId=a62905b0-f512-4746-9bc9-c721d3299514 method=GET status=200\n",
+    "finishedAt" : "2026-11-13T05:23:14.913272200Z"
+  }
+}

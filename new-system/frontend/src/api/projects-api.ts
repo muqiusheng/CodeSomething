@@ -1,0 +1,13 @@
+import {learningRequest, type CheckReport} from './learning-api';
+export const projectRequest=<T,>(path:string,body?:unknown)=>learningRequest<T>('/projects'+path,body);
+export type Source={id:string;title:string;url:string;revision:string;license:string;retrievedAt:string;usage:string};
+export type Candidate={kind:'existing'|'adapt'|'generate';title:string;difference:string;minutes:number;gaps:{title:string;state:string;reason:string;route:string}[];route:string};
+export type Candidates={interest:string;profileSnapshotId:string;verifiedCount:number;candidates:Candidate[];sources:Source[];scope:string};
+export type Chapter={id:string;title:string;minutes:number;dependsOn:string[];teaching:string[];requirements:string[];options:string[];starter:Record<string,string>};
+export type Gate={passed:boolean;checks:{name:string;passed:boolean;message?:string;result?:{status:string;report:CheckReport}}[]};
+export type Draft={id:string;interest:string;kind:string;status:string;partial?:string;error?:string;payload?:{plan:{title:string;resource:string;scenario:string};chapters:Chapter[];sources:Source[]};report?:Gate};
+export type Published={id:string;title:string;version:string};
+export type Attempt={id:string;course_id:string;stage_id:string;digest:string;status:string;report:CheckReport|null};
+export type GeneratedCourse=Published & {plan:{resource:string;scenario:string};sources:Source[];chapters:Chapter[];completions:{stage_id:string;digest:string;help:string}[];attempts:Attempt[]};
+export const statuses:Record<string,string>={generating:'正在生成题材方案',draft:'草稿待验证',validating:'正在验证参考与错误变式',ready:'门禁通过，待发布',rejected:'门禁未通过',published:'已发布',failed:'生成失败',interrupted:'服务中断，可恢复',cancelled:'已停止',queued:'等待检查',running:'检查中',passed:'功能通过',business_error:'功能未通过',compile_error:'编译失败',environment_error:'检查环境异常',timed_out:'检查超时'};
+export const active=(status:string)=>['generating','validating','queued','running'].includes(status);

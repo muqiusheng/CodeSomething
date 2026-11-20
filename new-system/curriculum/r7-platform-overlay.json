@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "baseLockSha256": "3b790f7e916890b0fe26b10a8c2c9502d02eda62a5bef03ef1336ab647a2196b",
+  "reason": "R7 registry and new-strategy dispatch; old published course bytes and runner remain unchanged",
+  "files": {
+    "backend/src/main/java/dev/codesomething/boot/BootCourses.java": "89790f1e035852c589bfeabaacf41488c464e3963755c8cf731a7be2698bea1b",
+    "backend/src/main/java/dev/codesomething/boot/BootCheckRunner.java": "e1453ac18b9348c91d042020be4ec822cba418e601ffb77bd72c5900d933cc55",
+    "backend/src/main/java/dev/codesomething/boot/CollaborationRunner.java": "919bddbc7c269df5b18da2408200aab9a4fe687f5b9e4d09884ae5d54ab2415d"
+  }
+}

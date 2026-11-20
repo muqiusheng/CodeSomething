@@ -1,0 +1,174 @@
+{
+  "question": "哪些公开Java后端样例能为项目A之后的小练习与业务项目提供可追溯的教学参考？",
+  "searched_at": "2026-11-12",
+  "providers": [
+    "mcp__codex_apps__search_service_web_run",
+    "Python urllib HTTPS / GitHub REST and raw files"
+  ],
+  "unavailable_providers": [
+    "web.web__run: 404"
+  ],
+  "sources": [
+    {
+      "id": "petclinic-mvc",
+      "url": "https://github.com/spring-projects/spring-petclinic",
+      "publisher": "spring-projects",
+      "source_type": "primary"
+    },
+    {
+      "id": "petclinic-rest",
+      "url": "https://github.com/spring-petclinic/spring-petclinic-rest",
+      "publisher": "spring-petclinic",
+      "source_type": "primary"
+    },
+    {
+      "id": "jdbc-customers",
+      "url": "https://github.com/spring-guides/gs-relational-data-access",
+      "publisher": "spring-guides",
+      "source_type": "primary"
+    }
+  ],
+  "claims": [
+    {
+      "id": "petclinic-mvc-license",
+      "text": "spring-projects/spring-petclinic固定提交500158f732419217507c7656904b8e6aa1bcc0d6的根LICENSE为Apache 2.0。",
+      "kind": "sourced",
+      "confidence": "low",
+      "source_ids": [
+        "petclinic-mvc"
+      ],
+      "supporting_source_ids": [
+        "petclinic-mvc"
+      ],
+      "contradicting_source_ids": [],
+      "independent_source_count": 1,
+      "conflict": false
+    },
+    {
+      "id": "petclinic-rest-license",
+      "text": "spring-petclinic/spring-petclinic-rest固定提交a4cb2c86272265c2916023074a771463f7114104的根LICENSE为Apache 2.0。",
+      "kind": "sourced",
+      "confidence": "low",
+      "source_ids": [
+        "petclinic-rest"
+      ],
+      "supporting_source_ids": [
+        "petclinic-rest"
+      ],
+      "contradicting_source_ids": [],
+      "independent_source_count": 1,
+      "conflict": false
+    },
+    {
+      "id": "jdbc-customers-license",
+      "text": "spring-guides/gs-relational-data-access固定提交39ee6416cdc511d5d92cdeb63b2b73129013888e的根LICENSE为Apache 2.0。",
+      "kind": "sourced",
+      "confidence": "low",
+      "source_ids": [
+        "jdbc-customers"
+      ],
+      "supporting_source_ids": [
+        "jdbc-customers"
+      ],
+      "contradicting_source_ids": [],
+      "independent_source_count": 1,
+      "conflict": false
+    },
+    {
+      "id": "petclinic-mvc-scope",
+      "text": "Petclinic固定README说明主线采用Spring Boot和Thymeleaf；已读源码包含Owner控制器与仓库。",
+      "kind": "sourced",
+      "confidence": "low",
+      "source_ids": [
+        "petclinic-mvc"
+      ],
+      "supporting_source_ids": [
+        "petclinic-mvc"
+      ],
+      "contradicting_source_ids": [],
+      "independent_source_count": 1,
+      "conflict": false
+    },
+    {
+      "id": "petclinic-mvc-adaptation",
+      "text": "服务端页面、关系实体和分页检索的业务参考；改编时需重写REST契约并缩小范围。",
+      "kind": "inference",
+      "confidence": "low",
+      "source_ids": [
+        "petclinic-mvc"
+      ],
+      "supporting_source_ids": [
+        "petclinic-mvc"
+      ],
+      "contradicting_source_ids": [],
+      "independent_source_count": 1,
+      "conflict": false
+    },
+    {
+      "id": "petclinic-rest-scope",
+      "text": "Petclinic REST固定README说明只提供REST后端，已读服务代码包含事务注解。",
+      "kind": "sourced",
+      "confidence": "low",
+      "source_ids": [
+        "petclinic-rest"
+      ],
+      "supporting_source_ids": [
+        "petclinic-rest"
+      ],
+      "contradicting_source_ids": [],
+      "independent_source_count": 1,
+      "conflict": false
+    },
+    {
+      "id": "petclinic-rest-adaptation",
+      "text": "多实体REST业务与服务层事务参考；前端需要另行实现。",
+      "kind": "inference",
+      "confidence": "low",
+      "source_ids": [
+        "petclinic-rest"
+      ],
+      "supporting_source_ids": [
+        "petclinic-rest"
+      ],
+      "contradicting_source_ids": [],
+      "independent_source_count": 1,
+      "conflict": false
+    },
+    {
+      "id": "jdbc-customers-scope",
+      "text": "JDBC固定源码使用JdbcTemplate和参数化批量写入，并在启动时重建customers表。",
+      "kind": "sourced",
+      "confidence": "low",
+      "source_ids": [
+        "jdbc-customers"
+      ],
+      "supporting_source_ids": [
+        "jdbc-customers"
+      ],
+      "contradicting_source_ids": [],
+      "independent_source_count": 1,
+      "conflict": false
+    },
+    {
+      "id": "jdbc-customers-adaptation",
+      "text": "适合从参数绑定和结果映射改编小练习，再加入HTTP契约与MySQL持久化。",
+      "kind": "inference",
+      "confidence": "low",
+      "source_ids": [
+        "jdbc-customers"
+      ],
+      "supporting_source_ids": [
+        "jdbc-customers"
+      ],
+      "contradicting_source_ids": [],
+      "independent_source_count": 1,
+      "conflict": false
+    }
+  ],
+  "gaps": [
+    "首轮集中在Spring生态，Petclinic两分支同源；不据此推断跨生态共识。",
+    "未执行上游构建、运行和测试有效性检查；实际发布由R6.3—R6.4承担。",
+    "尚未读取学习者当前画像或兴趣；匹配排序在R6.2实现。",
+    "root LICENSE事实以单一原始仓库为依据，confidence low表示独立来源数为1；许可适用范围见catalog。"
+  ]
+}

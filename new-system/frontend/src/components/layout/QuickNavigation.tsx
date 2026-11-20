@@ -1,0 +1,12 @@
+// shadcn/ui Command composition, adapted to the project's CSS. See command.source.json.
+import {useState,useEffect,useRef} from 'react';
+import {useNavigate,useLocation} from 'react-router-dom';
+import {Command} from 'cmdk';
+import {Search,ArrowUpRight,BookOpen,Home,Folder,Compass,RotateCcw,Trophy,Settings,UserRound} from 'lucide-react';
+import {Modal} from '../ui/modal';
+const destinations=[['任务数据实验室','/projects/sql-foundations',BookOpen,'mysql sql 数据库 查询'],['继续学习','/learn',Home,'home'],['学习路径','/path',Compass,'path'],['后端入门实验室','/projects/backend-foundations',BookOpen,'json http 基础 章节'],['项目','/projects',Folder,'projects'],['复习','/reviews',RotateCcw,'review'],['作品','/portfolio',Trophy,'portfolio'],['学习画像','/profile',UserRound,'profile'],['设置','/settings',Settings,'settings']] as const;
+export function QuickNavigation(){const [open,setOpen]=useState(false);const navigate=useNavigate();const location=useLocation();const trigger=useRef<HTMLButtonElement>(null);
+ useEffect(()=>{function key(e:KeyboardEvent){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();setOpen(previous=>!previous)}}document.addEventListener('keydown',key);return()=>document.removeEventListener('keydown',key)},[]);
+ useEffect(()=>setOpen(false),[location.pathname]);
+ return <><button className="quick-trigger" ref={trigger} onClick={()=>setOpen(true)} aria-label="快捷导航"><Search size={14} aria-hidden="true"/><span>快速前往</span><kbd>Ctrl K</kbd></button><Modal open={open} onOpenChange={value=>{setOpen(value);if(!value)requestAnimationFrame(()=>trigger.current?.focus())}} title="快速前往" description="输入页面名称，或用方向键选择后按 Enter。" className="command-modal"><Command label="页面导航" loop><div className="command-input"><Search size={17} aria-hidden="true"/><Command.Input aria-label="搜索页面" placeholder="搜索页面或课程…" autoFocus/></div><Command.List><Command.Empty>没有找到匹配页面</Command.Empty><Command.Group heading="学习空间">{destinations.map(([name,path,Icon,keyword])=><Command.Item key={path} value={`${name} ${keyword}`} onSelect={()=>{setOpen(false);navigate(path);requestAnimationFrame(()=>document.getElementById('main')?.focus())}}><Icon size={17} aria-hidden="true"/><span>{name}</span><ArrowUpRight size={14} aria-hidden="true"/></Command.Item>)}</Command.Group></Command.List><div className="command-footer"><span>↑ ↓ 选择</span><span>Enter 前往</span><span>Esc 关闭</span></div></Command></Modal></>}
+

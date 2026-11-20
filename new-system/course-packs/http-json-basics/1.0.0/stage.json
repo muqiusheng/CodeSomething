@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "courseId": "http-json-basics",
+  "courseVersion": "1.0.0",
+  "stageId": "json-task-response",
+  "status": "published",
+  "title": "让接口返回 JSON",
+  "estimatedMinutes": 45,
+  "prerequisites": ["Java变量、条件分支、字符串与main方法"],
+  "allowedFiles": ["TaskServer.java"],
+  "maxFileBytes": 65536,
+  "teaching": [
+    {"title":"请求如何到达接口","body":"浏览器或接口工具是客户端，运行中的Java程序是服务端。客户端发送请求，服务端返回响应。GET /api/tasks/1中，GET是请求方法，/api/tasks/1是路径；1表示要查询的任务编号。localhost:8080指向你电脑上监听8080端口的练习程序。网页平台与练习程序是两个独立服务。"},
+    {"title":"读懂响应的三个部分","body":"响应包含状态码、响应头和响应体。200表示本次请求成功；404表示没有找到目标资源。Content-Type: application/json说明响应体按JSON解释。状态码与JSON字段要分别检查：返回200不保证业务字段正确；返回404也可以用JSON说明失败原因。"},
+    {"title":"用JSON表达任务","body":"JSON对象用花括号包围，字段用逗号分隔，键与值用冒号连接。键和字符串使用双引号；数字和布尔值不加双引号。id:1表达编号，title表达文字，completed:false表达未完成。字符串\"false\"与布尔值false类型不同，前端不能把它们当成同一个值。"},
+    {"title":"从请求到Java分支","body":"骨架中的HttpServer接收请求，getRequestURI().getPath()取得路径。if分支生成任务数据，else分支生成未找到说明。sendResponseHeaders写入状态码和字节长度，响应体通过输出流发送。先理解分支、status和body的关系，本关不要求掌握服务器底层实现。修改代码后要停止旧进程并重新运行，刷新网页不会重新编译Java。"}
+  ],
+  "task": "复制完整骨架为TaskServer.java，在IDEA选择JDK21并运行main。修改两个TODO，让已有任务返回正确类型，不存在的任务返回正确状态码。此关只需JDK，不需要Maven、数据库或Spring Boot。",
+  "runInstructions": [
+    "新建一个独立练习目录，将下载的TaskServer.java保存进去；不要直接编辑平台课程包。",
+    "IDEA打开该目录，项目SDK设为21。点击main旁的运行按钮；或在该目录执行java --add-modules jdk.httpserver TaskServer.java。",
+    "打开http://localhost:8080/api/tasks/1查看任务，再访问/api/tasks/2对比。可用curl.exe -i http://localhost:8080/api/tasks/2查看状态码与响应头。",
+    "修改后停止并重启程序。8080被占用时先停止旧练习进程。保存代码后，在平台输入练习目录并预览提交范围。"
+  ],
+  "requirements": [
+    "GET /api/tasks/1返回200，Content-Type包含application/json。",
+    "成功响应是JSON对象，id是数字1，title是字符串“学习 HTTP”。",
+    "completed是布尔值false，不能是字符串\"false\"、数字0或null。",
+    "GET /api/tasks/2返回404，响应是包含非空message字符串的JSON对象。"
+  ],
+  "understanding": [
+    {"id":"boolean-transfer","prompt":"另一个接口返回{\"archived\":\"false\"}。要求archived表达是否归档，应该如何修改？","options":["改成布尔值false","保留字符串\"false\"","改成数字0"]},
+    {"id":"not-found-transfer","prompt":"查询/api/books/9，编号9的书不存在。应该用哪个状态码？","options":["200","404","500"]}
+  ],
+  "completionRule": "同一课程版本的有效代码快照功能通过，并完成迁移理解题，才记录关卡完成。浏览示例、保存快照和排队均不等于通过。",
+  "sources": [
+    {"title":"MDN HTTP Overview","url":"https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview","checkedAt":"2026-11-11"},
+    {"title":"RFC 8259 JSON","url":"https://www.rfc-editor.org/rfc/rfc8259","checkedAt":"2026-11-11"}
+  ]
+}

@@ -1,0 +1,349 @@
+{
+  "schemaVersion": 3,
+  "courseId": "task-manager",
+  "courseVersion": "1.0.0",
+  "status": "published",
+  "title": "个人任务管理",
+  "subtitle": "六关，从读取到独立迁移",
+  "description": "在真实IDE编码，用隔离检查和新情境理解验证每一关。",
+  "outcomes": [
+    "可运行的Maven工程",
+    "真实接口与数据库操作",
+    "版本绑定的功能与理解证据"
+  ],
+  "prerequisites": [
+    "HTTP三个代码关、SQL书签迁移、Boot JDBC双结果"
+  ],
+  "chapters": [
+    {
+      "stageId": "a-read",
+      "title": "读取任务",
+      "minutes": 50,
+      "goal": "查询列表和单条任务，区分空列表与不存在的编号。",
+      "concepts": [
+        {
+          "title": "集合与资源",
+          "body": "GET /api/tasks返回数组，空集合为[]与200。GET /api/tasks/999访问单个不存在资源，返回404与非空message。空集合不等于请求出错。"
+        },
+        {
+          "title": "映射与持久化",
+          "body": "SQL的completed通常保存0/1，ResultSet.getBoolean映射到Java布尔，再序列化为JSON布尔。id是数值，title是字符串。"
+        }
+      ],
+      "task": "补齐分层读取、200/404和字段类型，保留数据库原始记录。",
+      "steps": [
+        "先预测请求的状态、字段和数据变化，再阅读本章示例。",
+        "下载本关骨架文件，按相对路径在IDEA建立工程；保持固定pom.xml。数据库运行配置见下方环境说明。",
+        "实现任务后运行Application，按验收清单逐条请求，记录实际结果。",
+        "在网页预览文件范围并配对，保存不可变快照，提交功能检查。",
+        "根据报告修复，再完成两道新情境理解题；正式双结果由服务端保存。"
+      ],
+      "requirements": [
+        "补齐分层读取、200/404和字段类型，保留数据库原始记录。",
+        "修改后重新保存快照；旧报告始终对应原摘要。",
+        "环境失败可重试，不计为知识错误。"
+      ],
+      "pitfall": "SQL的completed通常保存0/1，ResultSet.getBoolean映射到Java布尔，再序列化为JSON布尔。id是数值，title是字符串。",
+      "example": "SELECT id,title,completed FROM tasks WHERE id=?;\nPOST /api/tasks\n{\"title\":\"O'Reilly\",\"completed\":false}",
+      "formalQuestions": [
+        {
+          "id": "apply",
+          "prompt": "空数据库的列表查询应返回什么？",
+          "options": [
+            "404",
+            "200与空数组",
+            "500"
+          ]
+        },
+        {
+          "id": "transfer",
+          "prompt": "查询不存在的单条任务应返回什么？",
+          "options": [
+            "200与第一条任务",
+            "200与空字符串",
+            "404与错误JSON"
+          ]
+        }
+      ],
+      "formalAnswer": {
+        "apply": 1,
+        "transfer": 2
+      }
+    },
+    {
+      "stageId": "a-create",
+      "title": "新增与生成编号",
+      "minutes": 50,
+      "goal": "让数据库生成编号，返回201和可再次查询的新任务。",
+      "concepts": [
+        {
+          "title": "生成主键",
+          "body": "INSERT不传id，让AUTO_INCREMENT生成；GeneratedKeyHolder取回同一连接的生成键。不能用列表长度或固定1充当新编号。"
+        },
+        {
+          "title": "写入与响应",
+          "body": "201表示资源已创建。返回id/title/completed后，应再次GET核对数据库状态；仅返回成功文案不能证明已保存。"
+        }
+      ],
+      "task": "实现POST /api/tasks，连续新增编号不同，引号标题完整保存。",
+      "steps": [
+        "先预测请求的状态、字段和数据变化，再阅读本章示例。",
+        "下载本关骨架文件，按相对路径在IDEA建立工程；保持固定pom.xml。数据库运行配置见下方环境说明。",
+        "实现任务后运行Application，按验收清单逐条请求，记录实际结果。",
+        "在网页预览文件范围并配对，保存不可变快照，提交功能检查。",
+        "根据报告修复，再完成两道新情境理解题；正式双结果由服务端保存。"
+      ],
+      "requirements": [
+        "实现POST /api/tasks，连续新增编号不同，引号标题完整保存。",
+        "修改后重新保存快照；旧报告始终对应原摘要。",
+        "环境失败可重试，不计为知识错误。"
+      ],
+      "pitfall": "201表示资源已创建。返回id/title/completed后，应再次GET核对数据库状态；仅返回成功文案不能证明已保存。",
+      "example": "SELECT id,title,completed FROM tasks WHERE id=?;\nPOST /api/tasks\n{\"title\":\"O'Reilly\",\"completed\":false}",
+      "formalQuestions": [
+        {
+          "id": "apply",
+          "prompt": "连续新增两个任务的id应怎样？",
+          "options": [
+            "由数据库分别生成且不同",
+            "都设为1",
+            "用title长度"
+          ]
+        },
+        {
+          "id": "transfer",
+          "prompt": "返回201后如何验证持久化？",
+          "options": [
+            "只看控制台成功文字",
+            "GET新id并核对数据库读取",
+            "刷新课程页面"
+          ]
+        }
+      ],
+      "formalAnswer": {
+        "apply": 0,
+        "transfer": 1
+      }
+    },
+    {
+      "stageId": "a-update-delete",
+      "title": "修改、删除与404",
+      "minutes": 55,
+      "goal": "只修改或删除指定编号，保留其他任务。",
+      "concepts": [
+        {
+          "title": "更新目标",
+          "body": "PUT /api/tasks/{id}同时更新title与completed。WHERE id=?限定目标；未知id应返回404，不能把整个任务表改掉。"
+        },
+        {
+          "title": "删除语义",
+          "body": "DELETE成功返回204且无响应体；再次删除已不存在的编号返回404。删除前后查询其他id验证范围。"
+        }
+      ],
+      "task": "实现PUT和DELETE，核对目标、204空体、重复删除和其他记录不变。",
+      "steps": [
+        "先预测请求的状态、字段和数据变化，再阅读本章示例。",
+        "下载本关骨架文件，按相对路径在IDEA建立工程；保持固定pom.xml。数据库运行配置见下方环境说明。",
+        "实现任务后运行Application，按验收清单逐条请求，记录实际结果。",
+        "在网页预览文件范围并配对，保存不可变快照，提交功能检查。",
+        "根据报告修复，再完成两道新情境理解题；正式双结果由服务端保存。"
+      ],
+      "requirements": [
+        "实现PUT和DELETE，核对目标、204空体、重复删除和其他记录不变。",
+        "修改后重新保存快照；旧报告始终对应原摘要。",
+        "环境失败可重试，不计为知识错误。"
+      ],
+      "pitfall": "DELETE成功返回204且无响应体；再次删除已不存在的编号返回404。删除前后查询其他id验证范围。",
+      "example": "SELECT id,title,completed FROM tasks WHERE id=?;\nPOST /api/tasks\n{\"title\":\"O'Reilly\",\"completed\":false}",
+      "formalQuestions": [
+        {
+          "id": "apply",
+          "prompt": "漏写UPDATE的WHERE会怎样？",
+          "options": [
+            "自动只改第一条",
+            "可能修改整张表",
+            "只更新最后一条"
+          ]
+        },
+        {
+          "id": "transfer",
+          "prompt": "删除成功后再次删除同一id应返回什么？",
+          "options": [
+            "按本项目约定404",
+            "201",
+            "始终返回任务1"
+          ]
+        }
+      ],
+      "formalAnswer": {
+        "apply": 1,
+        "transfer": 0
+      }
+    },
+    {
+      "stageId": "a-validation",
+      "title": "校验与统一错误",
+      "minutes": 55,
+      "goal": "在写库前拒绝无效输入，保留一致的错误JSON。",
+      "concepts": [
+        {
+          "title": "业务校验",
+          "body": "title先strip，长度1—100个字符；completed必须为JSON布尔且不能缺失。输入错误返回400，未找到资源返回404。校验应先于写入。"
+        },
+        {
+          "title": "集中处理异常",
+          "body": "RestControllerAdvice把错误转换为包含非空message的JSON。JSON语法错误和参数类型错误也返回400，避免向用户暴露堆栈和数据库细节。"
+        }
+      ],
+      "task": "拒绝空白、超长、缺字段、字符串布尔与非法JSON，并核对失败前后记录不变。",
+      "steps": [
+        "先预测请求的状态、字段和数据变化，再阅读本章示例。",
+        "下载本关骨架文件，按相对路径在IDEA建立工程；保持固定pom.xml。数据库运行配置见下方环境说明。",
+        "实现任务后运行Application，按验收清单逐条请求，记录实际结果。",
+        "在网页预览文件范围并配对，保存不可变快照，提交功能检查。",
+        "根据报告修复，再完成两道新情境理解题；正式双结果由服务端保存。"
+      ],
+      "requirements": [
+        "拒绝空白、超长、缺字段、字符串布尔与非法JSON，并核对失败前后记录不变。",
+        "修改后重新保存快照；旧报告始终对应原摘要。",
+        "环境失败可重试，不计为知识错误。"
+      ],
+      "pitfall": "RestControllerAdvice把错误转换为包含非空message的JSON。JSON语法错误和参数类型错误也返回400，避免向用户暴露堆栈和数据库细节。",
+      "example": "SELECT id,title,completed FROM tasks WHERE id=?;\nPOST /api/tasks\n{\"title\":\"O'Reilly\",\"completed\":false}",
+      "formalQuestions": [
+        {
+          "id": "apply",
+          "prompt": "校验失败的请求应怎样影响数据库？",
+          "options": [
+            "先写入再返回400",
+            "完全不写入",
+            "删除原记录"
+          ]
+        },
+        {
+          "id": "transfer",
+          "prompt": "合法标题前后有空格，保存时如何处理？",
+          "options": [
+            "保留全部空格",
+            "拒绝所有空格",
+            "去首尾空白后校验和保存"
+          ]
+        }
+      ],
+      "formalAnswer": {
+        "apply": 1,
+        "transfer": 2
+      }
+    },
+    {
+      "stageId": "a-pagination",
+      "title": "稳定分页与筛选",
+      "minutes": 55,
+      "goal": "实现可预测的分页结构和一致的筛选总数。",
+      "concepts": [
+        {
+          "title": "页码与边界",
+          "body": "page从0开始，size在1—50之间；非法值400，超出末页返回items空数组。offset用long计算，避免大page乘法溢出。"
+        },
+        {
+          "title": "稳定排序与总数",
+          "body": "先按completed筛选，再按唯一id升序分页。total是相同筛选下的全部条数，不能用当前页长度代替。"
+        }
+      ],
+      "task": "GET /api/tasks?page=0&size=2&completed=false返回items/page/size/total，稳定跨页，非法参数400。",
+      "steps": [
+        "先预测请求的状态、字段和数据变化，再阅读本章示例。",
+        "下载本关骨架文件，按相对路径在IDEA建立工程；保持固定pom.xml。数据库运行配置见下方环境说明。",
+        "实现任务后运行Application，按验收清单逐条请求，记录实际结果。",
+        "在网页预览文件范围并配对，保存不可变快照，提交功能检查。",
+        "根据报告修复，再完成两道新情境理解题；正式双结果由服务端保存。"
+      ],
+      "requirements": [
+        "GET /api/tasks?page=0&size=2&completed=false返回items/page/size/total，稳定跨页，非法参数400。",
+        "修改后重新保存快照；旧报告始终对应原摘要。",
+        "环境失败可重试，不计为知识错误。"
+      ],
+      "pitfall": "先按completed筛选，再按唯一id升序分页。total是相同筛选下的全部条数，不能用当前页长度代替。",
+      "example": "SELECT id,title,completed FROM tasks WHERE id=?;\nPOST /api/tasks\n{\"title\":\"O'Reilly\",\"completed\":false}",
+      "formalQuestions": [
+        {
+          "id": "apply",
+          "prompt": "筛选后total应统计什么？",
+          "options": [
+            "当前页长度",
+            "全部任务数且忽略筛选",
+            "相同筛选的全部匹配记录"
+          ]
+        },
+        {
+          "id": "transfer",
+          "prompt": "两行completed相同时如何稳定分页？",
+          "options": [
+            "用唯一id作为排序依据",
+            "依赖偶然返回顺序",
+            "每次随机排序"
+          ]
+        }
+      ],
+      "formalAnswer": {
+        "apply": 2,
+        "transfer": 0
+      }
+    },
+    {
+      "stageId": "a-transfer",
+      "title": "独立迁移：书签接口",
+      "minutes": 90,
+      "goal": "从最小工程实现书签CRUD、校验、分页和能检出错误的自动化测试。",
+      "concepts": [
+        {
+          "title": "迁移契约",
+          "body": "把资源路径和存储表从tasks迁移到bookmarks，本关使用title/saved字段，协调DTO、SQL与JSON映射。任务与书签的数据必须隔离，接口仍遵守201/204/400/404和分页规则。"
+        },
+        {
+          "title": "测试与讲解",
+          "body": "编写JUnit测试覆盖空白标题拒绝和首尾空格处理。检查器会把title校验故意改错再运行你的测试，只有能检出该错误才通过。附RUN.md说明环境、运行命令及请求→DTO→Service→SQL→响应的数据流。"
+        }
+      ],
+      "task": "独立完成/api/bookmarks全套接口，提交TitleTest.java与RUN.md；单元测试应能识别空白标题被误接收的变式。",
+      "steps": [
+        "先预测请求的状态、字段和数据变化，再阅读本章示例。",
+        "下载本关骨架文件，按相对路径在IDEA建立工程；保持固定pom.xml。数据库运行配置见下方环境说明。",
+        "实现任务后运行Application，按验收清单逐条请求，记录实际结果。",
+        "在网页预览文件范围并配对，保存不可变快照，提交功能检查。",
+        "根据报告修复，再完成两道新情境理解题；正式双结果由服务端保存。"
+      ],
+      "requirements": [
+        "独立完成/api/bookmarks全套接口，提交TitleTest.java与RUN.md；单元测试应能识别空白标题被误接收的变式。",
+        "修改后重新保存快照；旧报告始终对应原摘要。",
+        "环境失败可重试，不计为知识错误。"
+      ],
+      "pitfall": "编写JUnit测试覆盖空白标题拒绝和首尾空格处理。检查器会把title校验故意改错再运行你的测试，只有能检出该错误才通过。附RUN.md说明环境、运行命令及请求→DTO→Service→SQL→响应的数据流。",
+      "example": "SELECT id,title,completed FROM tasks WHERE id=?;\nPOST /api/tasks\n{\"title\":\"O'Reilly\",\"completed\":false}",
+      "formalQuestions": [
+        {
+          "id": "apply",
+          "prompt": "只改URL不改存储表会怎样？",
+          "options": [
+            "自动隔离数据",
+            "可能把书签写进任务表",
+            "框架自动建新表"
+          ]
+        },
+        {
+          "id": "transfer",
+          "prompt": "测试只断言true能证明校验有效吗？",
+          "options": [
+            "能",
+            "能，只要测试是绿色",
+            "不能，需触发实际校验并识别故意错误"
+          ]
+        }
+      ],
+      "formalAnswer": {
+        "apply": 1,
+        "transfer": 2
+      }
+    }
+  ]
+}

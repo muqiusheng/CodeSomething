@@ -1,0 +1,9 @@
+# Course snapshots and release gates compare the original bytes, including line endings.
+/new-system/course-packs/** -text
+/new-system/curriculum/** -text
+/new-system/backend/src/** -text
+/new-system/research/** -text
+/new-system/docs/acceptance/R3.4/strategies/** -text
+/new-system/docs/acceptance/R7/strategies-final/** -text
+/new-system/tooling/deploy-r7.ps1 -text
+/new-system/tooling/new-boot-workspace.ps1 -text

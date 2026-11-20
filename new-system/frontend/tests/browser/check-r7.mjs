@@ -1,0 +1,33 @@
+import {spawnSync} from 'node:child_process';
+import fs from 'node:fs';import path from 'node:path';
+const bin=process.env.CS_BROWSER_BIN;if(!bin)throw Error('Activate task browser runtime and set CS_BROWSER_BIN.');
+const out=path.resolve('new-system/docs/acceptance/R7'),session='cs-r7-browser-final',report={checks:[],layouts:[],audits:[]};
+fs.mkdirSync(out,{recursive:true});
+function run(...args){const r=spawnSync(bin,['--session',session,...args],{encoding:'utf8',windowsHide:true,timeout:35000});if(r.status!==0)throw Error(args[0]+': '+r.stdout+r.stderr);return r.stdout.trim()}
+function ev(input){const r=spawnSync(bin,['--session',session,'eval','--stdin'],{input,encoding:'utf8',windowsHide:true,timeout:35000});if(r.status!==0)throw Error(r.stdout+r.stderr);return JSON.parse(r.stdout)}
+function check(pass,name){report.checks.push({pass:!!pass,name});if(!pass)throw Error(name)}
+const click=name=>run('find','role','button','click','--name',name,'--exact'),fill=(name,value)=>run('find','label',name,'fill',value),wait=text=>run('wait','--text',text),text=()=>ev('document.querySelector("main").innerText');
+function layout(label,themes=false){for(const mode of themes?['light','dark']:['light']){if(themes&&ev('document.documentElement.dataset.theme')!==mode)click(mode==='light'?'切换到浅色模式':'切换到深色模式');for(const width of [320,375,768,1024,1440]){run('set','viewport',String(width),'1000');const pass=ev('document.documentElement.scrollWidth<=innerWidth+1');report.layouts.push({label,mode,width,pass});check(pass,label+' '+mode+' '+width+' no overflow')}run('screenshot',path.join(out,label+'-'+mode+'.png'));const audit=JSON.parse(run('a11y','--tags','wcag2a,wcag2aa','--json'));fs.writeFileSync(path.join(out,'axe-'+label+'-'+mode+'.json'),JSON.stringify(audit,null,2));report.audits.push({label,mode,counts:audit.data.counts});check(audit.data.counts.violations===0,label+' '+mode+' axe has no violations')}}
+function login(user){fill('账号',user);fill('密码','Learn-2026!');click('登录');wait('登录成功');check(text().includes(user+' · '),'Authenticated identity '+user)}
+try{
+ run('open','http://127.0.0.1:5197/');run('press','Tab');check(ev('document.activeElement.textContent')==='跳到主要内容','Skip link is first keyboard target');
+ fill('账号','alice');fill('密码','wrong');click('登录');wait('账号或密码不正确');check(ev('document.activeElement.id')==='feedback','Login error receives focus');
+ layout('business-login');login('alice');wait('共5条');check(text().includes('Java学习计划'),'Real plan data loaded');
+ run('select','#status','todo');click('查询任务');wait('共3条');check(ev('document.querySelector("#tasks").innerText').includes('1 · 学习 HTTP'),'Status filter shows known first item');click('下一页');wait('第2页');check(ev('document.querySelector("#tasks").innerText').includes('5 · 完成项目'),'Second page stable item');
+ fill('新计划名称','R7 <img src=x onerror=alert(1)>');click('创建计划');wait('计划已创建');const plan=ev('document.querySelector("#plan-id").value');check(Number(plan)>2,'New plan database id');check(ev('document.querySelector("#plans img")===null'),'Untrusted title is rendered as text');
+ fill('任务清单','1|必须回滚\n3|不是成员');click('分配任务');wait('被分配者不是计划成员');click('查询任务');wait('共0条');check(text().includes('共0条'),'Failed second item leaves no task');
+ fill('任务清单','1|第一条\n1|第二条');click('分配任务');wait('成功分配2条');check(text().includes('共2条'),'Valid batch persisted');
+ const taskName=ev('document.querySelector("#tasks button").textContent');click(taskName);wait('任务已完成');check(text().includes('共1条'),'Completed task leaves todo filter');run('select','#status','all');click('查询任务');wait('共2条');check(ev('document.querySelector("#tasks").innerText').includes('已完成'),'Assignee can complete task');
+ layout('business-owner');click('退出登录');wait('已退出');login('bob');check(!ev('document.querySelector("#tasks").innerText').includes('第一条'),'Account switch clears previous users tasks');
+ fill('计划编号',plan);click('查询任务');wait('你不是这个计划的成员');check(text().includes('403'),'Cross-plan read forbidden in UI');fill('计划编号','1');fill('任务清单','2|不允许');click('分配任务');wait('只有计划负责人');check(text().includes('403'),'Member cannot allocate tasks');click('查看管理员审计');wait('仅管理员');check(text().includes('403'),'Member cannot read audit');
+ click('退出登录');wait('已退出');login('eve');fill('计划编号','1');click('查询任务');wait('你不是这个计划的成员');check(text().includes('403'),'Outsider blocked in UI');click('退出登录');wait('已退出');login('admin');click('查看管理员审计');wait('已读取审计记录');check(ev('document.querySelector("#audit-result").innerText').includes('CREATE_TASK'),'Admin sees persisted audit');
+ run('open','http://127.0.0.1:5179/projects');wait('项目 B');run('find','role','link','click','--name','打开学习计划与任务协作','--exact');wait('章节目录');check(ev('document.querySelectorAll(".chapter-catalog-row").length')===8,'Published project B reachable from real catalog');layout('course-catalog',true);
+ run('open','http://127.0.0.1:5179/learn/collaboration/1.0/b-deploy?tab='+encodeURIComponent('任务'));wait('项目B运行与前端演示');check(text().includes('deploy-r7.ps1'),'Task exposes runnable deployment command');check(!text().includes('仅复制TaskServer.java'),'Correct multi-file scope');layout('course-deploy',true);
+ const {binding,submission,job}=JSON.parse(fs.readFileSync('new-system/runtime/r7-browser-binding.json','utf8'));
+ const response=await fetch('http://127.0.0.1:5189/api/v1/ide-handoffs',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+binding.token},body:JSON.stringify({bindingId:binding.id,jobId:job.id})});check(response.status===200,'Actual IDE report handoff ticket');const ticket=await response.json();
+ run('open','http://127.0.0.1:5179/learn/collaboration/1.0/b-login#ide-handoff='+ticket.code);wait('登录与可撤销会话');run('find','role','tab','click','--name','检查报告','--exact');wait('正式理解验证');check(text().includes('本关已达标'),'Real double-result report opens from IDE handoff');layout('course-report',true);
+ run('open','http://127.0.0.1:5179/profile');wait('学习计划与任务协作');check(text().includes('27 个关卡')||text().includes('/ 27'),'R7 knowledge included in actual profile');
+ run('open','http://127.0.0.1:5179/learn/collaboration/1.0/b-transaction');wait('批量分配与事务回滚');run('set','viewport','768','1000');ev('document.documentElement.style.zoom="2"');check(ev('document.documentElement.scrollWidth<=innerWidth+1'),'200 percent zoom has no page overflow');ev('document.documentElement.style.zoom=""');
+ report.finishedAt=new Date().toISOString();
+}finally{fs.writeFileSync(path.join(out,'browser.json'),JSON.stringify(report,null,2));run('close')}
+console.log('R7 browser checks: '+report.checks.length+', layouts: '+report.layouts.length+', audits: '+report.audits.length);

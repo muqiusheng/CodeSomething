@@ -1,0 +1,10 @@
+CREATE TABLE users(id BIGINT PRIMARY KEY,username VARCHAR(80) UNIQUE NOT NULL,salt CHAR(32) NOT NULL,password_hash CHAR(64) NOT NULL,role VARCHAR(10) NOT NULL);
+INSERT INTO users VALUES(1,'alice','00112233445566778899aabbccddeeff','2f266d40ede9ceccd308c5bd953da475b783859f8687ac8fa7ca2e52999845d2','USER'),(2,'bob','00112233445566778899aabbccddeeff','2f266d40ede9ceccd308c5bd953da475b783859f8687ac8fa7ca2e52999845d2','USER'),(3,'eve','00112233445566778899aabbccddeeff','2f266d40ede9ceccd308c5bd953da475b783859f8687ac8fa7ca2e52999845d2','USER'),(4,'admin','00112233445566778899aabbccddeeff','2f266d40ede9ceccd308c5bd953da475b783859f8687ac8fa7ca2e52999845d2','ADMIN');
+CREATE TABLE sessions(token_hash CHAR(64) PRIMARY KEY,user_id BIGINT NOT NULL,expires_at BIGINT NOT NULL,FOREIGN KEY(user_id) REFERENCES users(id));
+CREATE TABLE plans(id BIGINT PRIMARY KEY AUTO_INCREMENT,title VARCHAR(100) NOT NULL,owner_id BIGINT NOT NULL,FOREIGN KEY(owner_id) REFERENCES users(id));
+CREATE TABLE memberships(plan_id BIGINT NOT NULL,user_id BIGINT NOT NULL,PRIMARY KEY(plan_id,user_id),FOREIGN KEY(plan_id) REFERENCES plans(id),FOREIGN KEY(user_id) REFERENCES users(id));
+CREATE TABLE plan_tasks(id BIGINT PRIMARY KEY AUTO_INCREMENT,plan_id BIGINT NOT NULL,title VARCHAR(100) NOT NULL,status VARCHAR(10) NOT NULL,assignee_id BIGINT NOT NULL,FOREIGN KEY(plan_id,assignee_id) REFERENCES memberships(plan_id,user_id));
+CREATE TABLE audit_events(id BIGINT PRIMARY KEY AUTO_INCREMENT,actor_id BIGINT NOT NULL,action VARCHAR(40) NOT NULL,plan_id BIGINT NOT NULL,FOREIGN KEY(actor_id) REFERENCES users(id),FOREIGN KEY(plan_id) REFERENCES plans(id));
+INSERT INTO plans VALUES(1,'Java学习计划',1),(2,'私人复习计划',3);
+INSERT INTO memberships VALUES(1,1),(1,2),(2,3);
+INSERT INTO plan_tasks VALUES(1,1,'学习 HTTP','todo',1),(2,1,'复习 SQL','done',2),(3,1,'练习 JDBC','todo',2),(4,1,'阅读 Java','done',1),(5,1,'完成项目','todo',2),(6,2,'私人笔记','todo',3);

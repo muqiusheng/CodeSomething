@@ -1,0 +1,185 @@
+{
+  "status" : "passed",
+  "report" : {
+    "snapshotDigest" : "d736c3d0f64307d8ced4cbe0860e3e1f98d94722a1bc9a08603715f9a6cfc267",
+    "courseVersion" : "1.0.0",
+    "stageId" : "b-pagination",
+    "policy" : "b-pagination-v1",
+    "image" : "sha256:ed231f8aa9ebb2e48df58330e80692ecc5ca67717ee3c11dc0ab8ffabe3c3dc5",
+    "harnessDigest" : "96a81c50bf50c796bf86d5bcd381c0a6c963166959df5ec22ccaa05488313454",
+    "functionalPassed" : true,
+    "assertions" : [ {
+      "name" : "离线Maven构建",
+      "passed" : true,
+      "expected" : "固定依赖构建成功",
+      "actual" : "多文件工程已离线编译并生成可执行JAR。"
+    }, {
+      "name" : "错误密码拒绝",
+      "passed" : true,
+      "expected" : "401 JSON",
+      "actual" : "HTTP 401 {\"requestId\":\"54fb45c9-9c4b-43a3-b3ec-cbf8c93e5269\",\"message\":\"账号或密码不正确\",\"code\":\"BAD_CREDENTIALS\"}"
+    }, {
+      "name" : "无效身份拒绝",
+      "passed" : true,
+      "expected" : "401 JSON",
+      "actual" : "HTTP 401 {\"requestId\":\"86c352ce-fe86-4d78-892f-c91bf1625675\",\"message\":\"请先登录\",\"code\":\"LOGIN_REQUIRED\"}"
+    }, {
+      "name" : "无效身份拒绝",
+      "passed" : true,
+      "expected" : "401 JSON",
+      "actual" : "HTTP 401 {\"requestId\":\"3d363ee6-81ea-4075-bd19-6c15f675ce03\",\"message\":\"登录已失效，请重新登录\",\"code\":\"SESSION_EXPIRED\"}"
+    }, {
+      "name" : "登录 alice",
+      "passed" : true,
+      "expected" : "200与随机有时限令牌",
+      "actual" : "HTTP 200 <login credentials redacted>"
+    }, {
+      "name" : "登录 bob",
+      "passed" : true,
+      "expected" : "200与随机有时限令牌",
+      "actual" : "HTTP 200 <login credentials redacted>"
+    }, {
+      "name" : "登录 eve",
+      "passed" : true,
+      "expected" : "200与随机有时限令牌",
+      "actual" : "HTTP 200 <login credentials redacted>"
+    }, {
+      "name" : "登录 admin",
+      "passed" : true,
+      "expected" : "200与随机有时限令牌",
+      "actual" : "HTTP 200 <login credentials redacted>"
+    }, {
+      "name" : "会话身份不泄露摘要",
+      "passed" : true,
+      "expected" : "alice身份，隐藏密码/令牌摘要",
+      "actual" : "HTTP 200 {\"id\":1,\"username\":\"alice\",\"role\":\"USER\"}"
+    }, {
+      "name" : "注销204",
+      "passed" : true,
+      "expected" : "204空体",
+      "actual" : "HTTP 204 "
+    }, {
+      "name" : "重放已注销令牌",
+      "passed" : true,
+      "expected" : "401",
+      "actual" : "HTTP 401 {\"requestId\":\"a2caeedf-5951-4e46-aa83-6d605e07ebb3\",\"message\":\"登录已失效，请重新登录\",\"code\":\"SESSION_EXPIRED\"}"
+    }, {
+      "name" : "会话到期",
+      "passed" : true,
+      "expected" : "401",
+      "actual" : "HTTP 401 {\"requestId\":\"185f495d-4103-4750-9684-7f2da2c5cca3\",\"message\":\"登录已失效，请重新登录\",\"code\":\"SESSION_EXPIRED\"}"
+    }, {
+      "name" : "登录 bob",
+      "passed" : true,
+      "expected" : "200与随机有时限令牌",
+      "actual" : "HTTP 200 <login credentials redacted>"
+    }, {
+      "name" : "登录 eve",
+      "passed" : true,
+      "expected" : "200与随机有时限令牌",
+      "actual" : "HTTP 200 <login credentials redacted>"
+    }, {
+      "name" : "成员可读",
+      "passed" : true,
+      "expected" : "bob可以读计划1",
+      "actual" : "HTTP 200 {\"id\":1,\"title\":\"Java学习计划\",\"ownerId\":1}"
+    }, {
+      "name" : "跨计划越权拒绝",
+      "passed" : true,
+      "expected" : "eve不能读计划1",
+      "actual" : "HTTP 403 {\"requestId\":\"a7a14232-99b5-482d-9db6-48b36f6b3402\",\"message\":\"你不是这个计划的成员\",\"code\":\"PLAN_FORBIDDEN\"}"
+    }, {
+      "name" : "任务数据越权拒绝",
+      "passed" : true,
+      "expected" : "403",
+      "actual" : "HTTP 403 {\"requestId\":\"445d77fd-fd5c-46c1-b588-b2a5dbfb229d\",\"message\":\"你不是这个计划的成员\",\"code\":\"PLAN_FORBIDDEN\"}"
+    }, {
+      "name" : "管理员不绕过成员边界",
+      "passed" : true,
+      "expected" : "403",
+      "actual" : "HTTP 403 {\"requestId\":\"66c18bf9-e4c5-438c-af4c-a98a8136e3c5\",\"message\":\"你不是这个计划的成员\",\"code\":\"PLAN_FORBIDDEN\"}"
+    }, {
+      "name" : "成员无分配权限",
+      "passed" : true,
+      "expected" : "403",
+      "actual" : "HTTP 403 {\"requestId\":\"acb3bf28-f0c8-4f33-94f5-215ede0d4905\",\"message\":\"只有计划负责人可执行此操作\",\"code\":\"OWNER_REQUIRED\"}"
+    }, {
+      "name" : "普通用户无审计权限",
+      "passed" : true,
+      "expected" : "403",
+      "actual" : "HTTP 403 {\"requestId\":\"74c6855a-e916-4ae7-9a50-f54d531dcc9f\",\"message\":\"仅管理员可查看审计记录\",\"code\":\"ADMIN_REQUIRED\"}"
+    }, {
+      "name" : "管理员可读审计",
+      "passed" : true,
+      "expected" : "200数组",
+      "actual" : "HTTP 200 []"
+    }, {
+      "name" : "计划列表按成员隔离",
+      "passed" : true,
+      "expected" : "仅计划1",
+      "actual" : "HTTP 200 [{\"id\":1,\"title\":\"Java学习计划\",\"ownerId\":1}]"
+    }, {
+      "name" : "创建计划与可信负责人",
+      "passed" : true,
+      "expected" : "201，ownerId=1且引号与HTML保留为数据",
+      "actual" : "HTTP 201 {\"id\":3,\"title\":\"O'Reilly <script>\",\"ownerId\":1}"
+    }, {
+      "name" : "负责人自动成为成员",
+      "passed" : true,
+      "expected" : "200",
+      "actual" : "HTTP 200 {\"id\":3,\"title\":\"O'Reilly <script>\",\"ownerId\":1}"
+    }, {
+      "name" : "拒绝空计划标题",
+      "passed" : true,
+      "expected" : "400",
+      "actual" : "HTTP 400 {\"requestId\":\"ee1718b3-de51-4d70-9bef-6935178ef799\",\"message\":\"标题须为1至100个字符\",\"code\":\"INVALID_TITLE\"}"
+    }, {
+      "name" : "稳定筛选分页0",
+      "passed" : true,
+      "expected" : "todo三条，按id稳定分页",
+      "actual" : "HTTP 200 {\"items\":[{\"id\":1,\"title\":\"学习 HTTP\",\"status\":\"todo\",\"assigneeId\":1},{\"id\":3,\"title\":\"练习 JDBC\",\"status\":\"todo\",\"assigneeId\":2}],\"size\":2,\"total\":3,\"page\":0}"
+    }, {
+      "name" : "稳定筛选分页1",
+      "passed" : true,
+      "expected" : "todo三条，按id稳定分页",
+      "actual" : "HTTP 200 {\"items\":[{\"id\":5,\"title\":\"完成项目\",\"status\":\"todo\",\"assigneeId\":2}],\"size\":2,\"total\":3,\"page\":1}"
+    }, {
+      "name" : "稳定筛选分页2",
+      "passed" : true,
+      "expected" : "todo三条，按id稳定分页",
+      "actual" : "HTTP 200 {\"items\":[],\"size\":2,\"total\":3,\"page\":2}"
+    }, {
+      "name" : "分页边界 page=-1",
+      "passed" : true,
+      "expected" : "400",
+      "actual" : "HTTP 400 {\"requestId\":\"cb79c5bc-5ad7-49f8-99db-b1e145803291\",\"message\":\"page须为0至100000，size须为1至50，status为all/todo/done\",\"code\":\"INVALID_PAGE\"}"
+    }, {
+      "name" : "分页边界 page=100001",
+      "passed" : true,
+      "expected" : "400",
+      "actual" : "HTTP 400 {\"requestId\":\"c98a0bbd-1794-4c64-9f57-c3c69eaf0360\",\"message\":\"page须为0至100000，size须为1至50，status为all/todo/done\",\"code\":\"INVALID_PAGE\"}"
+    }, {
+      "name" : "分页边界 size=0",
+      "passed" : true,
+      "expected" : "400",
+      "actual" : "HTTP 400 {\"requestId\":\"bed3d558-127f-4cc6-852e-87ce0ba09586\",\"message\":\"page须为0至100000，size须为1至50，status为all/todo/done\",\"code\":\"INVALID_PAGE\"}"
+    }, {
+      "name" : "分页边界 size=51",
+      "passed" : true,
+      "expected" : "400",
+      "actual" : "HTTP 400 {\"requestId\":\"10a4e932-7db8-4d48-b96f-1cc9541d19ef\",\"message\":\"page须为0至100000，size须为1至50，status为all/todo/done\",\"code\":\"INVALID_PAGE\"}"
+    }, {
+      "name" : "分页边界 page=bad",
+      "passed" : true,
+      "expected" : "400",
+      "actual" : "HTTP 400 {\"requestId\":\"e8bdda2c-484f-4e2a-949e-d78171567a90\",\"message\":\"请求格式或参数不正确\",\"code\":\"INVALID_INPUT\"}"
+    }, {
+      "name" : "分页边界 status=unknown",
+      "passed" : true,
+      "expected" : "400",
+      "actual" : "HTTP 400 {\"requestId\":\"d9149df5-ef76-497c-8104-7a71cecd3ee7\",\"message\":\"page须为0至100000，size须为1至50，status为all/todo/done\",\"code\":\"INVALID_PAGE\"}"
+    } ],
+    "log" : "\n  .   ____          _            __ _ _\n /\\\\ / ___'_ __ _ _(_)_ __  __ _ \\ \\ \\ \\\n( ( )\\___ | '_ | '_| | '_ \\/ _` | \\ \\ \\ \\\n \\\\/  ___)| |_)| | | | | || (_| |  ) ) ) )\n  '  |____| .__|_| |_|_| |_\\__, | / / / /\n =========|_|==============|___/=/_/_/_/\n\n :: Spring Boot ::                (v4.1.2)\n\n2026-11-13T05:12:09.826Z  INFO 78 --- [           main] dev.codesomething.lab.Application        : Starting Application v1.0.0 using Java 21.0.13 with PID 78 (/tmp/project/target/boot-lab.jar started by nobody in /tmp/project)\n2026-11-13T05:12:09.833Z  INFO 78 --- [           main] dev.codesomething.lab.Application        : No active profile set, falling back to 1 default profile: \"default\"\n2026-11-13T05:12:11.336Z  INFO 78 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)\n2026-11-13T05:12:11.402Z  INFO 78 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]\n2026-11-13T05:12:11.402Z  INFO 78 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.27]\n2026-11-13T05:12:11.500Z  INFO 78 --- [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1571 ms\n2026-11-13T05:12:12.524Z  INFO 78 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'\n2026-11-13T05:12:12.533Z  INFO 78 --- [           main] dev.codesomething.lab.Application        : Started Application in 3.416 seconds (process running for 4.455)\n2026-11-13T05:12:12.636Z  INFO 78 --- [0.1-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'\n2026-11-13T05:12:12.636Z  INFO 78 --- [0.1-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'\n2026-11-13T05:12:12.637Z  INFO 78 --- [0.1-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms\n2026-11-13T05:12:12.738Z  INFO 78 --- [0.1-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...\n2026-11-13T05:12:13.023Z  INFO 78 --- [0.1-8080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@f31da61\n2026-11-13T05:12:13.024Z  INFO 78 --- [0.1-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.\n2026-11-13T05:12:14.114Z  INFO 78 --- [0.1-8080-exec-1] dev.codesomething.lab.RequestLog         : requestId=54fb45c9-9c4b-43a3-b3ec-cbf8c93e5269 method=POST status=401\n2026-11-13T05:12:15.207Z  INFO 78 --- [0.1-8080-exec-3] dev.codesomething.lab.RequestLog         : requestId=86c352ce-fe86-4d78-892f-c91bf1625675 method=GET status=401\n2026-11-13T05:12:16.100Z  INFO 78 --- [0.1-8080-exec-5] dev.codesomething.lab.RequestLog         : requestId=3d363ee6-81ea-4075-bd19-6c15f675ce03 method=GET status=401\n2026-11-13T05:12:17.238Z  INFO 78 --- [0.1-8080-exec-7] dev.codesomething.lab.RequestLog         : requestId=f99051b6-89ad-4a2e-895d-3b01561e09d8 method=POST status=200\n2026-11-13T05:12:18.213Z  INFO 78 --- [0.1-8080-exec-9] dev.codesomething.lab.RequestLog         : requestId=704c7ea6-1d18-47d4-84c4-4d4d6acb64b6 method=POST status=200\n2026-11-13T05:12:19.209Z  INFO 78 --- [0.1-8080-exec-1] dev.codesomething.lab.RequestLog         : requestId=2c5d36b8-7489-4c67-96a1-de38aded684c method=POST status=200\n2026-11-13T05:12:20.172Z  INFO 78 --- [0.1-8080-exec-3] dev.codesomething.lab.RequestLog         : requestId=c56883b4-142d-4d20-9083-e08d983f128e method=POST status=200\n2026-11-13T05:12:21.039Z  INFO 78 --- [0.1-8080-exec-5] dev.codesomething.lab.RequestLog         : requestId=0bfb8b31-ad85-4d76-a7bb-533239b4f1ba method=GET status=200\n2026-11-13T05:12:21.928Z  INFO 78 --- [0.1-8080-exec-7] dev.codesomething.lab.RequestLog         : requestId=370d76ff-11fa-4d8f-b7b0-ad42d15d13d7 method=DELETE status=204\n2026-11-13T05:12:22.797Z  INFO 78 --- [0.1-8080-exec-9] dev.codesomething.lab.RequestLog         : requestId=a2caeedf-5951-4e46-aa83-6d605e07ebb3 method=GET status=401\n2026-11-13T05:12:23.800Z  INFO 78 --- [0.1-8080-exec-1] dev.codesomething.lab.RequestLog         : requestId=185f495d-4103-4750-9684-7f2da2c5cca3 method=GET status=401\n2026-11-13T05:12:24.814Z  INFO 78 --- [0.1-8080-exec-3] dev.codesomething.lab.RequestLog         : requestId=417e4a4c-7f7a-43d5-9d56-2af44142a7a4 method=POST status=200\n2026-11-13T05:12:25.818Z  INFO 78 --- [0.1-8080-exec-5] dev.codesomething.lab.RequestLog         : requestId=bd0417c9-0250-4e86-b3e8-582cd851f9a7 method=POST status=200\n2026-11-13T05:12:26.650Z  INFO 78 --- [0.1-8080-exec-7] dev.codesomething.lab.RequestLog         : requestId=794b4e34-6661-4555-8683-8e2685eb8c64 method=GET status=200\n2026-11-13T05:12:27.547Z  INFO 78 --- [0.1-8080-exec-9] dev.codesomething.lab.RequestLog         : requestId=a7a14232-99b5-482d-9db6-48b36f6b3402 method=GET status=403\n2026-11-13T05:12:28.495Z  INFO 78 --- [0.1-8080-exec-1] dev.codesomething.lab.RequestLog         : requestId=445d77fd-fd5c-46c1-b588-b2a5dbfb229d method=GET status=403\n2026-11-13T05:12:29.339Z  INFO 78 --- [0.1-8080-exec-3] dev.codesomething.lab.RequestLog         : requestId=66c18bf9-e4c5-438c-af4c-a98a8136e3c5 method=GET status=403\n2026-11-13T05:12:30.326Z  INFO 78 --- [0.1-8080-exec-5] dev.codesomething.lab.RequestLog         : requestId=acb3bf28-f0c8-4f33-94f5-215ede0d4905 method=POST status=403\n2026-11-13T05:12:31.205Z  INFO 78 --- [0.1-8080-exec-7] dev.codesomething.lab.RequestLog         : requestId=74c6855a-e916-4ae7-9a50-f54d531dcc9f method=GET status=403\n2026-11-13T05:12:32.343Z  INFO 78 --- [0.1-8080-exec-9] dev.codesomething.lab.RequestLog         : requestId=b13b9e2b-5144-4dde-9b88-145fe9a39fb7 method=GET status=200\n2026-11-13T05:12:33.237Z  INFO 78 --- [0.1-8080-exec-1] dev.codesomething.lab.RequestLog         : requestId=dc2d5cf8-98bd-478d-92bb-b329e98fb50a method=GET status=200\n2026-11-13T05:12:34.114Z  INFO 78 --- [0.1-8080-exec-3] dev.codesomething.lab.RequestLog         : requestId=ba1385ed-487b-43cd-af5f-9c2a93a92b93 method=POST status=201\n2026-11-13T05:12:35.008Z  INFO 78 --- [0.1-8080-exec-5] dev.codesomething.lab.RequestLog         : requestId=65f68ef4-845b-423c-8af1-e8769c62367b method=GET status=200\n2026-11-13T05:12:35.839Z  INFO 78 --- [0.1-8080-exec-7] dev.codesomething.lab.RequestLog         : requestId=ee1718b3-de51-4d70-9bef-6935178ef799 method=POST status=400\n2026-11-13T05:12:36.727Z  INFO 78 --- [0.1-8080-exec-8] dev.codesomething.lab.RequestLog         : requestId=9247d5e2-a022-4a0c-93eb-92d6b07021f8 method=GET status=200\n2026-11-13T05:12:37.539Z  INFO 78 --- [.1-8080-exec-10] dev.codesomething.lab.RequestLog         : requestId=fdc4e030-b68a-489d-b424-6ded2ae09a30 method=GET status=200\n2026-11-13T05:12:38.415Z  INFO 78 --- [0.1-8080-exec-2] dev.codesomething.lab.RequestLog         : requestId=7a1958e5-a565-4707-bf17-9b8d0a779f46 method=GET status=200\n2026-11-13T05:12:39.238Z  INFO 78 --- [0.1-8080-exec-4] dev.codesomething.lab.RequestLog         : requestId=cb79c5bc-5ad7-49f8-99db-b1e145803291 method=GET status=400\n2026-11-13T05:12:40.110Z  INFO 78 --- [0.1-8080-exec-5] dev.codesomething.lab.RequestLog         : requestId=c98a0bbd-1794-4c64-9f57-c3c69eaf0360 method=GET status=400\n2026-11-13T05:12:40.995Z  INFO 78 --- [0.1-8080-exec-6] dev.codesomething.lab.RequestLog         : requestId=bed3d558-127f-4cc6-852e-87ce0ba09586 method=GET status=400\n2026-11-13T05:12:41.829Z  INFO 78 --- [0.1-8080-exec-7] dev.codesomething.lab.RequestLog         : requestId=10a4e932-7db8-4d48-b96f-1cc9541d19ef method=GET status=400\n2026-11-13T05:12:42.715Z  INFO 78 --- [0.1-8080-exec-8] dev.codesomething.lab.RequestLog         : requestId=e8bdda2c-484f-4e2a-949e-d78171567a90 method=GET status=400\n2026-11-13T05:12:43.528Z  INFO 78 --- [0.1-8080-exec-9] dev.codesomething.lab.RequestLog         : requestId=d9149df5-ef76-497c-8104-7a71cecd3ee7 method=GET status=400\n",
+    "finishedAt" : "2026-11-13T05:12:45.319222500Z"
+  }
+}

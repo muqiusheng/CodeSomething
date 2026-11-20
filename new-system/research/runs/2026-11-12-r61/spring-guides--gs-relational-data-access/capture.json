@@ -1,0 +1,56 @@
+{
+  "repository": "spring-guides/gs-relational-data-access",
+  "status": "captured",
+  "commit": "39ee6416cdc511d5d92cdeb63b2b73129013888e",
+  "commitDate": "2026-11-01T11:24:29Z",
+  "records": [
+    {
+      "url": "https://api.github.com/repos/spring-guides/gs-relational-data-access",
+      "file": "repository.json",
+      "sha256": "c6315693b1bcb740c8a49515ea1f63e9c55c2e4d3864d9329795dad5f7a6ce7b",
+      "bytes": 7381
+    },
+    {
+      "url": "https://api.github.com/repos/spring-guides/gs-relational-data-access/commits/main",
+      "file": "commit.json",
+      "sha256": "b8ae5e3b8f70fa2b598944b41e5e6431b653386bd006c496deee19be493549fe",
+      "bytes": 7063
+    },
+    {
+      "url": "https://api.github.com/repos/spring-guides/gs-relational-data-access/git/trees/39ee6416cdc511d5d92cdeb63b2b73129013888e?recursive=1",
+      "file": "tree.json",
+      "sha256": "3b992a6f692b1870ce5b306b625f36fd028fd2c5715e2b1c0739004d83a19d6a",
+      "bytes": 23441
+    },
+    {
+      "url": "https://raw.githubusercontent.com/spring-guides/gs-relational-data-access/39ee6416cdc511d5d92cdeb63b2b73129013888e/LICENSE.txt",
+      "file": "LICENSE.txt",
+      "sha256": "56dfc19e0dc836e30177332f73e8e6fbc297941acf3d906eec6eaaa46c2c452a",
+      "bytes": 11360
+    },
+    {
+      "url": "https://raw.githubusercontent.com/spring-guides/gs-relational-data-access/39ee6416cdc511d5d92cdeb63b2b73129013888e/README.adoc",
+      "file": "README.adoc",
+      "sha256": "a1ed833101242403dce4cd26cd8565da6e528244bf245e2848136635e37fe417",
+      "bytes": 8206
+    },
+    {
+      "url": "https://raw.githubusercontent.com/spring-guides/gs-relational-data-access/39ee6416cdc511d5d92cdeb63b2b73129013888e/complete/pom.xml",
+      "file": "complete--pom.xml",
+      "sha256": "5aaa3bab88fd66921843c0620e7fb1e8cc3f5d45df659fbad084deac13a27ad7",
+      "bytes": 1304
+    },
+    {
+      "url": "https://raw.githubusercontent.com/spring-guides/gs-relational-data-access/39ee6416cdc511d5d92cdeb63b2b73129013888e/complete/src/main/java/com/example/relationaldataaccess/Customer.java",
+      "file": "complete--src--main--java--com--example--relationaldataaccess--Customer.java",
+      "sha256": "270c7a38906d7fb38dde8321a0fc4d8344134d93c00c7bbd419cc6a01d85b111",
+      "bytes": 265
+    },
+    {
+      "url": "https://raw.githubusercontent.com/spring-guides/gs-relational-data-access/39ee6416cdc511d5d92cdeb63b2b73129013888e/complete/src/main/java/com/example/relationaldataaccess/RelationalDataAccessApplication.java",
+      "file": "complete--src--main--java--com--example--relationaldataaccess--RelationalDataAccessApplication.java",
+      "sha256": "ad9a328aef906c92677391807990aa7c1f61a51f1c5c28eb720184d9de9b2017",
+      "bytes": 2071
+    }
+  ]
+}

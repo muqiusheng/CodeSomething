@@ -1,0 +1,47 @@
+# Local state, dependencies and build output
+/.cache/
+**/node_modules/
+**/.npm-cache/
+**/dist/
+**/target/
+**/*.tsbuildinfo
+/new-system/runtime/
+/new-system/tooling/local.ps1
+*.log
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+!.env.*.example
+/.agents/
+
+# Locally imported third-party course material and reference captures
+/new-system/frontend/public/materials/tlias/
+/docs/references/douyin/video-*.png
+/docs/references/elevenlabs/
+/docs/installed-files.json
+
+# Keep acceptance summaries and the fixtures read by the release checkers
+/new-system/docs/acceptance/**/*
+!/new-system/docs/acceptance/**/
+!/new-system/docs/acceptance/**/README.md
+!/new-system/docs/acceptance/R3.4/strategies/*-reference.json
+!/new-system/docs/acceptance/R3.4/strategies/*-mutant.json
+!/new-system/docs/acceptance/R7/strategies-final/*-reference.json
+!/new-system/docs/acceptance/R7/strategies-final/*-mutant.json
+/new-system/docs/reviews/
+
+# Editor/OS generated files
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc

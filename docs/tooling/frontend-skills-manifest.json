@@ -1,0 +1,132 @@
+{
+  "sources": [
+    {
+      "path": "skills/taste-skill",
+      "repo": "Leonxlnx/taste-skill",
+      "skillHash": "0C7A5852A5217BE79CAB422C6D58329B776F0C25BD6DA8A7A01707CE75BE6206",
+      "url": "https://github.com/Leonxlnx/taste-skill/tree/f6b76575f949707b4e3c37cd86cb44b0b98643e8/skills/taste-skill",
+      "commit": "f6b76575f949707b4e3c37cd86cb44b0b98643e8",
+      "files": 1631,
+      "name": "design-taste-frontend"
+    },
+    {
+      "path": "skills/frontend-design",
+      "repo": "anthropics/skills",
+      "skillHash": "D91970639E9F5C37682AC7AB60094D35F1C7C1F38D731BD56396563AEE10C1D3",
+      "url": "https://github.com/anthropics/skills/tree/2c5958ecac7cee2b583967a2c4981d0f4a75c579/skills/frontend-design",
+      "commit": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+      "files": 2,
+      "name": "frontend-design"
+    },
+    {
+      "path": ".claude/skills/ui-ux-pro-max",
+      "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "skillHash": "14F43337EDFBF7822E091428E4AE0C6F92F86E3353DEDA6A30F6613121E2CF2D",
+      "url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/tree/4f2dbb67e64969a9a30ab00742f2d55d66ddec2b/.claude/skills/ui-ux-pro-max",
+      "commit": "4f2dbb67e64969a9a30ab00742f2d55d66ddec2b",
+      "files": 75,
+      "name": "ui-ux-pro-max"
+    },
+    {
+      "path": ".agents/skills/impeccable",
+      "repo": "pbakaus/impeccable",
+      "skillHash": "C6921E830B7A565EBBE9AABE11516D34092062CD7FA2B442F030134857BF86A8",
+      "url": "https://github.com/pbakaus/impeccable/tree/ec229b48547f24685ffb22aa51c462c5ae27908c/.agents/skills/impeccable",
+      "commit": "ec229b48547f24685ffb22aa51c462c5ae27908c",
+      "files": 63,
+      "name": "impeccable"
+    },
+    {
+      "path": "skills/make-interfaces-feel-better",
+      "repo": "jakubkrehel/make-interfaces-feel-better",
+      "skillHash": "C1D508FA7BEF8E47EE682B4F214C7A4ED1416B91D05A97285E555BAD1C41A23E",
+      "url": "https://github.com/jakubkrehel/make-interfaces-feel-better/tree/35545ea1512ad59fa463e6b1f95ca9c052981fe6/skills/make-interfaces-feel-better",
+      "commit": "35545ea1512ad59fa463e6b1f95ca9c052981fe6",
+      "files": 7,
+      "name": "make-interfaces-feel-better"
+    },
+    {
+      "path": "skills/web-design-guidelines",
+      "repo": "vercel-labs/agent-skills",
+      "skillHash": "F4647CA866A3ACCF763777F83E7682954F0187CD6BEA7EEA0399796652414E8F",
+      "url": "https://github.com/vercel-labs/agent-skills/tree/1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62/skills/web-design-guidelines",
+      "commit": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "files": 1,
+      "name": "web-design-guidelines"
+    }
+  ],
+  "reset": {
+    "date": "2026-11-10",
+    "removed": [
+      {
+        "name": "design-taste-frontend",
+        "skillHash": "D955DAE4BA8AB2D994F4BB06B4BF412A1D9875433A8597939C391F4BAE91DD7A"
+      },
+      {
+        "name": "frontend-design",
+        "skillHash": "D91970639E9F5C37682AC7AB60094D35F1C7C1F38D731BD56396563AEE10C1D3"
+      },
+      {
+        "name": "ui-ux-pro-max",
+        "skillHash": "EA087C341BFB5B23195C7302027268EDE86DA802554C18A5C4896A6017B439F9"
+      },
+      {
+        "name": "impeccable",
+        "skillHash": "C26D6963FE2278F570930EA083EC89609BA094EE93B1AE825719FF5D29B9AC3C"
+      },
+      {
+        "name": "web-design-guidelines",
+        "skillHash": "F4647CA866A3ACCF763777F83E7682954F0187CD6BEA7EEA0399796652414E8F"
+      },
+      {
+        "name": "emil-design-eng",
+        "skillHash": "FFBE68E6007FB42CB8149F089B400A1CA007D59BA23E8948E2BE4476F3175939"
+      },
+      {
+        "name": "finesse-ui",
+        "skillHash": "45690E40DC613107AF326BE00F7092547FB0976089553D52A52F2571660BC884"
+      },
+      {
+        "name": "unslop",
+        "skillHash": "9E49B2FF7643FA09729E8665890A18F6BFA58A82E6FCBBA330DA38136CCDC393"
+      }
+    ],
+    "installed": [
+      {
+        "name": "design-taste-frontend",
+        "files": 1631,
+        "skillHash": "0C7A5852A5217BE79CAB422C6D58329B776F0C25BD6DA8A7A01707CE75BE6206"
+      },
+      {
+        "name": "frontend-design",
+        "files": 2,
+        "skillHash": "D91970639E9F5C37682AC7AB60094D35F1C7C1F38D731BD56396563AEE10C1D3"
+      },
+      {
+        "name": "ui-ux-pro-max",
+        "files": 75,
+        "skillHash": "14F43337EDFBF7822E091428E4AE0C6F92F86E3353DEDA6A30F6613121E2CF2D"
+      },
+      {
+        "name": "impeccable",
+        "files": 63,
+        "skillHash": "C6921E830B7A565EBBE9AABE11516D34092062CD7FA2B442F030134857BF86A8"
+      },
+      {
+        "name": "make-interfaces-feel-better",
+        "files": 7,
+        "skillHash": "C1D508FA7BEF8E47EE682B4F214C7A4ED1416B91D05A97285E555BAD1C41A23E"
+      },
+      {
+        "name": "web-design-guidelines",
+        "files": 1,
+        "skillHash": "F4647CA866A3ACCF763777F83E7682954F0187CD6BEA7EEA0399796652414E8F"
+      }
+    ],
+    "globalWorkflowReplaced": true,
+    "unrelatedGlobalSectionsPreserved": true,
+    "backupLocation": "D:\\Document\\codex\\杂项\\output\\frontend-reset-20261110\\backup-inactive",
+    "backupActive": false
+  },
+  "date": "2026-11-10"
+}

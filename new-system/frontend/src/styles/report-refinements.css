@@ -1,0 +1,118 @@
+/* Report-driven refinements: existing console identity, quieter reading surfaces. */
+.foundation-home.improved-home .continue-card{padding:var(--space-8) var(--space-8);}
+.foundation-home.improved-home .continue-content{max-width:72ch;}
+.foundation-home.improved-home .continue-card h2{font-size:24px;line-height:1.5;letter-spacing:-.025em;}
+.foundation-home.improved-home .continue-card p{margin-bottom:var(--space-3);}
+.foundation-home.improved-home .lesson-steps{border-top:1px solid var(--border);padding-top:var(--space-3);margin-top:var(--space-6);gap:var(--space-1) var(--space-6);}
+.foundation-home.improved-home .resume-action{margin-top:var(--space-4);}
+.path-page .phase-surface{padding:var(--space-6) var(--space-6);display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:var(--space-6);align-items:center;}
+.path-page .phase-header,.path-page .phase-outcome{grid-column:1/-1;}
+.path-page .phase-surface>.phase-footer{grid-column:2;grid-row:3;}
+.path-page .phase-surface>div[data-orientation]{grid-column:1;min-width:0;}
+.path-page .phase-surface .accordion-heading{margin:0;}
+.path-page .phase-surface .accordion-heading button{padding-block:var(--space-3);min-height:44px;}
+.path-page .phase-outcome{margin:var(--space-3) 0 var(--space-3);max-width:72ch;font-size:14px;}
+.path-page .phase-footer{margin:0;padding:0;border:0;gap:var(--space-4);}
+.path-page .phase-header h2{font-size:18px;}
+.path-page .phase-list{gap:var(--space-4);}
+/* The scroll container stays full-width; the reading column has a stable measure. */
+.coding-app .foundation-lesson .lesson-main>.chapter-article:not(:has(.web-task-layout,.guided-coding-layout))>*,
+.foundation-lesson .chapter-article>.lesson-teaching{max-width:820px;margin-inline:auto;}
+.foundation-lesson .chapter-article .concept-facts li{background:transparent;color:var(--text-secondary);padding:var(--space-1) 0;border-radius:0;}
+.foundation-lesson .chapter-article .concept-code{background:var(--surface-muted);color:var(--text);}
+.foundation-lesson .chapter-article .concept-block{gap:var(--space-6);}
+.foundation-lesson .chapter-article .chapter-goal{background:var(--surface-muted);color:var(--text);}
+.foundation-lesson .chapter-article .chapter-goal p{color:var(--text-secondary);}
+/* A composite search field owns one focus ring. The input remains keyboard focusable. */
+.search:focus-within,.command-input:focus-within{border-color:var(--focus);outline:2px solid var(--focus);outline-offset:0;box-shadow:none;}
+.search input:focus-visible,.command-input input:focus-visible{outline:none;box-shadow:none;}
+.search input,.command-input input{border:0;border-radius:0;background:transparent;min-width:0;color:var(--text);}
+.command-footer{background:var(--surface-muted);border-color:var(--border);}
+/* Same artifact grammar across every course; no simulated application screenshots. */
+.project-card .project-cover.course-artifact{width:100%;height:100%;transform:none;box-shadow:none;border:0;border-radius:0;display:flex;flex-direction:column;justify-content:flex-start;padding:var(--space-6) var(--space-6);background:var(--surface-muted);color:var(--text);text-align:left;}
+.artifact-heading{display:flex;justify-content:space-between;gap:var(--space-3);font-size:12px;color:var(--text-secondary);}
+.artifact-heading>span:last-child{font-size:11px;white-space:nowrap;}
+.course-artifact pre{margin:var(--space-4) 0 var(--space-3);font-size:14px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--text);flex:1;}
+.project-card .course-artifact p{font-size:12px;line-height:1.6;margin:0;color:var(--text-secondary);}
+/* Synthwave accents stay on controls and selection, with quiet instructional surfaces. */
+html[data-theme=dark]{--primary-soft:color-mix(in oklab,var(--primary) 8%,var(--surface));--secondary-soft:color-mix(in oklab,var(--secondary) 10%,var(--surface));--accent-soft:color-mix(in oklab,var(--accent) 10%,var(--surface));--learning-teal-soft:var(--surface-muted);--learning-orange-soft:var(--surface-muted);--learning-violet-soft:var(--surface-muted);}
+html[data-theme=dark] .foundation-lesson .tabs button[data-state=active]{color:var(--text);}
+/* SQL uses the same compact header / reading / code arrangement as HTTP and Boot. */
+.sql-workbench.sql-page{max-width:none;padding:var(--space-3) var(--space-4);}
+.sql-workbench>.back-link{font-size:12px;margin:0;}
+.sql-workbench>.page-title{margin:var(--space-1) 0 var(--space-2);min-height:44px;}
+.sql-workbench h1{font-size:18px;line-height:1.5;margin:0;}
+.sql-workbench .sql-eyebrow{font-size:12px;}
+.sql-workbench .sql-chapter-select{margin:0;font-size:0;display:flex;min-width:0;max-width:min(100%,360px);}
+.sql-workbench .sql-chapter-select select{font-size:12px;max-width:100%;min-height:40px;}
+
+.sql-workbench{position:relative;}
+.sql-workspace{display:grid;grid-template-columns:minmax(0,44fr) minmax(0,56fr);gap:var(--space-3);min-height:0;flex:1;}
+.sql-reading-pane,.sql-code-pane{min-width:0;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);overflow:auto;scrollbar-gutter:stable;}
+.sql-reading-pane>.tabs-root{height:100%;}
+.sql-workbench .sql-reading-pane .tabs{position:sticky;top:0;z-index:var(--z-sticky);background:var(--surface-muted);padding-inline:var(--space-6);min-height:44px;gap:var(--space-6);}
+.sql-reading-pane [role=tabpanel]{padding:var(--space-6) var(--space-6);}
+.sql-reading-pane .sql-task-brief{display:block;}
+.sql-reading-pane .practice-steps{padding:0;}
+.sql-reading-pane .practice-current{padding:0!important;background:transparent;border:0;box-shadow:none;}
+.sql-reading-pane .sql-task{max-width:none;}
+.sql-reading-pane .sql-teaching,.sql-reading-pane .sql-report{padding-top:0;}
+.sql-code-pane{padding:var(--space-4) var(--space-6);display:flex;flex-direction:column;gap:var(--space-3);}
+.sql-code-pane .sql-editor-heading{margin:0;gap:var(--space-3);font-size:13px;flex-wrap:wrap;}
+.sql-code-pane>.text-button{align-self:flex-start;min-height:36px;}
+.sql-code-pane #sql-current-code{flex:1;min-height:200px;display:flex;flex-direction:column;}
+.sql-code-pane .code-editor-shell:not([open]){flex:1;min-height:0;display:flex;flex-direction:column;margin:0;width:100%;}
+.sql-code-pane .code-editor-shell:not([open]) .code-editor-area{height:auto;min-height:160px;flex:1;resize:none;}
+.sql-code-pane .sql-actions{margin-top:var(--space-1);gap:var(--space-2);}
+.sql-code-pane .sql-meta{font-size:12px;margin:0;}
+.sql-workbench .sql-position{margin:var(--space-1) 0 0;font-size:11px;min-height:18px;}
+.sql-pane-switch{display:none;}
+@media (width > 768px){
+ .coding-app:has(.sql-workbench) #main{height:calc(100dvh - var(--workspace-header-height));overflow:hidden;}
+ .sql-workbench.sql-page{height:100%;display:flex;flex-direction:column;}
+ .sql-workbench .sql-code-pane{overflow:auto;}
+}
+@media (width <= 768px){
+ .sql-workbench .sql-chapter-select{position:static;max-width:100%;font-size:13px;flex-direction:row;margin:var(--space-1) 0 var(--space-3);}
+ .sql-workbench>.page-title{padding:0;}
+ .sql-pane-switch{display:flex;gap:var(--space-2);margin:0 0 var(--space-3);}
+ .sql-pane-switch button{flex:1;min-height:44px;}
+ .sql-pane-switch button[aria-pressed=true]{background:var(--primary-soft);border-color:var(--primary-border);color:var(--primary-ink);}
+ .sql-workspace{display:block;}
+ .sql-workspace[data-pane=reading]>.sql-code-pane,.sql-workspace[data-pane=code]>.sql-reading-pane{display:none;}
+ .sql-code-pane #sql-current-code{flex:none;height:clamp(240px,43dvh,400px);}
+ .sql-code-pane{padding:var(--space-4);}
+ .sql-reading-pane [role=tabpanel]{padding:var(--space-4) var(--space-4);}
+}
+@media (width <= 640px){
+ .app .topbar .prototype,.app .topbar .history-controls{display:none;}
+ .app .topbar .coding-brand{font-size:13px;}
+ .foundation-home.improved-home .continue-card{padding:var(--space-6);}
+ .foundation-home.improved-home .continue-card h2{font-size:22px;}
+ .foundation-home.improved-home .lesson-steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 var(--space-3);}
+ .foundation-home.improved-home .lesson-steps>a{width:100%;justify-content:space-between;}
+ .path-page .phase-surface{padding:var(--space-4) var(--space-4);column-gap:var(--space-3);}
+ .path-page .phase-resume{display:none;}
+ .path-page .phase-footer .button{padding-inline:var(--space-3);}
+ .path-page .phase-heading{flex-wrap:wrap;gap:var(--space-2);}
+ .path-page .phase-footer{flex-wrap:wrap;gap:var(--space-3);}
+ .sql-workbench.sql-page{padding:var(--space-3);}
+ .sql-workbench .sql-chapter-select{align-items:center;flex-direction:row;gap:var(--space-2);}
+ .sql-workbench .sql-chapter-select select{flex:1;min-width:0;}
+ .sql-workbench>.page-title .text-pill{font-size:11px;}
+ .sql-code-pane .sql-actions .button{white-space:normal;}
+}
+
+.completion-card[data-state=passed] {
+ border:1px solid color-mix(in srgb,var(--color-success) 52%,var(--border));
+ border-inline-start:4px solid var(--color-success);
+ background:color-mix(in srgb,var(--color-success) 10%,var(--surface));
+ padding:var(--space-4);border-radius:var(--radius-md);
+}
+.completion-card[data-state=passed] h3 { display:flex;align-items:center;gap:8px; }
+.completion-card[data-state=passed] h3 svg { flex:none;color:var(--color-success); }
+
+@media (width <= 768px) {
+ .sql-pane-switch { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px; }
+ .sql-pane-switch .button { min-width:0;padding-inline:2px;font-size:13px; }
+}

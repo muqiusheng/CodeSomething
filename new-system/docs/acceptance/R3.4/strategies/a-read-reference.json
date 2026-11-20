@@ -1,0 +1,40 @@
+{
+  "status" : "passed",
+  "report" : {
+    "snapshotDigest" : "cf5e40264969df0c450e765f524a165bfb111f1e3dcffd139b099f6d478379b3",
+    "courseVersion" : "1.0.0",
+    "stageId" : "a-read",
+    "policy" : "a-read-v1",
+    "image" : "sha256:ed231f8aa9ebb2e48df58330e80692ecc5ca67717ee3c11dc0ab8ffabe3c3dc5",
+    "harnessDigest" : "f328c7de3d84f93f59381bbf0f64cb0c6d064e238371dd053a4de394cd8d9a1a",
+    "functionalPassed" : true,
+    "assertions" : [ {
+      "name" : "离线Maven构建",
+      "passed" : true,
+      "expected" : "固定依赖构建成功",
+      "actual" : "多文件工程已离线编译并生成可执行JAR。"
+    }, {
+      "name" : "读取单条与JSON类型",
+      "passed" : true,
+      "expected" : "id=1，初始标题与布尔字段",
+      "actual" : "HTTP 200 {\"id\":1,\"title\":\"学习 HTTP\",\"completed\":false}"
+    }, {
+      "name" : "未知编号404",
+      "passed" : true,
+      "expected" : "404与非空message",
+      "actual" : "HTTP 404 {\"message\":\"资源不存在\"}"
+    }, {
+      "name" : "列表",
+      "passed" : true,
+      "expected" : "5项JSON数组",
+      "actual" : "HTTP 200 [{\"id\":1,\"title\":\"学习 HTTP\",\"completed\":false},{\"id\":2,\"title\":\"复习 SQL\",\"completed\":true},{\"id\":3,\"title\":\"练习 JDBC\",\"completed\":false},{\"id\":4,\"title\":\"阅读 Java\",\"completed\":true},{\"id\":5,\"title\":\"完成项目\",\"completed\":false}]"
+    }, {
+      "name" : "空集合",
+      "passed" : true,
+      "expected" : "200与空数组",
+      "actual" : "HTTP 200 []"
+    } ],
+    "log" : "\n  .   ____          _            __ _ _\n /\\\\ / ___'_ __ _ _(_)_ __  __ _ \\ \\ \\ \\\n( ( )\\___ | '_ | '_| | '_ \\/ _` | \\ \\ \\ \\\n \\\\/  ___)| |_)| | | | | || (_| |  ) ) ) )\n  '  |____| .__|_| |_|_| |_\\__, | / / / /\n =========|_|==============|___/=/_/_/_/\n\n :: Spring Boot ::                (v4.1.2)\n\n2026-11-12T06:30:57.315Z  INFO 60 --- [           main] dev.codesomething.lab.Application        : Starting Application v1.0.0 using Java 21.0.13 with PID 60 (/tmp/project/target/boot-lab.jar started by nobody in /tmp/project)\n2026-11-12T06:30:57.399Z  INFO 60 --- [           main] dev.codesomething.lab.Application        : No active profile set, falling back to 1 default profile: \"default\"\n2026-11-12T06:30:59.598Z  INFO 60 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)\n2026-11-12T06:30:59.608Z  INFO 60 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]\n2026-11-12T06:30:59.608Z  INFO 60 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.27]\n2026-11-12T06:30:59.710Z  INFO 60 --- [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 2104 ms\n2026-11-12T06:31:00.808Z  INFO 60 --- [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'\n2026-11-12T06:31:00.815Z  INFO 60 --- [           main] dev.codesomething.lab.Application        : Started Application in 4.912 seconds (process running for 6.032)\n2026-11-12T06:31:00.923Z  INFO 60 --- [0.1-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'\n2026-11-12T06:31:00.923Z  INFO 60 --- [0.1-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'\n2026-11-12T06:31:00.924Z  INFO 60 --- [0.1-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms\n2026-11-12T06:31:00.997Z  INFO 60 --- [0.1-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...\n2026-11-12T06:31:01.398Z  INFO 60 --- [0.1-8080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@56665533\n2026-11-12T06:31:01.401Z  INFO 60 --- [0.1-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.\n",
+    "finishedAt" : "2026-11-12T06:31:08.718220Z"
+  }
+}
