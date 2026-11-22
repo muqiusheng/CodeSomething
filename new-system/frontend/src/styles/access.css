@@ -1,0 +1,47 @@
+@layer theme, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@plugin "daisyui" {
+  themes: false;
+  include: button, input, textarea, select, alert, table, badge;
+  prefix: csx-;
+  logs: false;
+}
+
+.access-page {min-height:100dvh;background:var(--canvas);color:var(--text);}
+.access-header {position:relative;z-index:var(--z-header, 10);}
+.access-header,.admin-header {min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px clamp(16px,4vw,42px);border-bottom:1px solid var(--color-base-300);}
+.access-wordmark {display:inline-flex;align-items:center;gap:10px;font-weight:740;color:inherit;text-decoration:none;white-space:nowrap;}
+.access-shell {max-width:480px;margin:clamp(28px,10vh,100px) auto;padding:0 16px;}
+.access-panel {padding:clamp(20px,5vw,36px);border:1px solid var(--color-base-300);border-radius:var(--radius-box);background:var(--surface,var(--color-base-100));}
+.access-panel h1 {font-size:clamp(25px,5vw,31px);margin:0 0 22px;letter-spacing:-.025em;}
+.access-panel p {line-height:1.55;}
+.access-fields {display:grid;gap:14px;}
+.access-fields label,.admin-form label {display:grid;gap:6px;font-weight:600;}
+.access-fields .csx-input {
+  width:100%;
+  min-height:44px;
+  border:1px solid color-mix(in srgb,var(--color-base-content) 57%,var(--surface));
+  border-radius:8px;
+  background:color-mix(in srgb,var(--color-base-100) 90%,var(--color-base-content));
+  color:var(--color-base-content);
+  box-shadow:none;
+}
+.access-fields .csx-input:focus {
+  border-color:var(--color-base-content);
+  outline:2px solid var(--color-base-content);
+  outline-offset:2px;
+}
+.access-fields .csx-btn {min-height:44px;border-radius:8px;font-weight:600;}
+.csx-btn.csx-btn-primary {background:var(--color-primary);color:var(--on-primary);border-color:var(--color-primary);}
+.csx-btn.csx-btn-error {background:var(--color-error);color:var(--color-error-content);border-color:var(--color-error);}
+.csx-btn.csx-btn-primary:hover:not(:disabled) {background:var(--primary-hover);}
+.csx-btn.csx-btn-error:hover:not(:disabled) {background:color-mix(in srgb,var(--color-error) 94%,var(--color-error-content));}
+.access-alternate {margin:18px 0 0;}
+.access-alternate a,.access-panel>a {text-decoration:underline;text-underline-offset:3px;}
+.access-shell>.csx-btn {margin-top:12px;}
+.supplemental-question {margin-top:16px;}
+.supplemental-question fieldset {min-width:0;display:grid;gap:8px;margin-bottom:14px;border:0;padding:0;}
+.supplemental-question h2,.supplemental-question span {overflow-wrap:anywhere;}
+.personal-menu-panel .personal-signout {display:flex;align-items:center;gap:10px;min-height:40px;width:100%;text-align:left;padding:8px 10px;background:transparent;color:inherit;border:0;border-radius:var(--radius-field);cursor:pointer;}
+.personal-menu-panel .personal-signout:hover {background:var(--color-base-200);}

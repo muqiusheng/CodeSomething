@@ -1,3 +1,4 @@
+import {sessionState} from '../../api/browser-state.mjs';
 import {useEffect, useLayoutEffect, useState} from 'react';
 import {Link, useLocation, useNavigate, useNavigationType} from 'react-router-dom';
 import {ArrowLeft, ArrowRight} from 'lucide-react';
@@ -11,7 +12,7 @@ function restore(key: string): Trail {
   // or browser traversal, so unrelated history cannot enable our controls.
   if (entry?.type === 'navigate') return {keys: [key], index: 0};
   try {
-    const stored = JSON.parse(sessionStorage.getItem(storageKey) || 'null') as Trail | null;
+    const stored = JSON.parse(sessionState.getItem(storageKey) || 'null') as Trail | null;
     if (stored && Array.isArray(stored.keys) && stored.keys.every(value => typeof value === 'string') && stored.keys.length <= window.history.length) {
       const index = stored.keys.indexOf(key);
       if (index >= 0) return {keys: stored.keys, index};
@@ -34,7 +35,7 @@ export function HeaderNavigation() {
   const navigate = useNavigate();
   const [trail, setTrail] = useState(() => restore(location.key));
   useLayoutEffect(() => { setTrail(previous => advance(previous, location.key, action)); }, [location.key, action]);
-  useEffect(() => {try {sessionStorage.setItem(storageKey, JSON.stringify(trail));} catch { /* Navigation remains available in memory. */ }}, [trail]);
+  useEffect(() => {try {sessionState.setItem(storageKey, JSON.stringify(trail));} catch { /* Navigation remains available in memory. */ }}, [trail]);
 
   return <div className="header-navigation">
     {location.pathname.startsWith('/learn/')&&<><Link className="coding-brand" to="/learn">CodeSomething<span>.</span></Link><nav className="coding-quick-links" aria-label="学习导航"><Link to="/path">学习路径</Link><Link to="/projects">项目</Link></nav></>}

@@ -1,3 +1,4 @@
+import {localState} from '../../../api/browser-state.mjs';
 import {journeyPositionKey,lessonById,lessonHref,workspaceHref,type JourneyLesson} from './catalog';
 
 const activeKey='cs-journey-active-v1';
@@ -5,8 +6,8 @@ const activeKey='cs-journey-active-v1';
 export function saveStudyPosition(lesson:JourneyLesson,working=false,tab?:string) {
  if(lesson.elective)return;
  try {
-  localStorage.setItem(activeKey,JSON.stringify({id:lesson.id,working,tab,updatedAt:Date.now()}));
-  localStorage.setItem(journeyPositionKey,lesson.id);
+  localState.setItem(activeKey,JSON.stringify({id:lesson.id,working,tab,updatedAt:Date.now()}));
+  localState.setItem(journeyPositionKey,lesson.id);
  } catch {
   // The course remains usable when browser storage is unavailable.
  }
@@ -14,9 +15,9 @@ export function saveStudyPosition(lesson:JourneyLesson,working=false,tab?:string
 
 export function readStudyPosition(){
  try {
-  const raw=localStorage.getItem(activeKey);
+  const raw=localState.getItem(activeKey);
   const active=raw?JSON.parse(raw):null;
-  const lesson=lessonById.get(active?.id)||lessonById.get(localStorage.getItem(journeyPositionKey)||'');
+  const lesson=lessonById.get(active?.id)||lessonById.get(localState.getItem(journeyPositionKey)||'');
   if(!lesson||lesson.elective)return;
   const current=active?.id===lesson.id&&Number.isFinite(active.updatedAt);
   const working=current&&active.working===true;
@@ -35,7 +36,7 @@ export function readStudyPosition(){
 
 export function preferFormalPosition(){
  try {
-  localStorage.removeItem(activeKey);
+  localState.removeItem(activeKey);
  } catch {
   // The formal position is already stored by the service.
  }

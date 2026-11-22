@@ -2,9 +2,9 @@
 import {useState,useEffect,useRef} from 'react';
 import {useNavigate,useLocation} from 'react-router-dom';
 import {Command} from 'cmdk';
-import {Search,ArrowUpRight,BookOpen,Home,Folder,Compass,RotateCcw,Trophy,Settings,UserRound} from 'lucide-react';
+import {Search,ArrowUpRight,BookOpen,GraduationCap,Home,Folder,Compass,RotateCcw,Trophy,Settings,UserRound} from 'lucide-react';
 import {Modal} from '../ui/modal';
-const destinations=[['任务数据实验室','/projects/sql-foundations',BookOpen,'mysql sql 数据库 查询'],['继续学习','/learn',Home,'home'],['学习路径','/path',Compass,'path'],['后端入门实验室','/projects/backend-foundations',BookOpen,'json http 基础 章节'],['项目','/projects',Folder,'projects'],['复习','/reviews',RotateCcw,'review'],['作品','/portfolio',Trophy,'portfolio'],['学习画像','/profile',UserRound,'profile'],['设置','/settings',Settings,'settings']] as const;
+const destinations=[['课内实战','/school',GraduationCap,'校园 课程作业 数据库原理 作业 school'],['任务数据实验室','/projects/sql-foundations',BookOpen,'mysql sql 数据库 查询'],['继续学习','/learn',Home,'home'],['学习路径','/path',Compass,'path'],['后端入门实验室','/projects/backend-foundations',BookOpen,'json http 基础 章节'],['项目','/projects',Folder,'projects'],['复习','/reviews',RotateCcw,'review'],['作品','/portfolio',Trophy,'portfolio'],['学习画像','/profile',UserRound,'profile'],['设置','/settings',Settings,'settings']] as const;
 export function QuickNavigation(){const [open,setOpen]=useState(false);const navigate=useNavigate();const location=useLocation();const trigger=useRef<HTMLButtonElement>(null);
  useEffect(()=>{function key(e:KeyboardEvent){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();setOpen(previous=>!previous)}}document.addEventListener('keydown',key);return()=>document.removeEventListener('keydown',key)},[]);
  useEffect(()=>setOpen(false),[location.pathname]);

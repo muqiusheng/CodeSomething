@@ -1,54 +1,42 @@
 import {useSyncExternalStore} from 'react';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
-const key = 'cs-theme';
-const changed = 'cs-theme-change';
-const system = window.matchMedia('(prefers-color-scheme: dark)');
+export type ResolvedTheme = Exclude<ThemePreference, 'system'>;
 
-function readPreference(): ThemePreference {
-  try {
-    const value = localStorage.getItem(key);
-    if (value === 'dark' || value === 'system') return value;
-  } catch { /* The selected theme still works when storage is unavailable. */ }
-  return 'light';
+const paletteDetails = {
+  emerald: {name: '云杉翡翠', detail: '翡翠青 · 靛蓝 · 琥珀橙', badge: '默认主配色'},
+  indigo: {name: '靛蓝极客', detail: '皇家靛蓝 · 冰青蓝 · 柔紫'},
+  terracotta: {name: '暖砂琥珀', detail: '陶土焦糖 · 森林绿 · 暖金'},
+  ocean: {name: '深海晴空', detail: '深海蔚蓝 · 薄荷青 · 珊瑚橙'},
+  graphite: {name: '极昼极夜', detail: '曜石黑白 · 钴蓝高亮 · 翠绿'},
+  forest: {name: '松林苔原', detail: '松针深绿 · 暖木棕 · 麦金'},
+  rose: {name: '暮光樱桃', detail: '宝石玫红 · 紫罗兰 · 暖琥珀'},
+  amber: {name: '黑金律动', detail: '琥珀暖金 · 青玉色 · 珊瑚红'},
+  'cupcake-synthwave': {name: '薄荷霓虹', detail: '薄荷绿 · 樱花粉 · 赛博深紫（原版配色）', badge: '经典保留'},
+};
+
+export type PaletteId = keyof typeof paletteDetails;
+type Appearance = {preference: ThemePreference; resolved: ResolvedTheme; palette: PaletteId};
+
+declare global {
+  interface Window {
+    // Installed synchronously by public/theme-init.js.
+    csAppearance: {
+      paletteIds: readonly PaletteId[];
+      getSnapshot: () => Appearance;
+      subscribe: (listener: () => void) => () => void;
+      setTheme: (value: ThemePreference) => boolean;
+      setPalette: (value: PaletteId) => boolean;
+    };
+  }
 }
 
-function resolve(preference: ThemePreference) {
-  return preference === 'system' ? (system.matches ? 'dark' : 'light') : preference;
-}
-
-// Keep an in-memory preference when browser storage is blocked.
-let temporaryPreference: ThemePreference | undefined;
-function preference() { return temporaryPreference ?? readPreference(); }
-function sync() {
-  const resolved = resolve(preference());
-  document.documentElement.dataset.theme = resolved;
-  document.documentElement.style.colorScheme = resolved;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolved === 'dark' ? '#09002f' : '#f7f3f1');
-  window.dispatchEvent(new Event(changed));
-}
-
-sync();
-system.addEventListener('change', sync);
-window.addEventListener('storage', event => {
-  if (event.key === key || event.key === null) { temporaryPreference = undefined; sync(); }
-});
-
-function subscribe(callback: () => void) {
-  window.addEventListener(changed, callback);
-  return () => window.removeEventListener(changed, callback);
-}
-
-export function setTheme(value: ThemePreference): boolean {
-  temporaryPreference = value;
-  let persisted = false;
-  try { localStorage.setItem(key, value); persisted = true; } catch { /* Report this in settings. */ }
-  sync();
-  return persisted;
-}
+const {subscribe, getSnapshot, setTheme, setPalette, paletteIds} = window.csAppearance;
+export {setTheme, setPalette};
+export const PALETTES: readonly {id: PaletteId; name: string; detail: string; badge?: string}[] =
+  paletteIds.map(id => ({id, ...paletteDetails[id]}));
 
 export function useTheme() {
-  const snapshot = useSyncExternalStore(subscribe, () => `${preference()}:${resolve(preference())}`);
-  const [selected, resolved] = snapshot.split(':') as [ThemePreference, 'light' | 'dark'];
-  return {preference: selected, resolved, setTheme};
+  const appearance = useSyncExternalStore(subscribe, getSnapshot);
+  return {...appearance, setTheme, setPalette, palettes: PALETTES};
 }

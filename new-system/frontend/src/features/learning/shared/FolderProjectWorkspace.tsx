@@ -1,4 +1,5 @@
-import {useEffect,useId,useMemo,useRef,useState,type ComponentProps,type ReactNode} from 'react';
+import {localState, sessionState} from '../../../api/browser-state.mjs';
+import {useEffect,useMemo,useRef,useState,type ComponentProps,type ReactNode} from 'react';
 import {nativeAvailable,pickNativeDirectory} from './native-project.mjs';
 import {Check,FolderOpen,FileCode2,Save,RefreshCw,X} from 'lucide-react';
 import {CodeEditor} from '../../../components/code/CodeEditor';
@@ -10,11 +11,12 @@ import {useWorkspaceView} from './WorkspaceLayout';
 import {ProjectFileDrawer} from './ProjectFileDrawer';
 import {ProjectOpenFiles} from './ProjectOpenFiles';
 import {WorkspaceDivider} from './WorkspaceDivider';
+import {WorkspaceResults} from './WorkspaceResults';
 import {CodeCompletion} from './CodeCompletion';
 import {listDirectory,readText,saveText,collectCheckFiles,projectStamp,rememberDirectory,recallDirectory,isMissingProjectEntry,openFilePresence,type LocalDirectory,type LocalFile} from './local-project-files.mjs';
 
 type Buffer={base:string;value:string;closed?:boolean};
-function pendingBuffers(key:string):Record<string,Buffer>{try{const value=JSON.parse(sessionStorage.getItem(key+'-unsaved')||'{}');return value&&typeof value==='object'&&!Array.isArray(value)&&Object.values(value).every(b=>b&&typeof (b as Buffer).base==='string'&&typeof (b as Buffer).value==='string')?value:{}}catch{return {}}}
+function pendingBuffers(key:string):Record<string,Buffer>{try{const value=JSON.parse(sessionState.getItem(key+'-unsaved')||'{}');return value&&typeof value==='object'&&!Array.isArray(value)&&Object.values(value).every(b=>b&&typeof (b as Buffer).base==='string'&&typeof (b as Buffer).value==='string')?value:{}}catch{return {}}}
 type Draft={id:string;revision:number;digest:string};
 const checking=(job:CheckJob|null)=>!!job&&['queued','running','cancelling','awaiting_runner'].includes(job.status);
 const signature=(files:Record<string,string>)=>JSON.stringify(Object.entries(files).sort(([a],[b])=>a.localeCompare(b)));
@@ -32,7 +34,6 @@ function DirectoryBranch({entry,prefix,view,onView,epoch}:{entry:LocalDirectory;
 export function FolderProjectWorkspace({context,onJobChange,nextHref,nextLabel,verifyRef,practiceFooter,guide}:ComponentProps<typeof BrowserWorkspace>&{practiceFooter?:ReactNode;guide:ReactNode}){
  const [resultsOpen,setResultsOpen]=useState(false);
  const mobileView=useWorkspaceView();
- const resultsId=useId();
  const resultPanel=useRef<HTMLDivElement>(null);
  const runButton=useRef<HTMLButtonElement>(null);
  const practiceOnly=practiceFooter!==undefined;
@@ -41,7 +42,7 @@ export function FolderProjectWorkspace({context,onJobChange,nextHref,nextLabel,v
  const [root,setRoot]=useState<LocalDirectory>(),[authorized,setAuthorized]=useState(false),[epoch,setEpoch]=useState(0),[buffers,setBuffers]=useState<Record<string,Buffer>>(()=>pendingBuffers(storageKey)),[view,setView]=useState('');
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[status,setStatus]=useState('选择独立的项目根目录，网站会记住此工程。'),[readAt,setReadAt]=useState('');
  const [job,setJob]=useState<CheckJob|null>(null),[submissionId,setSubmissionId]=useState<string>(),[reportKey,setReportKey]=useState(''),[currentKey,setCurrentKey]=useState(''),[readIssue,setReadIssue]=useState('');
- const [token]=useState(()=>{try{const old=localStorage.getItem(storageKey+'-key');if(old)return old;const key=crypto.randomUUID();localStorage.setItem(storageKey+'-key',key);return key}catch{return crypto.randomUUID()}});
+ const [token]=useState(()=>{try{const old=localState.getItem(storageKey+'-key');if(old)return old;const key=crypto.randomUUID();localState.setItem(storageKey+'-key',key);return key}catch{return crypto.randomUUID()}});
  const [native,setNative]=useState(false),[picking,setPicking]=useState(false);
  const [missing,setMissing]=useState<Set<string>>(new Set());
  const [checkIssue,setCheckIssue]=useState('');
@@ -65,7 +66,7 @@ export function FolderProjectWorkspace({context,onJobChange,nextHref,nextLabel,v
  useEffect(()=>{onJobChange?.(report,context.courseVersion+context.stageId,token,submissionId)},[report,context.courseVersion,context.stageId,token,submissionId,onJobChange]);
  useEffect(()=>{if(error)alert.current?.focus()},[error]);
  useEffect(()=>{let active=true;void recallDirectory(storageKey).then(async handle=>{if(!handle||!active)return;setRoot(handle);activeRoot.current=handle;if(await handle.queryPermission({mode:'readwrite'})==='granted'){if(!active)return;setAuthorized(true);setStatus('已记住上次工程，正在核对文件。');await refresh(handle)}else if(active)setStatus('已记住工程 '+handle.name+'，点击“重新授权”恢复读写。')}).catch(()=>{if(active)setReadIssue('原工程暂时无法读取，请重新选择项目目录；未保存修改继续保留。')});return()=>{active=false}},[storageKey]);
- useEffect(()=>{let active=true;setJob(null);setSubmissionId(undefined);setReportKey('');if(practiceOnly)return;try{const raw=sessionStorage.getItem(resultKey);if(raw){const saved=JSON.parse(raw);setResultsOpen(true);setReportKey(saved.selectionKey);setSubmissionId(saved.submissionId);void learningRequest<CheckJob>('/jobs/'+saved.jobId,undefined,token).then(value=>{if(active)setJob(value)}).catch(()=>{})}}catch{}return()=>{active=false}},[resultKey,token,practiceOnly]);
+ useEffect(()=>{let active=true;setJob(null);setSubmissionId(undefined);setReportKey('');if(practiceOnly)return;try{const raw=sessionState.getItem(resultKey);if(raw){const saved=JSON.parse(raw);setResultsOpen(true);setReportKey(saved.selectionKey);setSubmissionId(saved.submissionId);void learningRequest<CheckJob>('/jobs/'+saved.jobId,undefined,token).then(value=>{if(active)setJob(value)}).catch(()=>{})}}catch{}return()=>{active=false}},[resultKey,token,practiceOnly]);
  useEffect(()=>{if(!job||!checking(job))return;let active=true;const timer=setTimeout(()=>void learningRequest<CheckJob>('/jobs/'+job.id,undefined,token).then(value=>{if(active)setJob(value)}).catch(e=>{if(active)setError(e.message)}),1000);return()=>{active=false;clearTimeout(timer)}},[job,token]);
  useEffect(()=>{
   if(!root||!authorized)return;
@@ -79,7 +80,7 @@ export function FolderProjectWorkspace({context,onJobChange,nextHref,nextLabel,v
    clearInterval(timer);
   };
  },[root,authorized,context.courseId]);
- useEffect(()=>{try{const pending=Object.fromEntries(dirty);if(dirty.length)sessionStorage.setItem(storageKey+'-unsaved',JSON.stringify(pending));else sessionStorage.removeItem(storageKey+'-unsaved')}catch{}},[buffers,storageKey]);
+ useEffect(()=>{try{const pending=Object.fromEntries(dirty);if(dirty.length)sessionState.setItem(storageKey+'-unsaved',JSON.stringify(pending));else sessionState.removeItem(storageKey+'-unsaved')}catch{}},[buffers,storageKey]);
  useEffect(()=>{const guard=(e:BeforeUnloadEvent)=>{if(dirty.length){e.preventDefault();e.returnValue=''}};window.addEventListener('beforeunload',guard);return()=>window.removeEventListener('beforeunload',guard)},[dirty.length]);
  async function refresh(handle:LocalDirectory){
   if(refreshing.current){if(refreshRoot.current===handle)return refreshing.current;await refreshing.current;if(activeRoot.current===handle)return refresh(handle);return}
@@ -223,7 +224,7 @@ export function FolderProjectWorkspace({context,onJobChange,nextHref,nextLabel,v
   if(matchMedia('(width <= 768px)').matches)requestAnimationFrame(()=>resultPanel.current?.scrollIntoView({block:'nearest'}));
   setBusy(true);setError('');try{
   await save();const before=await projectStamp(root,context.courseId);const files=await collectCheckFiles(root,context.courseId),key=signature(files);const after=await projectStamp(root,context.courseId);stamp.current=after;if(before!==after){setCurrentKey('');throw new Error('工程在读取期间发生变化，请等待IDE保存完成后重试。')}setCurrentKey(key);setReadAt(new Date().toLocaleString('zh-CN'));
-  const draft=await learningRequest<Draft>('/browser-workspaces',{...context,clientKey:token});const saved=await learningRequest<Draft>('/browser-workspaces/'+draft.id+'/draft',{expectedRevision:draft.revision,files},token);const submission=await learningRequest<Submission>('/submissions',{bindingId:saved.id,expectedDigest:saved.digest},token);setSubmissionId(submission.id);const value=await learningRequest<CheckJob>('/check-jobs',{submissionId:submission.id,idempotencyKey:'folder-'+submission.id},token);setReportKey(key);setJob(value);try{sessionStorage.setItem(resultKey,JSON.stringify({jobId:value.id,submissionId:submission.id,selectionKey:key}))}catch{}setStatus('已从本地读取并提交'+Object.keys(files).length+'个检查文件。');
+  const draft=await learningRequest<Draft>('/browser-workspaces',{...context,clientKey:token});const saved=await learningRequest<Draft>('/browser-workspaces/'+draft.id+'/draft',{expectedRevision:draft.revision,files},token);const submission=await learningRequest<Submission>('/submissions',{bindingId:saved.id,expectedDigest:saved.digest},token);setSubmissionId(submission.id);const value=await learningRequest<CheckJob>('/check-jobs',{submissionId:submission.id,idempotencyKey:'folder-'+submission.id},token);setReportKey(key);setJob(value);try{sessionState.setItem(resultKey,JSON.stringify({jobId:value.id,submissionId:submission.id,selectionKey:key}))}catch{}setStatus('已从本地读取并提交'+Object.keys(files).length+'个检查文件。');
  }catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  useEffect(()=>{
   if(!verifyRef)return;
@@ -286,14 +287,12 @@ export function FolderProjectWorkspace({context,onJobChange,nextHref,nextLabel,v
    </details>}<CodeEditor path={view} value={buffers[view].value} readOnly={busy} onChange={value=>setBuffers(previous=>({...previous,[view]:{...previous[view],value}}))}/>{buffers[view].base!==buffers[view].value&&<button className="text-button" disabled={busy} onClick={()=>void discard()}>{missing.has(view)?'丢弃此文件网页草稿':'丢弃此文件网页修改并重新读取'}</button>}</>:<div className="project-editor-empty"><FileCode2 size={28} aria-hidden="true"/><p>从项目目录打开文件<br/>在IDE或这里编辑，使用同一份本地工程。</p>{!view&&tabs.length>0&&<button type="button" className="btn button secondary" onClick={()=>setView(tabs[0][0])}>重新打开 {tabs[0][0].split('/').pop()}</button>}</div>}</div></div>}>
   <Directory {...{root,view,epoch}} onView={path=>void open(path)}/>
  </ProjectFileDrawer></div>{!practiceOnly&&<>{checkIssue&&<p role="status">{checkIssue}</p>}<span className="sr-only">验证时自动读取本章源码，检查结果对应提交时的文件快照。</span></>}</>}{practiceOnly?<div className="practice-result-note">{practiceFooter}</div>:<>
- {resultsOpen&&<WorkspaceDivider dock/>}
- <section className="workspace-results workspace-dock-results" data-expanded={resultsOpen}>
- <button type="button" className="workspace-results-toggle" aria-expanded={resultsOpen}
-  aria-controls={resultsId} onClick={()=>setResultsOpen(value=>!value)}>
-  <span>运行结果</span><span role="status">{checking(job)?'正在验证…':report?.stale?'旧结果':report?.status==='passed'?'功能通过':report?'查看反馈':busy?'正在读取与保存…':'尚未运行'} · {resultsOpen?'收起':'展开'}</span>
- </button>
- <div ref={resultPanel} id={resultsId} className="workspace-output" role="region" aria-label="本次运行结果" tabIndex={0} hidden={!resultsOpen && !mobileView?.reportVisible}>
+ <WorkspaceResults dock open={resultsOpen} onOpenChange={setResultsOpen} output={resultPanel}
+  reportVisible={mobileView?.reportVisible} divider={<WorkspaceDivider dock/>}
+  onFloatChange={floating=>{if(matchMedia('(width < 640px)').matches)mobileView?.select(floating?'code':'report')}}
+  status={checking(job)?'正在验证…':report?.stale?'旧结果':report?.status==='passed'?'功能通过':report?'查看反馈':busy?'正在读取与保存…':'尚未运行'}>
  {report?<CheckJobReport job={report} action={completionAction}/>:completionAction}
  {!report&&<p className="workspace-result-empty">{busy?'正在读取工程文件并准备检查…':'运行代码后在这里查看实际结果。'}</p>}
- <div className="button-row">{job&&<button type="button" className="button secondary" disabled={busy} onClick={()=>void (job.status==='awaiting_runner'?learningRequest<CheckJob>('/check-jobs',{submissionId:job.submissionId,idempotencyKey:'folder-'+job.submissionId},token):learningRequest<CheckJob>('/jobs/'+job.id,undefined,token)).then(value=>{setJob(value);setError('')}).catch(e=>setError(e.message))}>刷新检查状态</button>}{checking(job)&&<button type="button" className="button secondary" disabled={busy||job?.status==='cancelling'} onClick={()=>void learningRequest<CheckJob>('/jobs/'+job!.id+'/cancel',{},token).then(setJob).catch(e=>setError(e.message))}>取消检查</button>}</div></div></section></>}</section>;
+ <div className="button-row">{job&&<button type="button" className="button secondary" disabled={busy} onClick={()=>void (job.status==='awaiting_runner'?learningRequest<CheckJob>('/check-jobs',{submissionId:job.submissionId,idempotencyKey:'folder-'+job.submissionId},token):learningRequest<CheckJob>('/jobs/'+job.id,undefined,token)).then(value=>{setJob(value);setError('')}).catch(e=>setError(e.message))}>刷新检查状态</button>}{checking(job)&&<button type="button" className="button secondary" disabled={busy||job?.status==='cancelling'} onClick={()=>void learningRequest<CheckJob>('/jobs/'+job!.id+'/cancel',{},token).then(setJob).catch(e=>setError(e.message))}>取消检查</button>}</div>
+ </WorkspaceResults></>}</section>;
 }

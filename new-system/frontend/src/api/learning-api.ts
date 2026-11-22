@@ -1,3 +1,4 @@
+import {apiFetch} from './auth-api';
 import {milestoneLabels} from '../features/learning/journey/catalog';
 import {preferFormalPosition} from '../features/learning/journey/study-position';
 
@@ -13,7 +14,7 @@ export type Submission={id:string;bindingId:string;digest:string;courseVersion:s
 export type CheckReport={snapshotDigest:string;courseVersion:string;stageId:string;policy:string;image:string;harnessDigest:string;functionalPassed:boolean;assertions:{name:string;passed:boolean;expected:string;actual:string}[];log:string;finishedAt:string};
 export type CheckJob={id:string;submissionId:string;status:string;message:string;progress?:{phase:string;label:string;step:number;total:number};report:CheckReport|null;stale:boolean;freshness:'current'|'changed'|'unknown'};
 export async function learningRequest<T>(path:string,body?:unknown,token?:string):Promise<T>{
- const response=await fetch('/api/v1'+path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(10000),cache:'no-store'});
+ const response=await apiFetch('/api/v1'+path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(10000),cache:'no-store'});
  const result=await response.json();if(!response.ok)throw new Error(result.message||'请求未完成，请重试。');return result as T;
 }
 export const coursePath='/courses/http-json-basics/versions/1.0.0/stages/json-task-response';
@@ -61,7 +62,7 @@ export function saveLearningPosition(context:{courseId:string;courseVersion:stri
    preferFormalPosition();
    return '阅读位置已保存';
   }
-  const response=await fetch('/api/v1/learning/sessions/local',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...context,step,expectedRevision:old?.revision||0}),signal:AbortSignal.timeout(10000)});
+  const response=await apiFetch('/api/v1/learning/sessions/local',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...context,step,expectedRevision:old?.revision||0}),signal:AbortSignal.timeout(10000)});
   const result=await response.json();
   if(!response.ok){if(result.code==='PREVIEW_ONLY')return '预览中 · 正式续学位置保持不变';throw new Error(result.message||'位置保存失败，请重试。')}
   if(isCurrent())preferFormalPosition();

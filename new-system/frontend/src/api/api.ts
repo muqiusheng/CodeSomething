@@ -1,3 +1,5 @@
+import {apiFetch} from './auth-api';
+import {localState} from './browser-state.mjs';
 export type LearningPreferences = {
   dailyMinutes: number;
   motion: 'system' | 'reduce';
@@ -6,7 +8,7 @@ export type LearningPreferences = {
 };
 
 async function preferencesRequest(method: 'GET' | 'PATCH', patch?: Partial<Pick<LearningPreferences, 'dailyMinutes' | 'motion'>>): Promise<LearningPreferences> {
-  const response = await fetch('/api/v1/profiles/me/preferences', {
+  const response = await apiFetch('/api/v1/profiles/me/preferences', {
     method,
     cache: 'no-store',
     headers: {'Content-Type': 'application/json'},
@@ -27,7 +29,7 @@ export const updatePreferences = (patch: Partial<Pick<LearningPreferences, 'dail
 export function cachePreferences(preferences: LearningPreferences) {
   document.documentElement.dataset.motion = preferences.motion;
   try {
-    localStorage.setItem('cs-duration', String(preferences.dailyMinutes));
-    localStorage.setItem('cs-motion', preferences.motion);
+    localState.setItem('cs-duration', String(preferences.dailyMinutes));
+    localState.setItem('cs-motion', preferences.motion);
   } catch { /* The server remains the source when browser storage is unavailable. */ }
 }

@@ -1,3 +1,4 @@
+import {localState} from '../../../api/browser-state.mjs';
 import {CodeCompletion} from './CodeCompletion';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {Play,Square,Download,FileCode2,Cloud,RefreshCw} from 'lucide-react';
@@ -5,11 +6,12 @@ import {LocalDirectorySave} from '../../../components/code/LocalDirectorySave';
 import {CodeEditor} from '../../../components/code/CodeEditor';
 import {learningRequest,type CheckJob,type Submission} from '../../../api/learning-api';
 import {CheckJobReport} from './CheckJobReport';
+import {WorkspaceResults} from './WorkspaceResults';
 type Files=Record<string,string>;
 type Draft={id:string;token?:string;revision:number;files:{path:string;content:string}[];digest:string;updatedAt:string;submissionId:string|null;jobId:string|null};
 type Context={courseId:string;courseVersion:string;stageId:string};
 const running=(job:CheckJob|null)=>!!job&&['queued','running','cancelling','awaiting_runner'].includes(job.status);
-export function BrowserWorkspace({context,onJobChange,onContinue,nextHref}:{nextHref?:string;nextLabel?:string;verifyRef?:React.RefObject<(()=>Promise<void>)|null>;context:Context;onJobChange?:(job:CheckJob|null,identity:string,token?:string,submissionId?:string)=>void;onContinue?:()=>void}){
+export function BrowserWorkspace({context,onJobChange,onContinue,nextHref,nextLabel,verifyRef}:{nextHref?:string;nextLabel?:string;verifyRef?:React.RefObject<(()=>Promise<void>)|null>;context:Context;onJobChange?:(job:CheckJob|null,identity:string,token?:string,submissionId?:string)=>void;onContinue?:()=>void}){
  const legacyStorageKey='cs-browser-'+[context.courseId,context.courseVersion,context.stageId].join('-');
  const storageKey='cs-browser-project-'+[context.courseId,context.courseVersion].join('-');
  const [draft,setDraft]=useState<Draft|null>(null),[files,setFiles]=useState<Files>({}),[selected,setSelected]=useState(''),[job,setJob]=useState<CheckJob|null>(null),[submissionId,setSubmissionId]=useState<string>();
@@ -18,14 +20,14 @@ export function BrowserWorkspace({context,onJobChange,onContinue,nextHref}:{next
  const output=useRef<HTMLDivElement>(null),requestedRun=useRef(false);
  const [resultsOpen,setResultsOpen]=useState(true);
  const [newFileKind,setNewFileKind]=useState<'java'|'test'|null>(null),[newFileName,setNewFileName]=useState('');
- useEffect(()=>{if(requestedRun.current&&job&&!running(job)&&job.report){requestedRun.current=false;setResultsOpen(true);requestAnimationFrame(()=>{output.current?.focus({preventScroll:true});output.current?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})})}},[job?.status]);
- const cache=useCallback((next:Files,isDirty:boolean)=>{try{localStorage.setItem(storageKey+'-draft',JSON.stringify({files:next,baseRevision:revision.current,dirty:isDirty}))}catch{setError('浏览器恢复副本无法保存，请保持服务连接并确认服务器保存成功。')}},[storageKey]);
+ useEffect(()=>{if(requestedRun.current&&job&&!running(job)&&job.report){requestedRun.current=false;setResultsOpen(true);requestAnimationFrame(()=>{if(output.current?.closest('[data-floating=true]'))return;output.current?.focus({preventScroll:true});output.current?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})})}},[job?.status]);
+ const cache=useCallback((next:Files,isDirty:boolean)=>{try{localState.setItem(storageKey+'-draft',JSON.stringify({files:next,baseRevision:revision.current,dirty:isDirty}))}catch{setError('浏览器恢复副本无法保存，请保持服务连接并确认服务器保存成功。')}},[storageKey]);
  useEffect(()=>{let active=true;alive.current=true;loaded.current=false;
-  void (async()=>{let key=localStorage.getItem(storageKey+'-key');if(!key){key=localStorage.getItem(legacyStorageKey+'-key')||crypto.randomUUID();localStorage.setItem(storageKey+'-key',key)}token.current=key;
+  void (async()=>{let key=localState.getItem(storageKey+'-key');if(!key){key=localState.getItem(legacyStorageKey+'-key')||crypto.randomUUID();localState.setItem(storageKey+'-key',key)}token.current=key;
    const value=await learningRequest<Draft>('/browser-workspaces',{...context,clientKey:key});if(!active)return;
    draftRef.current=value;setDraft(value);revision.current=value.revision;
    let next=Object.fromEntries(value.files.map(f=>[f.path,f.content]));saved.current=JSON.stringify(next);let restore=false;
-   try{const raw=localStorage.getItem(storageKey+'-draft')||localStorage.getItem(legacyStorageKey+'-draft');if(raw){const local=JSON.parse(raw);if(local.dirty&&JSON.stringify(local.files)!==saved.current){next=local.files;restore=true;if(local.baseRevision!==value.revision){paused.current=true;setConflict(true);setError('恢复副本与服务器版本不同，请选择保留的版本。')}}}}catch{setError('本机恢复副本无法读取，已读取服务器草稿。')}
+   try{const raw=localState.getItem(storageKey+'-draft')||localState.getItem(legacyStorageKey+'-draft');if(raw){const local=JSON.parse(raw);if(local.dirty&&JSON.stringify(local.files)!==saved.current){next=local.files;restore=true;if(local.baseRevision!==value.revision){paused.current=true;setConflict(true);setError('恢复副本与服务器版本不同，请选择保留的版本。')}}}}catch{setError('本机恢复副本无法读取，已读取服务器草稿。')}
    current.current=next;setFiles(next);setSelected(Object.keys(next).find(p=>p.endsWith('.java')&&!p.endsWith('Application.java'))||Object.keys(next).find(p=>p.endsWith('.java'))||Object.keys(next)[0]);setDirty(restore);loaded.current=true;setStatus(restore?'已恢复尚未保存的修改':'已恢复本项目代码');
    if(value.jobId){setSubmissionId(value.submissionId||undefined);setJob(await learningRequest<CheckJob>('/jobs/'+value.jobId,undefined,key))}
   })().catch(e=>{if(active){setError(e.message);setStatus('工作区未连接')}});
@@ -43,6 +45,12 @@ export function BrowserWorkspace({context,onJobChange,onContinue,nextHref}:{next
  useEffect(()=>{if(!dirty||!loaded.current||conflict)return;const timer=setTimeout(()=>void save().catch(()=>{}),800);return()=>clearTimeout(timer)},[files,dirty,conflict,save]);
  useEffect(()=>{const leave=(e:BeforeUnloadEvent)=>{if(loaded.current&&JSON.stringify(current.current)!==saved.current){e.preventDefault();e.returnValue=''}};window.addEventListener('beforeunload',leave);return()=>window.removeEventListener('beforeunload',leave)},[]);
  const changedSinceReport=dirty||conflict||!!(job?.report&&draft&&job.report.snapshotDigest!==draft.digest);
+ const verifyCurrent=useCallback(async()=>{
+  const value=await save();
+  if(value.digest!==job?.report?.snapshotDigest||JSON.stringify(current.current)!==saved.current)
+   throw new Error('代码已变化，请重新运行检查。');
+ },[save,job?.report?.snapshotDigest]);
+ useEffect(()=>{if(!verifyRef)return;verifyRef.current=verifyCurrent;return()=>{verifyRef.current=null}},[verifyRef,verifyCurrent]);
  useEffect(()=>{onJobChange?.(job?{...job,stale:job.stale||changedSinceReport,freshness:changedSinceReport?'changed' as const:job.freshness}:null,context.courseVersion+context.stageId,token.current,submissionId)},[job,changedSinceReport,onJobChange,submissionId]);
  useEffect(()=>{if(!job)return;let active=true,polling=false;async function poll(){if(polling)return;polling=true;try{const next=await learningRequest<CheckJob>('/jobs/'+job!.id,undefined,token.current);if(active)setJob(next)}catch(e){if(active)setError((e as Error).message)}finally{polling=false}}const timer=setInterval(()=>{if(running(job))void poll()},1000);const focus=()=>void poll();window.addEventListener('focus',focus);return()=>{active=false;clearInterval(timer);window.removeEventListener('focus',focus)}},[job?.id,job?.status]);
  async function perform(action:()=>Promise<void>){setBusy(true);setError('');try{await action()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
@@ -64,10 +72,15 @@ export function BrowserWorkspace({context,onJobChange,onContinue,nextHref}:{next
  {error&&<div className="workspace-error" role="alert"><p>{error}</p>{conflict?<div className="button-row"><button className="button secondary" onClick={()=>void resolve(false)}>读取服务器版本</button><button className="button secondary" onClick={()=>void resolve(true)}>保留本页代码并保存</button></div>:<button className="button secondary" onClick={()=>draft?void perform(async()=>{await save()}):setRetry(n=>n+1)}>重试连接与保存</button>}</div>}
  {draft&&<><div className="workspace-files" role="group" aria-label="工作区文件">{Object.keys(files).map(path=><button key={path} className={path===selected?'active':''} aria-pressed={path===selected} onClick={()=>{setSelected(path);setLine(undefined)}} title={path}><FileCode2 size={14} aria-hidden="true"/>{path.split('/').pop()}</button>)}{context.courseId!=='http-json-basics'&&<><button onClick={()=>createFile('java')}>＋ Java文件</button><button onClick={()=>createFile('test')}>＋ JUnit测试</button><button onClick={()=>createFile('notes')}>＋ 运行说明</button></>}</div>
  {newFileKind&&<form className="workspace-new-file" onSubmit={e=>{e.preventDefault();createFile(newFileKind,newFileName)}}><label>{newFileKind==='test'?'测试类名':'Java类名'}<input autoFocus required value={newFileName} onChange={e=>setNewFileName(e.target.value)} placeholder={newFileKind==='test'?'TaskServiceTest':'HealthController'} autoComplete="off" spellCheck={false}/></label><p>文件将放入当前工程的{newFileKind==='test'?'src/test':'src/main'}/java/dev/codesomething/lab目录。</p><div className="button-row"><button className="btn button primary" type="submit">创建并编辑</button><button type="button" className="button secondary" onClick={()=>setNewFileKind(null)}>取消</button></div></form>}
- <CodeEditor path={selected} value={files[selected]||''} onChange={value=>edit({...current.current,[selected]:value})} readOnly={selected==='pom.xml'} line={line}/>
+ <CodeEditor path={selected} value={files[selected]||''} onChange={value=>edit({...current.current,[selected]:value})} line={line}/>
  
  {locations.length>0&&<div className="workspace-locations">{locations.map(location=><button key={location} className="text-button" onClick={()=>{const [path,line]=location.split(':');const match=Object.keys(files).find(p=>p===path||p.split('/').pop()===path.split('/').pop());if(match){setSelected(match);setLine(Number(line))}}}>定位 {location.split('/').pop()}</button>)}</div>}
- <section className="workspace-results" data-expanded={resultsOpen}><button type="button" className="workspace-results-toggle" aria-expanded={resultsOpen} aria-controls={"results-"+context.stageId} onClick={()=>setResultsOpen(v=>!v)}><span>运行结果</span><span>{running(job)?'正在运行…':report?report.stale?'旧结果':report.status==='passed'?'功能通过':'查看反馈':'尚未运行'} · {resultsOpen?'收起':'展开'}</span></button><div ref={output} id={"results-"+context.stageId} className="workspace-output" tabIndex={-1} aria-label="本次运行结果" hidden={!resultsOpen}>{report?<CheckJobReport job={report}/>:<p className="workspace-result-empty">{running(job)?'正在本机隔离环境中编译运行…':'运行代码后，在这里查看实际响应与检查反馈。'}</p>}<CodeCompletion job={report} token={token.current} context={context} nextHref={nextHref}/>{report?.status==='passed'&&!report.stale&&onContinue&&<button className="text-button" onClick={onContinue}>补充巩固理解（可选）</button>}</div></section>
+ <WorkspaceResults open={resultsOpen} onOpenChange={setResultsOpen} output={output}
+  status={running(job)?'正在运行…':report?report.stale?'旧结果':report.status==='passed'?'功能通过':'查看反馈':'尚未运行'}>
+  {report?<CheckJobReport job={report}/>:<p className="workspace-result-empty">{running(job)?'正在隔离环境中编译运行…':'运行代码后，在这里查看实际响应与检查反馈。'}</p>}
+  <CodeCompletion job={report} token={token.current} context={context} nextHref={nextHref} nextLabel={nextLabel} beforeComplete={verifyCurrent}/>
+  {report?.status==='passed'&&!report.stale&&onContinue&&<button className="text-button" onClick={onContinue}>补充巩固理解（可选）</button>}
+ </WorkspaceResults>
  </>}
  </section>;
 }
