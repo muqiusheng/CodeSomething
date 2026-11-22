@@ -65,10 +65,10 @@
  color:var(--text-secondary);font-size:12px;font-weight:500;
 }
 .workspace-results-mode.btn:hover{background:var(--surface-hover,var(--surface));color:var(--text)}
-.workspace-results-resize-bar{display:flex;justify-content:flex-end;flex:none;height:24px}
 .workspace-results-resize.btn{
- position:relative;align-self:flex-end;width:32px;height:27px;min-height:0;
- padding:0;border:0;border-radius:var(--radius-sm);background:transparent;box-shadow:none;
+ position:absolute;inset:auto 8px 8px auto;width:32px;height:27px;min-height:0;z-index:1;
+ background:var(--surface);
+ padding:0;border:0;border-radius:var(--radius-sm);box-shadow:none;
  color:var(--text-secondary);cursor:nwse-resize;touch-action:none;
 }
 .workspace-results-resize::after,.workspace-results-resize::before{
@@ -97,7 +97,7 @@
 }
 .coding-app .workspace-results[data-floating=true] .workspace-output,
 .workspace-results[data-floating=true] .workspace-output{
- flex:1;min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;
+ flex:1;min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-block-end:36px;
 }
 .workspace-results[data-floating=true] :is(button,.workspace-output):focus-visible{outline-offset:-2px}
 .workspace-results :is(.workspace-results-mode,.workspace-results-resize).btn:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
@@ -454,4 +454,27 @@ html[data-motion=reduce] [data-workspace-view] :is(.workspace-task-pane,.folder-
 .http-workspace-location [aria-current] {overflow-wrap:anywhere}
 @media (width <= 640px) {
  .http-workspace-location a {display:inline-flex;align-items:center;min-height:44px}
+}
+
+/* The tab list stays mounted and keeps its Radix keyboard and URL behavior.
+   On the split task view it occupies the top of the reading island. */
+@media (width > 768px) {
+ .http-workspace-location {margin-bottom:4px}
+ .http-workspace-location a {min-height:28px;display:inline-flex;align-items:center}
+ .coding-app .foundation-lesson .lesson-main:has(>.chapter-article:not([hidden]) :is(.guided-coding-layout,.web-task-layout)) {position:relative}
+ .coding-app .foundation-lesson .lesson-main:has(>.chapter-article:not([hidden]) :is(.guided-coding-layout,.web-task-layout))>.tabs {
+  position:absolute;inset:1px auto auto 1px;z-index:var(--z-sticky);
+  width:min(238px,100%);height:38px;min-height:38px;
+  padding-inline:8px;gap:6px;background:var(--surface);border:0;border-radius:var(--radius-inset);
+  scrollbar-width:thin;
+ }
+ .coding-app .foundation-lesson .lesson-main:has(>.chapter-article:not([hidden]) :is(.guided-coding-layout,.web-task-layout))>.tabs button {
+  min-height:36px;height:36px;padding:0 6px;
+ }
+ .coding-app .foundation-lesson .lesson-main>.tabs .tab-index {display:none}
+ .coding-app .foundation-lesson :is(.guided-coding-layout,.web-task-layout) {padding-top:0}
+ .coding-app .foundation-lesson :is(.guided-coding-layout,.web-task-layout)>.workspace-task-pane:not([data-folded=true]) {
+  padding-top:46px!important;
+ }
+ .coding-app .foundation-lesson :is(.guided-coding-layout,.web-task-layout)>.workspace-task-pane[data-folded=true] {padding-top:40px}
 }

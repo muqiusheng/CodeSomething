@@ -7,19 +7,26 @@ import {tmpdir} from 'node:os';
 
 const bin=process.env.CS_BROWSER_BIN;
 assert.ok(bin,'Set CS_BROWSER_BIN to the agent-browser executable.');
-const session='cs-bento-craft';
+let session='cs-bento-craft';
 const base=process.env.CS_FRONTEND_URL||'http://127.0.0.1:5278';
 const output=process.env.CS_BENTO_OUTPUT||join(tmpdir(),'cs-bento-craft');
 mkdirSync(output,{recursive:true});
 const resultsFile=join(output,'results.json');
 const evidence={layout:[],contrast:[],interactions:[]};
 function run(args,input){
- const result=spawnSync(bin,['--session',session,...args],{input,encoding:'utf8',windowsHide:true,timeout:30000});
- assert.equal(result.status,0,result.stdout+result.stderr);
+ const result=spawnSync(bin,['--session',session,...args],{input,encoding:'utf8',windowsHide:true,timeout:45000});
+ assert.equal(result.status,0,[args.join(' '),result.error?.message,result.stdout,result.stderr].filter(Boolean).join('\n'));
  return result.stdout.trim();
 }
 const evaluate=code=>JSON.parse(run(['eval','--stdin'],code));
-const open=(url,selector)=>{run(['open',base+url]);run(['wait',selector]);run(['wait','.topbar']);};
+function open(url,selector){
+ try {run(['open',base+url]);}
+ catch (error) {
+  if(!/ETIMEDOUT|os error 10060|Not attached to an active page/.test(String(error)))throw error;
+  run(['open',base+url]);
+ }
+ run(['wait',selector]);run(['wait','.topbar']);
+}
 const click=selector=>run(['click',selector]);
 const sizes=[[1440,900],[1024,768],[768,1024],[390,844],[320,720]];
 const http='/learn/http-json/1.1/workspace?tab='+encodeURIComponent('任务');
@@ -51,12 +58,21 @@ try {
    run(['set','viewport',String(w),String(h)]);
    open('/learn','.home-hero');
    inspect('home-'+palette+'-'+mode+'-'+w,w,h);
+   if(w===390){
+    const codeWrap=evaluate("(() => {const code=document.querySelector('.home-expected pre');return !code||(getComputedStyle(code).whiteSpace==='pre-wrap'&&code.scrollWidth<=code.clientWidth+1)})()");
+    assert.ok(codeWrap,'390px 目标产物代码应完整折行');
+   }
    open(http,'.foundation-lesson');
    inspect('http-'+palette+'-'+mode+'-'+w,w,h);
   }
  }
  run(['set','viewport','1440','900']);
  open('/learn','.home-hero');
+ const density=evaluate("(() => ({plans:document.querySelectorAll('.home-daily,.header-daily').length,shell:!!document.querySelector('.shell-title'),bottom:Math.max(...['.home-example-preview','.home-review-action'].map(s=>document.querySelector(s).getBoundingClientRect().bottom)),status:document.querySelector('.sandbox-states button').offsetHeight,keys:document.querySelectorAll('.sandbox-json-key').length}))()");
+ assert.equal(density.plans,1);
+ assert.equal(density.shell,false);
+ assert.ok(density.bottom<=900&&density.status===32&&density.keys===3,JSON.stringify(density));
+ evidence.interactions.push('1440×900 首页单一计划入口、沙盒联动区和复习按钮完整可见');
  const primaryToggle=".header-right button[aria-label^='切换到']";
  const before=evaluate("document.documentElement.dataset.theme");
  click(primaryToggle);
@@ -104,9 +120,14 @@ try {
    const brand=getComputedStyle(document.querySelector('.brand-symbol'));
    const accent=getComputedStyle(document.querySelector('.home-status'));
    const code=getComputedStyle(document.querySelector('.home-code-card'));
-   return {palette,mode,button:ratio(primary.color,primary.backgroundColor),brand:ratio(brand.color,brand.backgroundColor),accentBrand:ratio(getComputedStyle(document.querySelector('.brand-stroke-secondary')).fill,brand.backgroundColor),badge:ratio(accent.color,accent.backgroundColor),code:ratio(code.color,code.backgroundColor)};
+   return {palette,mode,buttonText:rgb(primary.color),buttonBackground:rgb(primary.backgroundColor),button:ratio(primary.color,primary.backgroundColor),brand:ratio(brand.color,brand.backgroundColor),accentBrand:ratio(getComputedStyle(document.querySelector('.brand-stroke-secondary')).fill,brand.backgroundColor),badge:ratio(accent.color,accent.backgroundColor),code:ratio(code.color,code.backgroundColor)};
   }).toString()+')('+JSON.stringify(palette)+','+JSON.stringify(mode)+')');
   evidence.contrast.push(report);
+  if(palette==='emerald'&&mode==='light'){
+   assert.deepEqual(report.buttonText,[255,255,255]);
+   assert.deepEqual(report.buttonBackground,[7,111,84]);
+   assert.ok(report.button>5.4);
+  }
   const minimum=palette==='cupcake-synthwave'&&mode==='light'?5:4.5;
   assert.ok(report.button>=minimum&&report.brand>=minimum&&report.accentBrand>=minimum&&report.badge>=4.5&&report.code>=4.5,JSON.stringify(report));
  }
@@ -123,6 +144,13 @@ try {
  open(http,'.workspace-results-mode');
  const divider=evaluate("document.querySelector('.guided-coding-layout > .workspace-divider')?.getBoundingClientRect().width || 0");
  assert.equal(divider,12);
+ const placement=evaluate("(() => {const r=s=>document.querySelector(s).getBoundingClientRect(),tabs=r('.lesson-main>.tabs'),left=r('.workspace-task-pane'),right=r('.local-first-workspace');return {inset:tabs.left>=left.left&&tabs.right<=left.right,aligned:Math.abs(left.top-right.top)<1}})()");
+ assert.deepEqual(placement,{inset:true,aligned:true});
+ run(['focus','.lesson-main>.tabs [aria-selected=true]']);
+ run(['press','ArrowLeft']);
+ assert.equal(evaluate("new URLSearchParams(location.search).get('tab')"),'教学');
+ run(['press','ArrowRight']);
+ assert.equal(evaluate("new URLSearchParams(location.search).get('tab')"),'任务');
  const sectionWidth=()=>evaluate("document.querySelector('.workspace-task-pane').getBoundingClientRect().width");
  const beforeResize=sectionWidth();
  run(['focus','.guided-coding-layout > .workspace-divider']);
@@ -132,6 +160,8 @@ try {
  run(['wait','.workspace-results[data-floating=true]']);
  const geometry=()=>evaluate("(() => {const r=document.querySelector('.workspace-results[data-floating=true]').getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height}})()");
  const floating=geometry();
+ const resizeInset=evaluate("(() => {const panel=document.querySelector('.workspace-results[data-floating=true]').getBoundingClientRect(),handle=document.querySelector('.workspace-results-resize').getBoundingClientRect();return [panel.right-handle.right,panel.bottom-handle.bottom]})()");
+ assert.ok(resizeInset.every(value=>value>=8),JSON.stringify(resizeInset));
  run(['focus','.workspace-results-move']);
  run(['press','ArrowRight']);run(['press','ArrowDown']);
  assert.ok(geometry().x>floating.x&&geometry().y>floating.y);
@@ -141,13 +171,36 @@ try {
  run(['screenshot',join(output,'results-floating.png')]);
  click('.workspace-results-mode');
  evidence.interactions.push('HTTP 分隔条键盘调宽、结果浮窗、双轴移动和缩放');
- for(const [w,h] of sizes){
+ run(['close']);
+ session='cs-bento-craft-workspaces';
+ // Exercise the Monaco keyboard at the end so its focused editor does not
+ // affect subsequent viewport changes in the browser driver.
+ for(const [w,h] of [...sizes.filter(([width])=>width!==390),sizes.find(([width])=>width===390)]){
   run(['set','viewport',String(w),String(h)]);
   for(const [name,url,sel] of workspaces.slice(1)){open(url,sel);inspect(name+'-'+w,w,h,w===1440||w===390);}
   open('/school','.school-home');
   const lab=evaluate("document.querySelector('.school-lab-list a')?.getAttribute('href') || null");
   assert.ok(lab,'课内实战缺少可打开的实验');
-  open(lab,'.school-workspace');inspect('school-'+w,w,h,w===1440||w===390);
+  open(lab,'.school-workspace');
+  if(w===390){
+   run(['wait','.school-monaco .monaco-editor']);
+   const mobile=evaluate("(() => {const tools=document.querySelector('.school-extra-tools'),run=document.querySelector('.school-run-current'),save=document.querySelector('.school-tools [aria-label^=保存]'),editor=document.querySelector('.school-monaco .monaco-editor');return {collapsed:getComputedStyle(tools).display==='none',sameRow:run.offsetTop===save.offsetTop,editorTop:editor.getBoundingClientRect().top,visible:Math.min(editor.getBoundingClientRect().bottom,innerHeight)-editor.getBoundingClientRect().top,disabled:run.disabled}})()");
+   assert.ok(mobile.collapsed&&mobile.sameRow&&mobile.visible>=120,JSON.stringify(mobile));
+   click('.school-tool-toggle');
+   assert.equal(evaluate("getComputedStyle(document.querySelector('.school-extra-tools')).display"),'grid');
+   click('.school-tool-toggle');
+   inspect('school-390',w,h);
+   if(mobile.disabled){
+    run(['click','.school-monaco .monaco-editor .view-lines']);
+    run(['keyboard','inserttext','x']);
+    run(['wait','--fn',"!document.querySelector('.school-run-current').disabled"]);
+    run(['press','Backspace']);
+    run(['wait','--fn',"document.querySelector('.school-run-current').disabled"]);
+   }
+   evidence.interactions.push('390px SQL 编辑区首屏、核心操作同排、辅助操作可展开');
+   continue;
+  }
+  inspect('school-'+w,w,h,w===1440||w===390);
  }
 } finally {
  writeFileSync(resultsFile,JSON.stringify(evidence,null,2));

@@ -9,6 +9,7 @@ import {readStudyPosition,saveStudyPosition} from '../learning/journey/study-pos
 import {HomeReviewEntry} from '../reviews/HomeReviewEntry';
 import {ProgressTrail} from './ProgressTrail';
 import {HomePlayground} from './HomePlayground';
+import {HomeDirectory} from './HomeDirectory';
 import {homeContext} from './home-context.mjs';
 import '../../styles/learning-home.css';
 
@@ -90,11 +91,7 @@ export function Dashboard({duration}:{duration:string}){
    </section>
    <HomeReviewEntry/>
   </div>
-  <nav className="learning-home-directory" aria-label="学习目录">
-   <Link to="/path">查看学习路径<ArrowRight size={15} aria-hidden="true"/></Link>
-   <Link to="/learn/journey">查看全部课次<ArrowRight size={15} aria-hidden="true"/></Link>
-   <Link to="/projects">查看项目<ArrowRight size={15} aria-hidden="true"/></Link>
-  </nav>
+  <HomeDirectory/>
   </div>
  </div>;
 }

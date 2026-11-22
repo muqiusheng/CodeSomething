@@ -146,8 +146,7 @@ html[data-motion=reduce] :is(#root,.mobile-nav-slot) {transition:none;}
   background:var(--surface);border:1px solid var(--border);
   border-radius:var(--radius-inset);box-shadow:var(--shadow-panel);
  }
- .coding-app > .topbar .header-right {box-shadow:none}
- .coding-app .shell-title {display:none}
+ .coding-app > .topbar .header-right {border:0;background:transparent;box-shadow:none;padding:0}
 }
 @media (width <= 640px) {
  .app > .topbar {display:flex;min-height:56px;height:56px;padding:0 8px}

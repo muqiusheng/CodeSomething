@@ -1,7 +1,7 @@
 
-.learning-home {max-width:1440px;padding-top:clamp(16px,3vw,32px)}
-.learning-home-heading {display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px}
-.learning-home-heading h1 {margin:0;font-size:clamp(25px,3vw,34px);letter-spacing:-.035em}
+.page.learning-home {max-width:1440px;padding-top:clamp(8px,1.2vw,14px)}
+.learning-home-heading {display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.learning-home-heading h1 {margin:0;font-size:clamp(25px,3vw,34px);line-height:1.2;letter-spacing:-.035em}
 .learning-home-heading p {margin:4px 0 0;color:var(--text-secondary)}
 .learning-home .home-daily {
  display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;
@@ -9,16 +9,17 @@
  color:var(--text);box-shadow:var(--shadow-panel);font-variant-numeric:tabular-nums;
 }
 .home-daily svg {color:var(--primary-ink)}
-.learning-home-grid {display:grid;gap:clamp(14px,2vw,22px)}
+.learning-home-grid {display:grid;gap:12px}
 .home-hero,.home-interactions {display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:16px}
 .home-interactions>* {min-width:0}
 .learning-home :is(.learning-home-task,.learning-home-example,.review-entry,.home-trail a) {
  border:1px solid var(--border);border-radius:var(--radius-bento);
  background:var(--surface);box-shadow:var(--shadow-panel);margin:0;
 }
-.learning-home .learning-home-task {
- padding:clamp(16px,3vw,32px);
- background:linear-gradient(132deg,var(--surface) 15%,color-mix(in srgb,var(--primary) 13%,var(--surface)));
+.learning-home .learning-home-grid>.learning-home-task {
+ padding:clamp(14px,2vw,24px);
+ padding-block:clamp(12px,1.25vw,16px);
+ background:linear-gradient(32deg,color-mix(in srgb,var(--primary) 12%,var(--surface)),var(--surface) 76%);
 }
 .home-hero-copy {align-self:center}
 .learning-home-task h2 {margin:10px 0 8px;font-size:clamp(22px,3vw,34px);line-height:1.33;text-wrap:balance}
@@ -28,12 +29,41 @@
  color:var(--primary-ink);background:var(--primary-soft);font-size:12px;font-weight:650;
 }
 .learning-home-location {margin:0}
-.learning-home-actions,.learning-home-directory {display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}
-.learning-home-actions {margin-top:16px}
-.learning-home .button,.learning-home-directory a {min-height:44px}
-.learning-home-directory a {display:inline-flex;align-items:center;gap:5px}
+.learning-home-actions {display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}
+.learning-home-actions {margin-top:12px}
+.learning-home .button {min-height:44px}
+.learning-home-directory {
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;
+}
+.learning-home-directory .home-directory-link {
+ --directory-ink:var(--primary-ink);
+ --directory-tint:var(--primary-soft);
+ display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;
+ min-height:58px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-bento);
+ background:var(--surface);box-shadow:var(--shadow-panel);color:var(--text);text-decoration:none;
+ transition:border-color 150ms ease,background-color 150ms ease;
+}
+.home-directory-link[data-tone=secondary] {--directory-ink:var(--secondary-ink);--directory-tint:var(--secondary-soft)}
+.home-directory-link[data-tone=accent] {--directory-ink:var(--accent-ink);--directory-tint:var(--accent-soft)}
+.home-directory-icon {
+ display:grid;place-items:center;inline-size:44px;block-size:44px;border-radius:var(--radius-inset);
+ background:var(--directory-tint);color:var(--directory-ink);
+}
+.home-directory-copy {display:grid;gap:2px;overflow-wrap:anywhere}
+.home-directory-copy strong {font-size:15px}
+.home-directory-copy>span {color:var(--text-secondary);font-size:12px}
+.home-directory-arrow {color:var(--text-secondary);transition:transform 150ms ease}
+.learning-home-directory .home-directory-link:is(:hover,:focus-visible) {border-color:var(--primary-border);background:var(--surface-elevated)}
+.learning-home-directory .home-directory-link:focus-visible {outline:2px solid var(--focus);outline-offset:2px}
+@media (hover:hover) and (prefers-reduced-motion:no-preference) {
+ html:not([data-motion=reduce]) .home-directory-link:hover .home-directory-arrow {transform:translateX(3px)}
+}
+@container (width < 700px) {
+ .learning-home-directory {grid-template-columns:minmax(0,1fr);gap:8px}
+ .learning-home-directory .home-directory-link {min-height:64px;padding:9px 11px}
+}
 .home-deliverable {
- min-width:0;padding:16px;background:var(--surface);
+ min-width:0;padding:12px;background:var(--surface);
  border:1px solid var(--border);border-radius:var(--radius-inset);
 }
 .home-deliverable h3 {display:flex;align-items:center;gap:8px;margin:0;font-size:14px}
@@ -46,7 +76,7 @@
 .home-expected pre {max-height:8rem;overflow:auto;white-space:pre}
 .home-trail h2,.learning-home-example h2,.learning-home .review-entry h2 {font-size:18px;margin:0}
 .home-trail ol {list-style:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:10px 0 0;padding:0}
-.learning-home .home-trail a {display:grid;gap:8px;padding:12px 14px;text-decoration:none}
+.learning-home .home-trail a {display:grid;gap:6px;padding:10px 13px;text-decoration:none}
 .learning-home .home-trail a:hover {border-color:var(--primary-border)}
 .learning-home .home-trail a[aria-current=step] {border-color:var(--primary-border)}
 .trail-top {display:flex;align-items:center;justify-content:space-between;gap:4px;min-height:19px}
@@ -63,7 +93,7 @@
 .home-trail progress::-moz-progress-bar {background:var(--muted);border-radius:inherit}
 .home-trail [aria-current=step] progress::-webkit-progress-value {background:var(--primary-ink)}
 .home-trail [aria-current=step] progress::-moz-progress-bar {background:var(--primary-ink)}
-.learning-home :is(.learning-home-example,.review-entry) {padding:clamp(14px,2vw,22px)}
+.learning-home :is(.learning-home-example,.review-entry) {padding:clamp(12px,1.5vw,18px)}
 .home-sandbox {min-width:0;margin-top:10px}
 .sandbox-controls,.sandbox-request,.sandbox-states,.sandbox-response-heading {display:flex;align-items:center;gap:8px}
 .sandbox-controls,.sandbox-response-heading {justify-content:space-between;flex-wrap:wrap}
@@ -71,7 +101,7 @@
 .sandbox-request svg {color:var(--primary-ink)}
 .sandbox-states {gap:4px}
 .learning-home .sandbox-states .button {border-radius:var(--radius-pill);font-variant-numeric:tabular-nums;min-width:44px}
-.home-sandbox .sandbox-states .button[aria-pressed=true] {color:var(--primary-ink);background:var(--primary-soft);border-color:var(--primary-border)}
+.home-sandbox .sandbox-states .button[aria-pressed=true] {color:var(--on-primary);background:var(--primary);border-color:transparent}
 .home-example-flow {display:grid;gap:8px;margin-top:8px}
 .sandbox-response-heading h3 {margin:0;font-size:12px;color:var(--code-muted)}
 .sandbox-response-heading .home-status {background:color-mix(in srgb,var(--code-mint) 12%,var(--home-code-bg));color:var(--code-mint)}
@@ -92,7 +122,7 @@
 .learning-home .review-entry h2 svg {color:var(--primary-ink)}
 .learning-home .review-entry p {font-size:14px;color:var(--text-secondary)}
 .home-review-counts {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.home-review-counts span {display:grid;gap:4px;padding:clamp(8px,2vw,16px);border-radius:var(--radius-inset);background:var(--surface-muted);font-size:13px}
+.home-review-counts span {display:grid;gap:4px;padding:clamp(8px,2vw,16px);border-radius:var(--radius-inset);background:var(--surface-muted);border:1px solid var(--border);font-size:13px}
 .home-review-counts strong {font-size:clamp(20px,3vw,28px);line-height:1.1}
 .learning-home .home-review-action {width:100%;justify-content:center;margin-top:auto}
 @container (width < 760px) {
@@ -103,4 +133,19 @@
  .home-trail ol {grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
  .learning-home .home-trail a {padding:10px}
  .sandbox-controls {justify-content:start}
+}
+
+.sandbox-json-key {color:var(--code-text)}
+.sandbox-json-string {color:var(--code-mint)}
+.sandbox-json-value {color:var(--code-peach)}
+.home-example-response pre {color:var(--code-muted)}
+@media (width > 640px) {
+ .learning-home-actions .button {font-size:14px;font-weight:600;padding-inline:18px}
+}
+@media (width > 640px) and (pointer:fine) {
+ .learning-home .sandbox-states .button {min-height:32px;height:32px;min-width:48px;padding:0 12px}
+ .learning-home .home-example-preview .button {min-height:34px;height:34px;padding-block:0}
+}
+@media (width <= 640px) {
+ .home-expected pre,.home-expected pre code {white-space:pre-wrap;overflow-wrap:anywhere}
 }

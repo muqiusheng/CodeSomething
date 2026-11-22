@@ -1,6 +1,6 @@
 import {sessionState} from '../../api/browser-state.mjs';
 import {useEffect, useLayoutEffect, useState} from 'react';
-import {Link, useLocation, useNavigate, useNavigationType} from 'react-router-dom';
+import {useLocation, useNavigate, useNavigationType} from 'react-router-dom';
 import {ArrowLeft, ArrowRight} from 'lucide-react';
 
 type Trail = {keys: string[]; index: number};
@@ -38,7 +38,7 @@ export function HeaderNavigation() {
   useEffect(() => {try {sessionState.setItem(storageKey, JSON.stringify(trail));} catch { /* Navigation remains available in memory. */ }}, [trail]);
 
   return <div className="header-navigation">
-    {location.pathname.startsWith('/learn/')&&<><Link className="coding-brand" to="/learn">CodeSomething<span>.</span></Link><nav className="coding-quick-links" aria-label="学习导航"><Link to="/path">学习路径</Link><Link to="/projects">项目</Link></nav></>}
+
     <div className="history-controls" role="group" aria-label="浏览历史">
       <button type="button" aria-label="后退" title="后退" disabled={trail.index === 0} onClick={() => navigate(-1)}><ArrowLeft size={17} aria-hidden="true"/></button>
       <button type="button" aria-label="前进" title="前进" disabled={trail.index >= trail.keys.length - 1} onClick={() => navigate(1)}><ArrowRight size={17} aria-hidden="true"/></button>

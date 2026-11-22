@@ -49,14 +49,14 @@
   --color-base-200: #EEF4F1;
   --color-base-300: #DCE6E1;
   --color-base-content: #14221D;
-  --color-primary: #0D9488;
-  --color-primary-content: #080A10;
+  --color-primary: #076F54;
+  --color-primary-content: #FFFFFF;
   --color-secondary: #4F46E5;
   --color-secondary-content: #FFFFFF;
   --color-accent: #D97706;
   --color-accent-content: #080A10;
   --code-bg: #162420;
-  --primary-hover-tint: #ffffff;
+  --primary-hover-tint: #000000;
 }
 
 html[data-theme="dark"]:not([data-palette]),

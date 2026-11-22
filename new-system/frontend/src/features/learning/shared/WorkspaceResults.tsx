@@ -110,11 +110,9 @@ export function WorkspaceResults({open,onOpenChange,status,output,dock,reportVis
    </header>
    <div ref={output} id={id} className="workspace-output" role="region" aria-label="本次运行结果"
     tabIndex={0} hidden={!open&&!floating&&!reportVisible}>{children}</div>
-   {floating&&<footer className="workspace-results-resize-bar">
-    <button type="button" className="btn btn-ghost workspace-results-resize" aria-label="调整浮窗大小，可用方向键"
+   {floating&&<button type="button" className="btn btn-ghost workspace-results-resize" aria-label="调整浮窗大小，可用方向键"
      title="拖动调整大小" onPointerDown={event=>startDrag(event,true)} onPointerMove={moveDrag}
-     onLostPointerCapture={endDrag} onKeyDown={event=>useArrow(event,true)}/>
-   </footer>}
+     onLostPointerCapture={endDrag} onKeyDown={event=>useArrow(event,true)}/>}
   </section>
  </>;
 }

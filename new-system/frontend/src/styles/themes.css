@@ -5,7 +5,7 @@
 :root {
   --canvas: color-mix(in srgb, rgb(238 242 247) 65%, var(--color-base-100));
   --surface: white;
-  --surface-muted: color-mix(in srgb, var(--canvas) 76%, var(--surface));
+  --surface-muted: color-mix(in srgb, var(--canvas) 97%, var(--color-base-content));
   --surface-elevated: var(--surface);
   --text: var(--color-base-content);
   --text-secondary: color-mix(in oklab, var(--text) 79%, var(--surface));
@@ -93,7 +93,7 @@ html[data-palette="emerald"] {
 .brand-symbol { width: 30px; height: 30px; border-radius: var(--radius-control); background: var(--brand-bg); color: var(--brand-fg); }
 .brand-dot { color: var(--secondary-ink); }
 .workspace { padding-block: var(--space-3); border: 0; }
-.avatar, .avatar.small { background: var(--secondary-soft); color: var(--secondary-ink); border-color: var(--secondary-border); }
+.avatar, .avatar.small { background: var(--primary-soft); color: var(--primary-ink); border-color: var(--border); }
 .sidebar nav a.active, .utility.active { background: var(--primary-soft); color: var(--primary-ink); border-color: transparent; }
 
 .sidebar nav a:hover:not(.active), .utility:hover, .profile-link:hover { background: var(--surface-muted); }

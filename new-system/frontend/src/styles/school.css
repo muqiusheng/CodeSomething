@@ -530,3 +530,23 @@
   .school-lab-progress {grid-column: 1;}
   .school-pane {padding: var(--space-3);}
 }
+
+.school-extra-tools {display:contents}
+.school-tools .school-tool-toggle {display:none}
+.school-tools .school-run-current:disabled {
+ opacity:1;color:var(--text-secondary);background:var(--surface-muted);border-color:var(--border-strong);
+}
+@media (width <= 640px) {
+ .page.school-workspace {padding-block-start:12px}
+ .school-workspace .school-lab-heading {margin-block:4px 8px;gap:4px}
+ .school-workspace .school-grid {gap:10px}
+ .school-workbench-tabs {margin-bottom:0}
+ .school-brief details>summary {padding-block:5px}
+ .school-question-menu {margin-top:3px}
+ .school-tools {display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:5px;margin-block:8px}
+ .school-tools .button {min-width:0;padding-inline:7px;gap:4px;min-height:44px;font-size:12px}
+ .school-tools .school-tool-toggle {display:inline-flex}
+ .school-tool-toggle[aria-expanded=true]>svg {transform:rotate(90deg)}
+ .school-extra-tools {grid-column:1/-1;display:none}
+ .school-extra-tools[data-open=true] {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+}

@@ -62,6 +62,7 @@ function LabWorkspace({details, url}: {details: LabDetails; url: string}) {
   const editor = useRef<CodeEditorHandle>(null);
   const [report, setReport] = useState(false);
   const [reset, setReset] = useState(false);
+  const [toolsOpen,setToolsOpen] = useState(false);
   const [wide] = useState(() => matchMedia('(min-width:821px)').matches);
   const [inspectorOpen, setInspectorOpen] = useState(() => matchMedia('(min-width:1200px)').matches);
   const question = lab.questions.find(item => item.id === selected)!;
@@ -257,15 +258,18 @@ function LabWorkspace({details, url}: {details: LabDetails; url: string}) {
             </p>}
           </details>}
           <div className="school-actions school-tools">
-            {mysql && <button className="btn button primary" disabled={!!busy || !value.trim()} onClick={() => run(false)} title="Ctrl+Enter · 优先运行选中 SQL"><Play aria-hidden="true" size={15}/>运行当前题</button>}
-            {mysql && <button className="btn button secondary" disabled={!!busy || !Object.values(drafts).some(text => text.trim())} onClick={() => run(true)}>运行全部</button>}
-            {mysql && <button className="btn button secondary" disabled={!!busy || !value.trim()} onClick={formatSql}>
-              <TextQuote size={15} aria-hidden="true"/>格式化 SQL
-            </button>}
+            {mysql && <button className="btn button primary school-run-current" disabled={!!busy || !value.trim()} onClick={() => run(false)} title="Ctrl+Enter · 优先运行选中 SQL"><Play aria-hidden="true" size={15}/>运行当前题</button>}
             <button className="btn button secondary" disabled={!!busy} aria-label={dirty ? '保存（有未保存修改）' : '保存'}
               onClick={() => void act('正在保存…', save)}><Save aria-hidden="true" size={15}/>保存
               {dirty && <span className="school-dirty-dot" aria-hidden="true"/>}
             </button>
+            <button type="button" className="button secondary school-tool-toggle" aria-expanded={toolsOpen}
+              aria-controls="school-extra-tools" onClick={() => setToolsOpen(!toolsOpen)}>更多操作<ChevronRight size={14} aria-hidden="true"/></button>
+            <div id="school-extra-tools" className="school-extra-tools" data-open={toolsOpen}>
+            {mysql && <button className="btn button secondary" disabled={!!busy || !Object.values(drafts).some(text => text.trim())} onClick={() => run(true)}>运行全部</button>}
+            {mysql && <button className="btn button secondary" disabled={!!busy || !value.trim()} onClick={formatSql}>
+              <TextQuote size={15} aria-hidden="true"/>格式化 SQL
+            </button>}
             {hasOriginalData && (
               <button
                 type="button"
@@ -283,6 +287,7 @@ function LabWorkspace({details, url}: {details: LabDetails; url: string}) {
             {!complete && <button className="btn button secondary" disabled={!!busy} onClick={openReport}>
               <FileText aria-hidden="true" size={15}/>导出实验报告
             </button>}
+            </div>
           </div>
           {mysql ? <div className="school-monaco" onKeyDownCapture={event => {
             if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !event.repeat) {
