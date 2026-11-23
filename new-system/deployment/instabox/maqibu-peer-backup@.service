@@ -1,0 +1,14 @@
+[Unit]
+Description=Snapshot local SQLite and send it to the Maqibu peer for %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=%i
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+TimeoutStartSec=10min
+ExecStart=/usr/bin/flock -n /data/maqibu-peer-backup/.cycle.lock /usr/bin/python3 /opt/maqibu-peer-backup/peer-backup.py cycle /etc/maqibu-peer-backup/%i.json

@@ -1,0 +1,18 @@
+[Unit]
+Description=Maqibu private backup receiver for %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=%i
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/data/maqibu-peer-backup/incoming
+ExecStart=/usr/bin/python3 /opt/maqibu-peer-backup/peer-backup.py serve /etc/maqibu-peer-backup/%i.json
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

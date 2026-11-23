@@ -1,0 +1,10 @@
+[Unit]
+Description=Hourly Maqibu peer backup for %i
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=120
+Unit=maqibu-peer-backup@%i.service
+
+[Install]
+WantedBy=timers.target
