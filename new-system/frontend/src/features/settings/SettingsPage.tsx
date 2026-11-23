@@ -1,8 +1,9 @@
+import {InlineSpinner} from '../../components/shared/LoadingState';
 import {localState} from '../../api/browser-state.mjs';
 import {Link,useLocation} from 'react-router-dom';
 import {useEffect, useState} from 'react';
 import {Check} from 'lucide-react';
-import {getPreferences, updatePreferences, cachePreferences, type LearningPreferences} from '../../api/api';
+import {usePreferences, updatePreferences, type LearningPreferences} from '../../api/api';
 import {MotionSettings} from '../../components/shared/WorkspaceExtras';
 import {TutorConnection} from './TutorConnection';
 import {ThemeSettings} from '../../components/shared/ThemeControls';
@@ -13,19 +14,13 @@ function localDuration() {try {const value=localState.getItem('cs-duration');ret
 export function SettingsPage() {
  const location=useLocation();useEffect(()=>{if(location.hash){requestAnimationFrame(()=>{document.getElementById(location.hash.slice(1))?.scrollIntoView({block:'start'});document.getElementById(location.hash.slice(1))?.focus({preventScroll:true})})}},[location.hash]);
   const [duration, setDuration] = useState(localDuration);
-  const [saved, setSaved] = useState<LearningPreferences | null>(null);
-  const [loading, setLoading] = useState(true);
+  const {data:saved,error:readError,setData:setSaved}=usePreferences();
+  const loading=!saved&&!readError;
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
-  const [connected, setConnected] = useState(false);
-  useEffect(() => {
-    let active = true;
-    getPreferences().then(value => {
-      if (!active) return;
-      setSaved(value); setDuration(String(value.dailyMinutes)); setConnected(true); cachePreferences(value);
-    }).catch(() => {if (active) setConnected(false);}).finally(() => {if (active) setLoading(false);});
-    return () => {active = false;};
-  }, []);
+  const [writeFailed, setWriteFailed] = useState(false);
+  const connected=!!saved&&!writeFailed;
+  useEffect(()=>{if(saved)setDuration(String(saved.dailyMinutes));},[saved]);
 
   async function saveDuration() {
     setSaving(true); setStatus('');
@@ -33,17 +28,19 @@ export function SettingsPage() {
     try {localState.setItem('cs-duration', duration);cached=true;} catch { /* Report actual persistence below. */ }
     try {
       const result = await updatePreferences({dailyMinutes: Number(duration)});
-      setSaved(result); setConnected(true); cachePreferences(result); setStatus('已保存到本机数据库');
+      setSaved(result); setWriteFailed(false); setStatus('已保存到本机数据库');
     } catch {
-      setConnected(false); setStatus(cached?'未保存到本机数据库，已保存在此浏览器。可再次保存以重试。':'保存失败，请再次保存以重试。');
+      setWriteFailed(true);
+      if(cached)window.dispatchEvent(new CustomEvent('learning-duration',{detail:duration}));
+      setStatus(cached?'未保存到本机数据库，已保存在此浏览器。可再次保存以重试。':'保存失败，请再次保存以重试。');
     } finally {setSaving(false);}
   }
   async function saveMotion(motion: string) {
     setSaving(true);
     try {
       const result = await updatePreferences({motion: motion as LearningPreferences['motion']});
-      setSaved(result); setConnected(true); cachePreferences(result);
-    } catch (error) {setConnected(false); throw error;} finally {setSaving(false);}
+      setSaved(result); setWriteFailed(false);
+    } catch (error) {setWriteFailed(true); throw error;} finally {setSaving(false);}
   }
 
   return <div className="page narrow">
@@ -56,7 +53,7 @@ export function SettingsPage() {
         <select name="duration" id="duration" disabled={loading || saving} value={duration} onChange={event => {setDuration(event.target.value); setStatus('');}}>
           <option value="30">30 分钟</option><option value="60">60 分钟</option><option value="90">90 分钟</option>
         </select>
-        <button className="button primary" type="submit" disabled={loading || saving}>{saving ? '保存中…' : '保存偏好'}<Check size={14} aria-hidden="true"/></button>
+        <button className="button primary" type="submit" disabled={loading || saving}>{saving ? '保存中…' : '保存偏好'}{saving?<InlineSpinner/>:<Check size={15} aria-hidden="true"/>}</button>
         <span className="save-status" role="status">{status}</span>
       </form>
     </section>

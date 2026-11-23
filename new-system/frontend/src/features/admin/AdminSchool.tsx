@@ -1,3 +1,4 @@
+import {InlineSpinner} from '../../components/shared/LoadingState';
 import {useEffect, useRef, useState} from 'react';
 import {adminDownload, adminRead, adminWrite} from '../../api/admin-api';
 import {ConfirmAction, DataState, TableFrame, message, useAdminData, type Confirmation} from './admin-controls';
@@ -89,7 +90,7 @@ export function AdminSchool() {
         <label>归档格式<select className="csx-select" value={format} disabled={!!busy} onChange={event => setFormat(event.target.value)}>
           <option value="word">Word (.doc)</option><option value="markdown">Markdown (.md)</option>
         </select></label>
-        <button className="csx-btn csx-btn-primary" type="button" disabled={!!busy||!course} onClick={() => void download()}>{busy || (matching?'继续等待':'下载已通关实验报告')}</button>
+        <button className="csx-btn csx-btn-primary" type="button" disabled={!!busy||!course} onClick={() => void download()}><InlineSpinner active={!!busy}/>{busy || (matching?'继续等待':'下载已通关实验报告')}</button>
         {matching && !busy && <button className="csx-btn csx-btn-ghost" type="button" onClick={() => void download(true)}>重新生成</button>}
       </div>
       {busy && <p role="status">{busy}</p>}

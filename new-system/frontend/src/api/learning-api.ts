@@ -40,7 +40,7 @@ export type LearningProgress={courseId:string;courseVersion:string;completions:C
 export type LearningCursor={courseId:string;courseVersion:string;stageId:string;step:string;revision:number;updatedAt?:string};
 export type LearningResume={session:LearningCursor|null;nextAction:string;checksAvailable:boolean;nextStageId:string|null;progress:LearningProgress};
 export const progressPath='/learning/progress/http-json-basics/1.1.0';
-export const refreshLearning=()=>window.dispatchEvent(new Event('learning-progress'));
+export const refreshLearning=(courseId?: string)=>window.dispatchEvent(new CustomEvent('learning-progress',{detail:courseId}));
 export function resumeRoute(resume:LearningResume){
  if(resume.session&&['boot-foundations','task-manager','collaboration'].includes(resume.session.courseId))return resume.progress.projectCompleted?'/projects/'+resume.session.courseId:'/learn/'+resume.session.courseId+'/1.0/'+resume.session.stageId+'?tab='+encodeURIComponent(resume.session.step==='teaching'?'教学':resume.session.step==='task'?'任务':'检查报告');
  if(resume.session?.courseId==='sql-foundations')return resume.progress.projectCompleted?'/projects/sql-foundations':'/learn/sql/1.0/'+resume.session.stageId+'?tab='+encodeURIComponent(resume.session.step==='teaching'?'教学':resume.session.step==='task'?'任务':'检查报告');
@@ -66,6 +66,7 @@ export function saveLearningPosition(context:{courseId:string;courseVersion:stri
   const result=await response.json();
   if(!response.ok){if(result.code==='PREVIEW_ONLY')return '预览中 · 正式续学位置保持不变';throw new Error(result.message||'位置保存失败，请重试。')}
   if(isCurrent())preferFormalPosition();
+  window.dispatchEvent(new Event('learning-position'));
   return '阅读位置已保存';
  });positionQueue=task;return task;
 }

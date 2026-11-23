@@ -2,6 +2,7 @@ import EditorWorker from 'monaco-editor/editor/editor.worker.js?worker';
 import {useEffect,useImperativeHandle,useRef,useState,type Ref} from 'react';
 import {Keyboard,Lightbulb,Maximize2,Minimize2} from 'lucide-react';
 import {completionCandidates} from './completions';
+import {PageSkeleton} from '../shared/LoadingState';
 import type * as Monaco from 'monaco-editor/editor/editor.api.js';
 import {useTheme} from '../../theme/theme';
 import '../../styles/browser-workspace.css';
@@ -79,6 +80,22 @@ export function CodeEditor({path,value,onChange,readOnly=false,line,errorLine,se
  }
  const latest=useRef({value,onChange,path,readOnly,line,errorLine});latest.current={value,onChange,path,readOnly,line,errorLine};
  const [failed,setFailed]=useState(false);const {resolved}=useTheme();
+ const [ready,setReady]=useState(false);
+ const [showLoading,setShowLoading]=useState(true);
+ const loadingOverlay=useRef<HTMLDivElement>(null);
+ useEffect(()=>{
+  const overlay=loadingOverlay.current;
+  if(!ready||!overlay)return;
+  const skeleton=overlay.firstElementChild;
+  if(!skeleton||getComputedStyle(skeleton).opacity==='0'||getComputedStyle(overlay).animationName==='none'){setShowLoading(false);return;}
+  const remove=(event:AnimationEvent)=>{if(event.target===overlay)setShowLoading(false);};
+  overlay.addEventListener('animationend',remove);
+  overlay.addEventListener('animationcancel',remove);
+  return()=>{
+   overlay.removeEventListener('animationend',remove);
+   overlay.removeEventListener('animationcancel',remove);
+  };
+ },[ready]);
  const panel=useRef<HTMLDialogElement>(null),expandButton=useRef<HTMLButtonElement>(null);
  const fallback=useRef<HTMLTextAreaElement>(null);
  useImperativeHandle(selectionRef,()=>({getSelectedText(){
@@ -112,6 +129,7 @@ export function CodeEditor({path,value,onChange,readOnly=false,line,errorLine,se
     api.current=null;
     instance.current=null;
    };
+   setReady(true);
   }).catch(()=>{if(active)setFailed(true)});
   return()=>{active=false;dispose?.()};
  },[]);
@@ -129,6 +147,9 @@ export function CodeEditor({path,value,onChange,readOnly=false,line,errorLine,se
   {!readOnly&&<button type="button" className="button secondary" aria-label="代码提示" title="代码提示（Ctrl+Space）" onClick={()=>{instance.current?.focus();instance.current?.trigger('toolbar','editor.action.triggerSuggest',{})}}><Lightbulb size={15}/></button>}
   <button ref={expandButton} type="button" className="button secondary" title={expanded?'还原编辑器':readOnly?'放大查看':'放大编辑'} aria-label={expanded?'还原编辑器':readOnly?'放大查看':'放大编辑'} aria-expanded={expanded} onClick={expanded?restore:expand}>{expanded?<Minimize2 size={15}/>:<Maximize2 size={15}/>}</button>
  </div>
- <div className="code-editor-area">{failed?<><p role="status">编辑器加载失败，可继续使用文本编辑。</p><textarea ref={fallback} aria-label={'代码编辑器 '+path} value={value} readOnly={readOnly} onChange={e=>onChange(e.target.value)} spellCheck={false}/></>:<div ref={host} className="code-editor"/>}</div><div className="editor-shortcuts" data-open={shortcuts} onKeyDown={event=>{if(event.key==='Escape')setShortcuts(false)}}><button type="button" aria-label="编辑器快捷键" aria-expanded={shortcuts} onClick={()=>setShortcuts(value=>!value)}><Keyboard size={16}/></button><span>UTF-8 · {expanded?'Esc 还原 · ':''}{readOnly?'只读查看':'Ctrl+Space 提示 · Enter 采纳 · Tab 下一处 · Ctrl+F 查找 · Ctrl+M 切换焦点移动'}</span></div></dialog>;
+ <div className="code-editor-area">{failed?<><p role="status">编辑器加载失败，可继续使用文本编辑。</p><textarea ref={fallback} aria-label={'代码编辑器 '+path} value={value} readOnly={readOnly} onChange={e=>onChange(e.target.value)} spellCheck={false}/></>:<>
+  <div ref={host} className="code-editor"/>
+  {showLoading&&<div ref={loadingOverlay} className="editor-loading-overlay" data-ready={ready} aria-hidden={ready||undefined}><PageSkeleton variant="editor" label="正在准备代码编辑器…"/></div>}
+ </>}</div><div className="editor-shortcuts" data-open={shortcuts} onKeyDown={event=>{if(event.key==='Escape')setShortcuts(false)}}><button type="button" aria-label="编辑器快捷键" aria-expanded={shortcuts} onClick={()=>setShortcuts(value=>!value)}><Keyboard size={16}/></button><span>UTF-8 · {expanded?'Esc 还原 · ':''}{readOnly?'只读查看':'Ctrl+Space 提示 · Enter 采纳 · Tab 下一处 · Ctrl+F 查找 · Ctrl+M 切换焦点移动'}</span></div></dialog>;
 }
 function language(path:string){return path.endsWith('.java')?'java':path.endsWith('.sql')?'sql':path.endsWith('.xml')?'xml':'plaintext'}

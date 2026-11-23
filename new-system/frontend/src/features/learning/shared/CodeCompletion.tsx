@@ -28,7 +28,7 @@ export function CodeCompletion({job,token,context,nextHref,nextLabel,onComplete,
  async function finish(){
   if(!job||!token||!fresh||disabled||busy)return false;
   setBusy(true);setError('');
-  try{await beforeComplete?.();await learningRequest('/understanding-attempts/complete-code',{jobId:job.id},token);setSavedJob(job.id);refreshLearning();onComplete?.();return true}
+  try{await beforeComplete?.();await learningRequest('/understanding-attempts/complete-code',{jobId:job.id},token);setSavedJob(job.id);refreshLearning(context.courseId);onComplete?.();return true}
   catch(e){setError((e as Error).message);return false}
   finally{setBusy(false)}
  }

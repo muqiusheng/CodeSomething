@@ -1,3 +1,4 @@
+import {InlineSpinner,PulseDots} from '../../components/shared/LoadingState';
 import {TutorMarkdown} from './TutorMarkdown';
 import {useId} from 'react';
 import {Link} from 'react-router-dom';
@@ -22,7 +23,7 @@ export function LessonTutorBody() {
     <label htmlFor={id+'-question'}>想问什么</label>
     <textarea id={id+'-question'} name="tutorQuestion" rows={4} maxLength={2000} required autoComplete="off" value={tutor.question} disabled={disabled} onChange={e=>tutor.setQuestion(e.target.value)} placeholder="例如：false为什么不能加引号…" aria-describedby={id+'-scope'}/>
     <p className="tutor-help" id={id+'-scope'}>发送当前任务约定、所在小节和勾选内容；代码使用已保存快照。</p>
-    <div className="button-row">{tutor.active?<button className="button secondary full" type="button" disabled={tutor.busy||tutor.answer?.status==='cancelling'} onClick={()=>void tutor.stop()}><Square size={14} aria-hidden="true"/>{tutor.answer?.status==='cancelling'?'正在停止…':'停止回答'}</button>:<button className="button primary full" type="submit" disabled={tutor.busy}><Send size={14} aria-hidden="true"/>{tutor.busy?'正在发送…':'发送问题'}</button>}</div>
+    <div className="button-row">{tutor.active?<button className="button secondary full" type="button" disabled={tutor.busy||tutor.answer?.status==='cancelling'} onClick={()=>void tutor.stop()}><Square size={14} aria-hidden="true"/>{tutor.answer?.status==='cancelling'?'正在停止…':'停止回答'}</button>:<button className="button primary full" type="submit" disabled={tutor.busy}>{tutor.busy?<InlineSpinner/>:<Send size={15} aria-hidden="true"/>}{tutor.busy?'正在发送…':'发送问题'}</button>}</div>
    </form>
    {tutor.hasPending&&!tutor.active&&<div className="tutor-recovery"><p>发送结果尚未确认，可按原编号重试。</p><button className="button secondary" disabled={tutor.busy} onClick={()=>void tutor.send(true)}>重试发送</button></div>}
    {tutor.error&&<div className="tutor-recovery" role="alert"><p>{tutor.error}</p>{tutor.answer&&<button className="button secondary" onClick={tutor.restore}>恢复回答</button>}</div>}
@@ -30,7 +31,7 @@ export function LessonTutorBody() {
     <div className="tutor-response-heading"><h3>本次回答</h3><span className="text-pill">{({concept:'概念提示',locate:'定位问题',example:'示例讲解'} as Record<string,string>)[tutor.answer.level]}</span></div>
     {tutor.scope.stageId==='workspace'&&<p className="tutor-task-basis">当前任务：亲手编写任务接口响应。<Link to="?tab=%E4%BB%BB%E5%8A%A1">回到任务核对</Link></p>}{tutor.scope.stageId==='workspace'&&/不需要[^。\n]*(?:写|编写)[^。\n]*(?:服务器|响应)|只[^。\n]*准备工作台/.test(tutor.answer.answer)&&<p role="alert">回答中的行动建议与当前任务可能冲突。请以任务要求为准，可填回问题重新提问。</p>}<p className="tutor-question">{tutor.answer.question}</p>
     <div className="tutor-answer" aria-busy={tutor.active}><TutorMarkdown text={tutor.answer.answer|| (tutor.active?'正在准备回答…':'本次未生成回答。')}/></div>
-    <p role="status" className="tutor-result-status">{tutor.answer.message||'正在连接本机ChatGPT…'}</p>
+    <p role="status" className="tutor-result-status">{tutor.active&&<PulseDots/>}{tutor.answer.message||'正在连接本机ChatGPT…'}</p>
     <details><summary>查看本次上下文</summary><p>v{tutor.answer.courseVersion} · {tutor.answer.stageId}</p><p>{tutor.answer.contextManifest||'仅当前章节标识与问题'}</p></details>
     {!tutor.active&&<button className="text-button" onClick={tutor.askAgain}>填回此问题</button>}
    </section>}

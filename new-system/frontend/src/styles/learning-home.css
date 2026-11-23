@@ -2,7 +2,7 @@
 .page.learning-home {max-width:1440px;padding-top:clamp(8px,1.2vw,14px)}
 .learning-home-heading {display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
 .learning-home-heading h1 {margin:0;font-size:clamp(25px,3vw,34px);line-height:1.2;letter-spacing:-.035em}
-.learning-home-heading p {margin:4px 0 0;color:var(--text-secondary)}
+.learning-home-heading p {margin:4px 0 0;color:var(--text-secondary);line-height:1.5;min-block-size:1.5em}
 .learning-home .home-daily {
  display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;
  border:1px solid var(--border);border-radius:var(--radius-pill);background:var(--surface);
@@ -10,7 +10,7 @@
 }
 .home-daily svg {color:var(--primary-ink)}
 .learning-home-grid {display:grid;gap:12px}
-.home-hero,.home-interactions {display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:16px}
+.home-hero,.home-hero-loading,.home-interactions {display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:16px}
 .home-interactions>* {min-width:0}
 .learning-home :is(.learning-home-task,.learning-home-example,.review-entry,.home-trail a) {
  border:1px solid var(--border);border-radius:var(--radius-bento);
@@ -22,6 +22,14 @@
  background:linear-gradient(32deg,color-mix(in srgb,var(--primary) 12%,var(--surface)),var(--surface) 76%);
 }
 .home-hero-copy {align-self:center}
+.home-hero,.home-hero-loading {min-block-size:264px}
+.learning-home .learning-home-grid>.home-hero-loading {background:var(--surface);box-shadow:none}
+.home-hero-skeleton,.home-deliverable-skeleton {display:grid;align-content:center;gap:20px}
+.home-hero-skeleton>.loading-lines .loading-line:nth-child(2) {block-size:12px}
+.home-hero-skeleton-actions .loading-lines {display:flex;max-inline-size:240px}
+.home-code-skeleton {padding:14px;border:1px solid var(--border);border-radius:var(--radius-inset)}
+.home-code-skeleton .loading-line {block-size:8px}
+.home-code-skeleton .loading-line:nth-child(n+2):nth-child(-n+4) {margin-inline-start:2ch}
 .learning-home-task h2 {margin:10px 0 8px;font-size:clamp(22px,3vw,34px);line-height:1.33;text-wrap:balance}
 .learning-home-task p {line-height:1.65;overflow-wrap:anywhere}
 .learning-home-location,.home-status {
@@ -86,7 +94,7 @@
 .home-trail [aria-current=step] .trail-dot {background:var(--primary-ink)}
 .trail-top strong,.trail-count,.home-review-counts strong {font-variant-numeric:tabular-nums}
 .trail-name {font-size:14px;font-weight:650}
-.trail-count {font-size:12px;color:var(--text-secondary)}
+.trail-count {font-size:12px;color:var(--text-secondary);min-block-size:1.4em}
 .trail-placeholder,.home-trail progress {width:100%;height:4px;border:0;border-radius:var(--radius-pill);background:var(--surface-muted);overflow:hidden}
 .home-trail progress::-webkit-progress-bar {background:var(--surface-muted)}
 .home-trail progress::-webkit-progress-value {background:var(--muted);border-radius:inherit}
@@ -124,9 +132,24 @@
 .home-review-counts {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .home-review-counts span {display:grid;gap:4px;padding:clamp(8px,2vw,16px);border-radius:var(--radius-inset);background:var(--surface-muted);border:1px solid var(--border);font-size:13px}
 .home-review-counts strong {font-size:clamp(20px,3vw,28px);line-height:1.1}
+.home-review-loading span {grid-template-rows:clamp(22px,3.3vw,30.8px) 1.5em}
+.home-review-loading .loading-line {align-self:center;inline-size:40%;max-inline-size:54px}
+.home-review-loading .loading-line:first-child {block-size:10px;inline-size:24px}
+.home-review-text-placeholder {min-block-size:calc(1.8em + var(--space-4));font-size:14px}
+.trail-placeholder>.loading-delay {display:block;block-size:100%}
+.trail-placeholder .loading-line {block-size:100%;inline-size:100%}
 .learning-home .home-review-action {width:100%;justify-content:center;margin-top:auto}
+@container (width >= 760px) {
+ .home-deliverable {padding:10px}
+ .home-deliverable>p {margin-block:3px 6px}
+ .home-expected {padding:8px 12px}
+ .home-expected>span {display:block;line-height:1.4}
+ .home-expected :is(pre,p) {line-height:1.42}
+}
 @container (width < 760px) {
- .home-hero,.home-interactions {grid-template-columns:minmax(0,1fr)}
+ .home-hero,.home-hero-loading,.home-interactions {grid-template-columns:minmax(0,1fr)}
+ .home-hero,.home-hero-loading {min-block-size:clamp(465px,calc(872px - 98vw),560px)}
+ .home-hero-loading {grid-template-rows:1fr 1fr}
  .home-trail ol {grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @container (width < 430px) {

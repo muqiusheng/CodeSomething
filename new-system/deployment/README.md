@@ -4,7 +4,7 @@
 
 ## Instabox 主站
 
-2026年11月22日启用免费机器 `codesomething`，当前前端0.30.3、后端0.6.2和SQLite V22。对外统一使用 [try.maqibu.online 主站](https://try.maqibu.online)。悉尼网关使用现有域名证书，并通过校验证书的 HTTPS 到达 Instabox 公开端口17680。Compose 使用生产文件和 `docker-compose.instabox.yml`，后端和MySQL由专用rootless Docker运行。
+2026年11月22日启用免费机器 `codesomething`，当前前端0.30.5、后端0.6.2和SQLite V22。对外统一使用 [try.maqibu.online 主站](https://try.maqibu.online)。悉尼网关使用现有域名证书，并通过校验证书的 HTTPS 到达 Instabox 公开端口17680。Compose 使用生产文件和 `docker-compose.instabox.yml`，后端和MySQL由专用rootless Docker运行。
 
 - 悉尼 `codesomething-https.socket` 通过 `20-instabox-primary.conf` 把443交给本机8444的 `codesomething-domain-gateway`。8443上的悉尼应用仍使用自己的数据库，上海应用通过原SSH隧道访问。此拓扑下自定义域名入口依赖悉尼 HTTPS 网关。
 - 网关使用 `instabox/domain-gateway.conf`。私有网关凭据分别在悉尼网关环境文件和 Instabox `site.env` 保存。域名续签后，同时重载悉尼公开网关与备用应用网关。

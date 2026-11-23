@@ -44,7 +44,9 @@ try {
   assert.doesNotMatch(raw, /<div id="root"|正在读取登录状态/);
   assert.match(await (await fetch(base + '/app.html')).text(), /noindex, nofollow, noarchive/);
   assert.deepEqual((await (await fetch(base + '/robots.txt')).text()).trim().split(/\r?\n/), [
-    'User-agent: *','Allow: /$','Allow: /assets/','Allow: /theme-init.js','Allow: /favicon.svg','Allow: /sitemap.xml','Disallow: /','Sitemap: https://try.maqibu.online/sitemap.xml',
+    'User-agent: *','Allow: /$','Allow: /assets/','Allow: /theme-init.js','Allow: /favicon.ico$',
+    'Allow: /favicon.svg','Allow: /sitemap.xml','Allow: /BingSiteAuth.xml$','Disallow: /',
+    'Sitemap: https://try.maqibu.online/sitemap.xml',
   ]);
   assert.deepEqual((await (await fetch(base + '/sitemap.xml')).text()).match(/<loc>(.*?)<\/loc>/g), ['<loc>https://try.maqibu.online/</loc>']);
   if (dev) {

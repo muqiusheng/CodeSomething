@@ -1,3 +1,4 @@
+import {InlineSpinner} from '../../components/shared/LoadingState';
 import {BrandMark} from '../../components/layout/BrandMark';
 import {useState, type FormEvent} from 'react';
 import {Link, Navigate, useLocation, useNavigate, useSearchParams} from 'react-router-dom';
@@ -25,7 +26,8 @@ export function AccountPage({mode}: {mode: Mode}) {
   const {hash} = useLocation();
   const [parameters] = useSearchParams();
   const navigate = useNavigate();
-  const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<'submit' | 'logout' | null>(null);
+  const busy = pending !== null;
   const [error, setError] = useState('');
   const destination = safeDestination(parameters.get('redirect'), user?.role);
   const redirect = '?redirect=' + encodeURIComponent(destination);
@@ -41,7 +43,7 @@ export function AccountPage({mode}: {mode: Mode}) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(event.currentTarget)) as Record<string,string>;
-    setBusy(true);
+    setPending('submit');
     setError('');
     try {
       if (changing) {
@@ -52,7 +54,7 @@ export function AccountPage({mode}: {mode: Mode}) {
       }
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : '请求失败，请重试。');
-    } finally { setBusy(false); }
+    } finally { setPending(null); }
   }
 
   return <div className="access-page">
@@ -72,14 +74,14 @@ export function AccountPage({mode}: {mode: Mode}) {
           {(registration || changing) && <small id="password-requirements">至少{MIN_PASSWORD_LENGTH}个字符，最多72字节。</small>}
           {registration && config.inviteRequired && <label>邀请码<input key={invite} className="csx-input" name="inviteCode" defaultValue={invite.length <= 100 ? invite : ''} autoComplete="off" spellCheck={false} required maxLength={100}/></label>}
           {error && <div role="alert" className="csx-alert csx-alert-error">{error}</div>}
-          <button className="csx-btn csx-btn-primary" disabled={busy} type="submit">{busy ? '正在提交…' : changing ? '保存新密码' : registration ? '注册' : '登录'}</button>
+          <button className="csx-btn csx-btn-primary" disabled={busy} type="submit"><InlineSpinner active={pending === 'submit'}/>{pending === 'submit' ? '正在提交…' : changing ? '保存新密码' : registration ? '注册' : '登录'}</button>
         </form>
         {!changing && <p className="access-alternate">{registration ? '已有账户？' : '首次使用？'} <Link to={(registration ? '/login' : '/register') + redirect}>{registration ? '去登录' : '创建账户'}</Link></p>}
         {changing && !user?.passwordChangeRequired && <Link to={destination}>取消修改</Link>}
         {changing && user?.passwordChangeRequired && <button type="button" className="csx-btn csx-btn-ghost" disabled={busy} onClick={() => {
-          setBusy(true);setError('');
-          void logout().catch(failure => {setBusy(false);setError(failure instanceof Error ? failure.message : '无法退出，请重试。');});
-        }}>退出登录</button>}
+          setPending('logout');setError('');
+          void logout().catch(failure => {setPending(null);setError(failure instanceof Error ? failure.message : '无法退出，请重试。');});
+        }}><InlineSpinner active={pending === 'logout'}/>{pending === 'logout' ? '正在退出…' : '退出登录'}</button>}
       </section>
     </main>
   </div>;

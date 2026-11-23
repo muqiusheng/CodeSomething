@@ -1,3 +1,4 @@
+import {PageSkeleton} from '../../components/shared/LoadingState';
 import {useEffect, useState} from 'react';
 import {RefreshCw} from 'lucide-react';
 import {errorMessage, schoolRequest, type SchemaColumn, type SchoolSchema} from './school-api';
@@ -105,7 +106,7 @@ export function WorkbenchNavigator({courseId, revision, database, onDatabaseChan
         <RefreshCw size={15} aria-hidden="true"/>
       </button>
     </div>
-    {(loading || listLoading) && <p role="status">正在读取数据库对象…</p>}
+    {(loading || listLoading) && <PageSkeleton variant="inline" label="正在读取数据库对象…"/>}
     {error && <p className="school-error-panel" role="alert">{error}</p>}
     {schema && <div className="school-schema-tree">
       <strong className="school-schema-name">{schema.database}</strong>

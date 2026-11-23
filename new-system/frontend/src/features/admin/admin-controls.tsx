@@ -1,8 +1,10 @@
-import {useEffect, useId, useRef, useState, type ComponentProps, type ReactNode} from 'react';
+import {useCallback, useEffect, useId, useRef, useState, type ComponentProps, type ReactNode} from 'react';
 import {CalendarDays, ChevronLeft, ChevronRight, Ellipsis, Search} from 'lucide-react';
 import {useSearchParams} from 'react-router-dom';
 import {adminRead, type Page} from '../../api/admin-api';
 import {Modal} from '../../components/ui/modal';
+import {InlineSpinner,PageSkeleton} from '../../components/shared/LoadingState';
+import {useScopedRead} from '../../hooks/useScopedRead';
 
 const number = new Intl.NumberFormat('zh-CN');
 const time = new Intl.DateTimeFormat('zh-CN', {dateStyle: 'short', timeStyle: 'short'});
@@ -75,27 +77,9 @@ export function RowActions({subject, children, actions}: {subject: string; child
 }
 
 export function useAdminData<T>(path: string | null, interval = 0) {
-  const [version, setVersion] = useState(0);
-  const [result, setResult] = useState<{path: string | null; data?: T; error?: string}>();
-  useEffect(() => {
-    if (!path) return;
-    const controller = new AbortController();
-    let timer: number | undefined;
-    async function load() {
-      try {
-        const data = await adminRead<T>(path!, controller.signal);
-        if (!controller.signal.aborted) setResult({path, data});
-      } catch (error) {
-        if (!controller.signal.aborted) setResult(previous => ({path, data: previous?.path === path ? previous.data : undefined, error: message(error)}));
-      } finally {
-        if (interval && !controller.signal.aborted) timer = window.setTimeout(load, interval);
-      }
-    }
-    void load();
-    return () => { controller.abort(); window.clearTimeout(timer); };
-  }, [path, interval, version]);
-  const current = result?.path === path ? result : undefined;
-  return {data: current?.data, error: current?.error, refresh: () => setVersion(value => value + 1)};
+  const request = useCallback(() => adminRead<T>(path!), [path]);
+  const {data,error,reload} = useScopedRead(path === null ? null : '/admin' + path, request, {interval});
+  return {data: data ?? undefined, error: error || undefined, refresh: reload};
 }
 
 export function useAdminFilters<T extends Record<string, string>>(defaults: T) {
@@ -130,9 +114,9 @@ export function useAdminFilters<T extends Record<string, string>>(defaults: T) {
   };
 }
 
-export function DataState({loading, error, retry}: {loading: boolean; error?: string; retry?: () => void}) {
+export function DataState({loading, error, retry, variant = 'table'}: {loading: boolean; error?: string; retry?: () => void; variant?: ComponentProps<typeof PageSkeleton>['variant']}) {
   if (error) return <div className="csx-alert csx-alert-error" role="alert"><span>{error}</span>{retry && <button className="csx-btn" type="button" onClick={retry}>重试</button>}</div>;
-  return loading ? <p role="status" className="admin-empty">正在读取…</p> : null;
+  return loading ? <PageSkeleton className="admin-empty" variant={variant} label="正在读取…"/> : null;
 }
 
 export function TableFrame({name, children}: {name: string; children: ReactNode}) {
@@ -166,7 +150,7 @@ export function ConfirmAction({confirmation, onClose}: {confirmation: Confirmati
     {error && <p role="alert" className="csx-alert csx-alert-error">{error}</p>}
     <div className="admin-tools">
       <button className="csx-btn" type="button" disabled={busy} onClick={onClose}>取消</button>
-      <button className="csx-btn csx-btn-error" type="button" disabled={busy} onClick={() => void confirm()}>{busy ? '正在处理…' : confirmation.confirmLabel ?? '确认执行'}</button>
+      <button className="csx-btn csx-btn-error" type="button" disabled={busy} onClick={() => void confirm()}><InlineSpinner active={busy}/>{busy ? '正在处理…' : confirmation.confirmLabel ?? '确认执行'}</button>
     </div>
   </Modal>;
 }

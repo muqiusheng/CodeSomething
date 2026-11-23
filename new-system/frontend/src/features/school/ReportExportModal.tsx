@@ -1,3 +1,4 @@
+import {InlineSpinner} from '../../components/shared/LoadingState';
 import {apiFetch} from '../../api/auth-api';
 import {useEffect, useState} from 'react';
 import {Clipboard, Download} from 'lucide-react';
@@ -69,7 +70,7 @@ export function ReportExportModal({url, student, onClose}: {url: string; student
     {error ? <p role="alert">{error}</p> : current ? <iframe title="实验报告正文" sandbox="" srcDoc={current}/> : <p role="status">正在生成报告…</p>}
     <div className="school-actions">
       <button className="btn button secondary" disabled={!current} onClick={() => void copy()}><Clipboard size={16} aria-hidden="true"/>复制报告</button>
-      <button className="btn button primary" type="button" disabled={downloading} onClick={() => void download()}><Download size={16} aria-hidden="true"/>{downloading ? '正在下载…' : '下载 .doc'}</button>
+      <button className="btn button primary" type="button" disabled={downloading} onClick={() => void download()}>{downloading?<InlineSpinner/>:<Download size={15} aria-hidden="true"/>}{downloading ? '正在下载…' : '下载 .doc'}</button>
       <span role="status">{status}</span>
     </div>
   </Modal>;

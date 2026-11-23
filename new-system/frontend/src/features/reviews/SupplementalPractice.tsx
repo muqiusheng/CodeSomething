@@ -1,3 +1,4 @@
+import {PageSkeleton} from '../../components/shared/LoadingState';
 import {useEffect,useState} from 'react';
 import {Link,Navigate} from 'react-router-dom';
 import {learningRequest} from '../../api/learning-api';
@@ -28,7 +29,7 @@ export function SupplementalPractice() {
     <label>主题 <select className="csx-select" value={topic} onChange={event=>{setOffset(0);setTopic(event.target.value);}}>
       <option value="">全部主题</option>{Object.entries(questionTopics).map(([key,title])=><option key={key} value={key}>{title}</option>)}
     </select></label>
-    {error?<p role="alert">{error}</p>:!questions?<p role="status">正在读取题目…</p>:questions.length===0?<p>暂无已发布的题目。</p>:
+    {error?<p role="alert">{error}</p>:!questions?<PageSkeleton variant="cards" label="正在读取题目…"/>:questions.length===0?<p>暂无已发布的题目。</p>:
       questions.map(question=><QuestionCard key={question.id+'/'+question.revision} question={question}/>)}
     <div className="button-row">
       <button type="button" className="csx-btn" disabled={!offset} onClick={()=>setOffset(offset-20)}>上一页</button>

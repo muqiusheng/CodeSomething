@@ -1,3 +1,6 @@
+import {useCourseRead} from '../../../hooks/useCourseRead';
+import {useLearningProgress} from '../../../hooks/useLearningProgress';
+import {PageSkeleton} from '../../../components/shared/LoadingState';
 import {useAuth} from '../../auth/AuthContext';
 import {FrontendBridge} from '../shared/LearningSupport';
 import {CodeCompletion} from '../shared/CodeCompletion';
@@ -13,7 +16,7 @@ import {isJourneyWorkspace,saveStudyTab} from '../journey/study-position';
 import {keepJourney,lessonHref,nextMainLesson} from '../journey/catalog';
 import {useRef,useEffect,useState,useCallback} from 'react';
 import {Link,useParams,useSearchParams,useNavigate} from 'react-router-dom';
-import {learningRequest,milestoneTitles,saveLearningPosition,refreshLearning,type CheckJob,type LearningProgress} from '../../../api/learning-api';
+import {milestoneTitles,saveLearningPosition,type CheckJob} from '../../../api/learning-api';
 import {LocalFirstWorkspace} from '../shared/LocalFirstWorkspace';
 import {UnderstandingVerification} from '../shared/UnderstandingVerification';
 import {CheckJobReport} from '../shared/CheckJobReport';
@@ -28,19 +31,20 @@ export function BootLearning({project=false,course:givenCourse}:{project?:boolea
  const verifyRef=useRef<(()=>Promise<void>)|null>(null);
  const params=useParams(),navigate=useNavigate(),courseId=givenCourse||params.course||'boot-foundations';
  const [search,setSearch]=useSearchParams(),rawTab=search.get('tab')||'任务',tab=rawTab==='理解验证'?'检查报告':rawTab;
- const [course,setCourse]=useState<Course|null>(null),[progress,setProgress]=useState<LearningProgress|null>(null),[error,setError]=useState(''),[notice,setNotice]=useState('');
+ const {data:course,error:courseError,reload:retryCourse}=useCourseRead<Course>('/courses/'+courseId+'/versions/1.0.0');
+ const {progress,error:progressError,reload:retryProgress}=useLearningProgress('/learning/progress/'+courseId+'/1.0.0');
+ const error=courseError||progressError;
+ const [notice,setNotice]=useState('');
  const [job,setJob]=useState<CheckJob|null>(null),[token,setToken]=useState<string|undefined>();
  const route=(stage:string)=>'/learn/'+courseId+'/1.0/'+stage;
  const stage=params.stage||course?.chapters[0]?.stageId||'';
  const chapter=course?.chapters.find(c=>c.stageId===stage);
- const load=useCallback(async()=>{try{const [c,p]=await Promise.all([learningRequest<Course>('/courses/'+courseId+'/versions/1.0.0'),learningRequest<LearningProgress>('/learning/progress/'+courseId+'/1.0.0')]);setCourse(c);setProgress(p);setError('')}catch(e){setError(e instanceof Error?e.message:'读取课程失败。')}},[courseId]);
- useEffect(()=>{void load();window.addEventListener('learning-progress',load);return()=>window.removeEventListener('learning-progress',load)},[load]);
  const fromJourney=isJourneyWorkspace(search,courseId,stage);
  function changeTab(value:string){if(fromJourney)saveStudyTab(search,value);setSearch(keepJourney(search,{tab:value}));}
  useEffect(()=>{if(project||!chapter||fromJourney)return;let active=true;void saveLearningPosition({courseId,courseVersion:'1.0.0',stageId:stage},tab==='教学'?'teaching':tab==='任务'?'task':'report',()=>active).then(value=>{if(active)setNotice(value)}).catch(e=>{if(active)setNotice(e instanceof Error?e.message:'位置保存失败')});return()=>{active=false}},[project,courseId,stage,tab,chapter?.stageId,fromJourney]);
  const onJob=useCallback((value:CheckJob|null,_identity:string,auth?:string)=>{setJob(value);setToken(auth)},[]);
- if(error&&!course)return <div className="page narrow"><h1>课程暂时无法读取</h1><p role="alert">{error}</p><button className="button secondary" onClick={()=>void load()}>重试</button></div>;
- if(!course||!progress)return <div className="page narrow" role="status">正在读取课程…</div>;
+ if(error&&(!course||!progress))return <div className="page narrow"><h1>课程暂时无法读取</h1><p role="alert">{error}</p><button className="button secondary" onClick={()=>{if(courseError)void retryCourse();if(progressError)void retryProgress();}}>重试</button></div>;
+ if(!course||!progress)return <div className="page narrow"><PageSkeleton variant="course" label="正在读取课程…"/></div>;
  if(project)return <div className="page narrow boot-project"><Link className="back-link" to="/projects">← 返回项目</Link><h1>{course.title}</h1><p className="project-subtitle">{course.subtitle}</p><p>{course.description}</p><section className="detail-section"><h2>完成后你会得到</h2><ul>{course.outcomes.map(o=><li key={o}>{o}</li>)}</ul><h2>开始前</h2>{course.prerequisites.map(p=><p key={p}>{p}</p>)}<p className="text-pill">{progress.completedCount}/{progress.totalCodeStages}关达标 · 独立程度尚未评价</p><Link className="button primary" to={route(progress.nextCodeStage||course.chapters[0].stageId)}>进入学习</Link></section><CourseSyllabus courseId={courseId} route={route}/></div>;
  if(!chapter)return <div className="page narrow"><h1>此章节不存在</h1><Link to={'/projects/'+courseId}>返回课程目录</Link></div>;
  const index=course.chapters.indexOf(chapter),completion=progress.completions.find(c=>c.stageId===stage),required=progress.nextCodeStage&&course.chapters.findIndex(c=>c.stageId===progress.nextCodeStage)<index?progress.nextCodeStage:null;
@@ -76,7 +80,7 @@ export function BootLearning({project=false,course:givenCourse}:{project?:boolea
    <p>在工程根目录运行。默认端口 <code>8080</code>，可通过 <code>server.port</code> 调整。</p>
    <pre><code>mvn spring-boot:run</code></pre>
   </>}/></section></TabsContent>
- <TabsContent value="检查报告">{job?<CheckJobReport job={job} action={<CodeCompletion job={job} context={context} token={token} nextHref={nextHref} nextLabel={nextLabel} beforeComplete={()=>verifyRef.current?.()??Promise.resolve()}/>}/>:<p>尚未提交本关检查。在任务页保存快照并运行检查后，这里显示报告。</p>}<details className="supplementary-practice"><summary>选择题补充（可选）</summary><UnderstandingVerification courseId={courseId} courseVersion="1.0.0" stageId={stage} job={job} token={token} completion={completion} requiredStage={required} nextStage={course.chapters[index+1]?.stageId} onComplete={()=>{refreshLearning();void load()}}/></details></TabsContent></Tabs></WorkspaceTaskPane>
+ <TabsContent value="检查报告">{job?<CheckJobReport job={job} action={<CodeCompletion job={job} context={context} token={token} nextHref={nextHref} nextLabel={nextLabel} beforeComplete={()=>verifyRef.current?.()??Promise.resolve()}/>}/>:<p>尚未提交本关检查。在任务页保存快照并运行检查后，这里显示报告。</p>}<details className="supplementary-practice"><summary>选择题补充（可选）</summary><UnderstandingVerification courseId={courseId} courseVersion="1.0.0" stageId={stage} job={job} token={token} completion={completion} requiredStage={required} nextStage={course.chapters[index+1]?.stageId}/></details></TabsContent></Tabs></WorkspaceTaskPane>
  <WorkspaceDivider/><div className="boot-workspace-panel"><LocalFirstWorkspace key={courseId+stage} context={{courseId,courseVersion:'1.0.0',stageId:stage}} onJobChange={onJob} onContinue={()=>changeTab('检查报告')} verifyRef={verifyRef} nextLabel={nextLabel} nextHref={nextHref}/>{job?.status==='passed'&&<button className="button primary" onClick={()=>changeTab('检查报告')}>补充巩固（可选）</button>}</div>
  </WorkspaceLayout></div></div></TutorProvider>;
 }

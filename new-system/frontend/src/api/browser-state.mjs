@@ -4,15 +4,15 @@ export function setStorageOwner(id) {
   owner = id;
 }
 
-export function scopedKey(key) {
-  return owner ? `cs-account:${owner}:${key}` : key;
+export function scopedKey(key, account = owner) {
+  return account ? `cs-account:${account}:${key}` : key;
 }
 
 function storage(name) {
   return {
-    getItem: key => globalThis[name].getItem(scopedKey(key)),
-    setItem: (key, value) => globalThis[name].setItem(scopedKey(key), value),
-    removeItem: key => globalThis[name].removeItem(scopedKey(key)),
+    getItem: (key, account) => globalThis[name].getItem(scopedKey(key, account)),
+    setItem: (key, value, account) => globalThis[name].setItem(scopedKey(key, account), value),
+    removeItem: (key, account) => globalThis[name].removeItem(scopedKey(key, account)),
   };
 }
 

@@ -1,3 +1,4 @@
+import {InlineSpinner} from '../../components/shared/LoadingState';
 import {useState, type FormEvent} from 'react';
 import {Link, useSearchParams} from 'react-router-dom';
 import {Ticket} from 'lucide-react';
@@ -194,7 +195,7 @@ function InvitationDialog({onClose}: {onClose: () => void}) {
     <form className="admin-form" onSubmit={generate}>
       <label>可使用次数<input className="csx-input" name="maxUses" type="number" min={1} max={100} defaultValue={1} required/></label>
       <label>有效时长（小时）<input className="csx-input" name="hours" type="number" min={1} max={720} defaultValue={72} required/></label>
-      <button className={privateSite ? 'csx-btn csx-btn-outline' : 'csx-btn csx-btn-primary'} disabled={busy} type="submit">{busy ? '正在生成…' : privateSite ? '创建个人入口邀请' : '创建邀请码'}</button>
+      <button className={privateSite ? 'csx-btn csx-btn-outline' : 'csx-btn csx-btn-primary'} disabled={busy} type="submit"><InlineSpinner active={busy}/>{busy ? '正在生成…' : privateSite ? '创建个人入口邀请' : '创建邀请码'}</button>
     </form>
     {error && <p role="alert">{error}</p>}
     {invitation && <div>

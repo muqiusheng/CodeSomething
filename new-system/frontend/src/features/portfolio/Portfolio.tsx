@@ -1,3 +1,5 @@
+import {useScopedRead} from '../../hooks/useScopedRead';
+import {PageSkeleton} from '../../components/shared/LoadingState';
 import {localState} from '../../api/browser-state.mjs';
 import {LocalProjectGuide} from '../learning/shared/LocalProjectGuide';
 import {RunExperience} from '../learning/shared/RunExperience';
@@ -5,10 +7,10 @@ import {PracticeSteps} from '../learning/shared/PracticeSteps';
 import {ProjectLessonDirectory} from '../learning/shared/CourseSyllabus';
 import {keepJourney,lessonById,lessonHref} from '../learning/journey/catalog';
 import {ProjectFileEditor} from '../../components/code/ProjectFileEditor';
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
 import {Link,useNavigate,useParams,useSearchParams} from 'react-router-dom';
 import {ArrowRight,Download,FolderOpen,Trophy} from 'lucide-react';
-import {learningRequest,type CheckReport} from '../../api/learning-api';
+import {learningRequest,refreshLearning,type CheckReport} from '../../api/learning-api';
 import {Tabs,TabsList,TabsTrigger,TabsContent} from '../../components/ui/tabs';
 import {statuses,active} from '../../api/projects-api';
 import '../../styles/project-studio.css';
@@ -30,16 +32,23 @@ export function Portfolio(){
  const [journeySearch]=useSearchParams();
  const requested=lessonById.get(journeySearch.get('journey')||'');
  const journeyLesson=requested?.courseId==='portfolio'?requested:undefined;
- const withLesson=(path:string)=>journeyLesson?path+'?'+keepJourney(journeySearch,{step:journeySearch.get('step')||'design'}):path;const [works,setWorks]=useState<Work[]>([]);const [work,setWork]=useState<Work|null>(null);const [error,setError]=useState('');const [notice,setNotice]=useState('');const [busy,setBusy]=useState(false);const [theme,setTheme]=useState('');const creationKey=useRef(crypto.randomUUID());
- const load=async()=>{if(id){setWork(await request<Work>('/'+id));}else setWorks(await request<Work[]>(''));};
- useEffect(()=>{let current=true;setWork(null);setError('');if(id)void request<Work>('/'+id).then(w=>{if(current)setWork(w)}).catch(e=>{if(current)setError(e.message)});else void request<Work[]>('').then(w=>{if(current)setWorks(w)}).catch(e=>{if(current)setError(e.message)});return()=>{current=false}},[id]);
- useEffect(()=>{if(!work?.checks.some(j=>active(j.status)||j.status==='cancelling'))return;const timer=setInterval(()=>void load().catch(e=>setError(e.message)),1500);return()=>clearInterval(timer)},[work?.checks,id]);
+ const withLesson=(path:string)=>journeyLesson?path+'?'+keepJourney(journeySearch,{step:journeySearch.get('step')||'design'}):path;const [error,setError]=useState('');const [notice,setNotice]=useState('');const [busy,setBusy]=useState(false);const [theme,setTheme]=useState('');const creationKey=useRef(crypto.randomUUID());
+ const readList=useCallback(()=>request<Work[]>(''),[]);
+ const readWork=useCallback(()=>request<Work>('/'+id),[id]);
+ const {data:works,error:listError,reload:reloadList}=useScopedRead(id?null:'/portfolio',readList,{persist:true});
+ const {data:work,error:workError,reload:load,setData:setWork}=useScopedRead(id?'/portfolio/'+id:null,readWork,{persist:true});
+ const readError=workError||listError;
+ useEffect(()=>{if(!work?.checks.some(j=>active(j.status)||j.status==='cancelling'))return;const timer=setInterval(()=>void load(),1500);return()=>clearInterval(timer)},[work?.checks,load]);
+ function update(next:Work){
+  setWork(next);
+  if(next.state!==work?.state||next.checks.length!==work?.checks.length||next.visits.length!==work?.visits.length)refreshLearning('portfolio');
+ }
  async function action(fn:()=>Promise<void>){setBusy(true);setError('');setNotice('');try{await fn()}catch(e){setError(e instanceof Error?e.message:'保存失败，请重试。')}finally{setBusy(false)}}
  return <div className="page project-studio portfolio-workspace"><div className="page-title"><h1>{work?work.theme:'作品'}</h1>{id&&<Link className="button secondary" to={withLesson("/portfolio")}>全部作品</Link>}{journeyLesson&&<Link className="btn button secondary" to={lessonHref(journeyLesson.id)}>返回第 {journeyLesson.number} 节 · {journeyLesson.title}</Link>}</div>
-  <div role="alert" className={error?'studio-error':''}>{error&&<>{error}<button className="button secondary" onClick={()=>void action(load)}>重新加载</button></>}</div><div role="status" aria-live="polite">{busy?'正在处理…':notice}</div>
-  {!id&&<><p className="studio-intro">从自己的题材出发，完成设计、编码、测试与部署，再用讲解和陌生改动检验作品。</p><section><div className="section-heading"><h2>开始独立作品</h2><span className="text-pill">作品 C</span></div><p>当前自动评价支持有限资源预约。可以做摄影设备借用、场地预约、活动名额，或同类新题材。核心业务由你实现，系统提供需求边界和评价规则。</p><form onSubmit={e=>{e.preventDefault();void action(async()=>{const w=await request<Work>('',{theme,domain:'reservation',idempotencyKey:creationKey.current});creationKey.current=crypto.randomUUID();navigate(withLesson('/portfolio/'+w.id))})}}><label className="generated-explanation">作品题材<input className="input" required minLength={2} maxLength={80} name="theme" autoComplete="off" value={theme} onChange={e=>{setTheme(e.target.value);creationKey.current=crypto.randomUUID()}} placeholder="例如：摄影设备借用"/></label><button disabled={busy} className="btn button primary">确定题材与评价边界<ArrowRight size={16} aria-hidden="true"/></button></form></section><section><h2>我的作品档案</h2>{works.length===0?<div className="portfolio-placeholder"><Trophy size={28} aria-hidden="true"/><p>还没有作品。确定题材后，设计和检查记录会保存在这里。</p><Link to="/projects/collaboration">先完成项目B</Link></div>:works.map(w=><Link className="studio-history-row" to={withLesson(w.route)} key={w.id}><span><strong>{w.theme}</strong><span className="portfolio-row-detail">{w.checks.length}次检查 · {w.visits.length}次回访</span></span><span>{stateName[w.state]}<ArrowRight size={15} aria-hidden="true"/></span></Link>)}</section></>}
+  <div role="alert" className={error||readError?'studio-error':''}>{(error||readError)&&<>{error||readError}<button className="button secondary" onClick={()=>{setError('');void (id?load():reloadList());}}>重新加载</button></>}</div><div role="status" aria-live="polite">{busy?'正在处理…':notice}</div>
+  {!id&&<><p className="studio-intro">从自己的题材出发，完成设计、编码、测试与部署，再用讲解和陌生改动检验作品。</p><section><div className="section-heading"><h2>开始独立作品</h2><span className="text-pill">作品 C</span></div><p>当前自动评价支持有限资源预约。可以做摄影设备借用、场地预约、活动名额，或同类新题材。核心业务由你实现，系统提供需求边界和评价规则。</p><form onSubmit={e=>{e.preventDefault();void action(async()=>{const w=await request<Work>('',{theme,domain:'reservation',idempotencyKey:creationKey.current});creationKey.current=crypto.randomUUID();refreshLearning('portfolio');navigate(withLesson('/portfolio/'+w.id))})}}><label className="generated-explanation">作品题材<input className="input" required minLength={2} maxLength={80} name="theme" autoComplete="off" value={theme} onChange={e=>{setTheme(e.target.value);creationKey.current=crypto.randomUUID()}} placeholder="例如：摄影设备借用"/></label><button disabled={busy} className="btn button primary">确定题材与评价边界<ArrowRight size={16} aria-hidden="true"/></button></form></section><section><h2>我的作品档案</h2>{!works?!readError&&<PageSkeleton variant="cards" label="正在读取作品…"/>:works.length===0?<div className="portfolio-placeholder"><Trophy size={28} aria-hidden="true"/><p>还没有作品。确定题材后，设计和检查记录会保存在这里。</p><Link to="/projects/collaboration">先完成项目B</Link></div>:works.map(w=><Link className="studio-history-row" to={withLesson(w.route)} key={w.id}><span><strong>{w.theme}</strong><span className="portfolio-row-detail">{w.checks.length}次检查 · {w.visits.length}次回访</span></span><span>{stateName[w.state]}<ArrowRight size={15} aria-hidden="true"/></span></Link>)}</section></>}
   {!id&&<ProjectLessonDirectory courseId="portfolio"/>}
-  {id&&!work&&!error&&<p>正在读取作品…</p>}{work&&<WorkEditor key={work.id} work={work} busy={busy} action={action} update={setWork} notice={setNotice}/>}
+  {id&&!work&&!readError&&<PageSkeleton variant="course" label="正在读取作品…"/>}{work&&<WorkEditor key={work.id} work={work} busy={busy} action={action} update={update} notice={setNotice}/>}
  </div>;
 }
 function WorkEditor({work,busy,action,update,notice}:{work:Work;busy:boolean;action:(fn:()=>Promise<void>)=>Promise<void>;update:(w:Work)=>void;notice:(s:string)=>void}){

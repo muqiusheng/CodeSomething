@@ -1,3 +1,4 @@
+import {InlineSpinner} from '../../components/shared/LoadingState';
 import {useState, type FormEvent} from 'react';
 import {adminWrite, query, type Page} from '../../api/admin-api';
 import {Modal} from '../../components/ui/modal';
@@ -89,7 +90,7 @@ function QuestionEditor({question,onClose,onSaved}: {question:Question;onClose:(
       <label>解析<textarea className="csx-textarea w-full" name="explanation" rows={3} required maxLength={2000} defaultValue={question.explanation}/></label>
       <label>状态<select className="csx-select" name="status" defaultValue={question.status}>{Object.entries(states).map(([key,title])=><option key={key} value={key}>{title}</option>)}</select></label>
       {error&&<p role="alert">{error}</p>}
-      <button type="submit" className="csx-btn csx-btn-primary" disabled={busy}>{busy?'正在保存…':'保存题目'}</button>
+      <button type="submit" className="csx-btn csx-btn-primary" disabled={busy}><InlineSpinner active={busy}/>{busy?'正在保存…':'保存题目'}</button>
     </form>
   </Modal>;
 }

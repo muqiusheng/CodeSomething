@@ -1,5 +1,8 @@
+import {useScopedRead} from '../../hooks/useScopedRead';
+import {refreshLearning} from '../../api/learning-api';
+import {PageSkeleton} from '../../components/shared/LoadingState';
 import {sessionState} from '../../api/browser-state.mjs';
-import {useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {ArrowLeft, Check, ChevronRight, Database, FileText, ListTree, Play, RotateCcw, Save, TextQuote} from 'lucide-react';
 import {Link, useParams} from 'react-router-dom';
 import {CodeEditor, type CodeEditorHandle} from '../../components/code/CodeEditor';
@@ -16,19 +19,13 @@ import '../../styles/school.css';
 export function SchoolLabWorkspace() {
   const {courseId = '', labId = ''} = useParams();
   const url = labUrl(courseId, labId);
-  const [details, setDetails] = useState<LabDetails>();
-  const [error, setError] = useState('');
-  const [attempt, setAttempt] = useState(0);
-  useEffect(() => {
-    const controller = new AbortController();
-    schoolRequest<LabDetails>(url, undefined, controller.signal)
-      .then(setDetails).catch(error => {if (!controller.signal.aborted) setError(errorMessage(error));});
-    return () => controller.abort();
-  }, [url, attempt]);
-  if (details) return <LabWorkspace details={details} url={url}/>;
+  const request=useCallback(()=>schoolRequest<LabDetails>(url),[url]);
+  const {data:details,error,reload,setData}=useScopedRead(url,request);
+  if (details) return <LabWorkspace key={url} details={details} url={url}
+    updateWork={work=>setData({...details,work})}/>;
   return <div className="page school-workspace">
     <Link to="/school" className="back-link">返回课内实战</Link>
-    {error ? <div className="note" role="alert"><p>{error}</p><button className="button secondary" onClick={() => {setError(''); setAttempt(attempt + 1);}}>重试</button></div> : <p role="status">正在读取实验…</p>}
+    {error ? <div className="note" role="alert"><p>{error}</p><button className="button secondary" onClick={reload}>重试</button></div> : <PageSkeleton variant="course" label="正在读取实验…"/>}
   </div>;
 }
 
@@ -40,7 +37,7 @@ function recover(url: string, work: Work) {
   return work.drafts;
 }
 
-function LabWorkspace({details, url}: {details: LabDetails; url: string}) {
+function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: string; updateWork: (value: Work) => void}) {
   const {lab, course, outline} = details;
   const [work, setWork] = useState(details.work);
   const [drafts, setDrafts] = useState(() => recover(url, details.work));
@@ -122,7 +119,15 @@ function LabWorkspace({details, url}: {details: LabDetails; url: string}) {
     finally {active.current = false; setBusy('');}
   }
 
+  useEffect(() => {
+    if (!dirty && !busy && details.work.revision > work.revision) {
+      setWork(details.work);
+      setDrafts(details.work.drafts);
+    }
+  }, [details.work, work.revision, dirty, busy]);
+
   function applyWork(next: Work) {
+    updateWork(next);
     setWork(next);
     setDrafts(next.drafts);
   }
@@ -157,6 +162,7 @@ function LabWorkspace({details, url}: {details: LabDetails; url: string}) {
         return;
       }
       applyWork(response.work);
+      refreshLearning('school');
       const ids = lab.questions.filter(item => response.results[item.id]).map(item => item.id);
       setBatch(all ? ids : []);
       if (all) {

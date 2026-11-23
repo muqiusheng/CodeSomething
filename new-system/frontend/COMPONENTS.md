@@ -4,6 +4,8 @@
 
 # 组件来源与复用
 
+`src/components/shared/LoadingState.tsx` 提供自有品牌启动态、行内圆环、三点等待提示和结构化骨架屏。样式集中在 `src/styles/loading.css`，复用 BrandMark 和主题语义变量。骨架由真实表面和低对比细线组成，220ms后淡入。品牌启动态使用细圆弧，编辑器使用等尺寸覆盖层。两种减少动效设置均使用静态占位。只读快照由 `useScopedRead` 复用，默认20秒内切页直接使用缓存，课程元数据为60秒。动态数据只在当前页面可见时每120秒校验，管理端沿用各表的轮询间隔。完成内容后按受影响的资源在后台刷新已访问的数据，手动重试也会立即读取。允许持久化的资源按账号保存到 `sessionState`，重新载入时静默校验。课内实验详情使用内存缓存，未提交的编辑仍走原草稿恢复逻辑。无新增运行依赖。
+
 0.13.1：HeaderNavigation为自有React组件，采用daisyui breadcrumbs/menu的语义参考，使用现有React Router与Lucide，无新增组件库。原生details/summary展开栏目链接，按钮进行历史导航；sessionStorage只保存当前标签页访问分支。navigation.css沿用双主题角色；移除usePointerFeedback中的侧栏跟随测量及旧伪元素，80ms行级反馈遵循make-interfaces-feel-better高频交互规则。
 
 2026年11月12日R3.2：SqlLearning复用本文件已有shadcn/Radix Tabs与Modal，SQL结果表、textarea、文件输入和手机章节select使用原生语义。普通CSS延续现有变量，图标沿用lucide-react；没有新增运行依赖。LeiBox查询“代码编辑器 查询结果 数据表格”和table均count=0（revision ec051883c3d34df3327ccc7d3d34972cba515288c41efff69e0d838b1c30f73e），未下载或声称采用新组件。项目图为自有HTML/CSS代码示意，不包含用户数据。

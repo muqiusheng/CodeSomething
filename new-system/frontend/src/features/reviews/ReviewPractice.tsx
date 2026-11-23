@@ -1,3 +1,4 @@
+import {PageSkeleton} from '../../components/shared/LoadingState';
 import {useEffect,useRef,useState} from 'react';
 import {Link,useSearchParams} from 'react-router-dom';
 import {ArrowRight,RotateCcw} from 'lucide-react';
@@ -16,8 +17,8 @@ export function ReviewPractice(){
  function resumeRound(round:Review){
   setReview(round);setAnswer(null);setStage(round.skill.stageId);setHelp(round.help);setFailure('');
  }
- async function start(id=stage,level=help){setBusy(true);setFailure('');try{const r=await learnerRequest<Review>('/reviews',{stageId:id,help:level});setReview(r);setHelp(r.help);setAnswer(null);setStage(id);reload()}catch(e){setFailure((e as Error).message)}finally{setBusy(false)}}
- async function finish(action:'answer'|'later'|'skip'){if(!review)return;setBusy(true);setFailure('');try{const r=await learnerRequest<Review>('/reviews/'+review.id+(action==='answer'?'/answer':'/defer'),action==='answer'?{answer,help}:{action});setReview(r);reload()}catch(e){setFailure((e as Error).message)}finally{setBusy(false)}}
+ async function start(id=stage,level=help){setBusy(true);setFailure('');try{const r=await learnerRequest<Review>('/reviews',{stageId:id,help:level});setReview(r);setHelp(r.help);setAnswer(null);setStage(id)}catch(e){setFailure((e as Error).message)}finally{setBusy(false)}}
+ async function finish(action:'answer'|'later'|'skip'){if(!review)return;setBusy(true);setFailure('');try{const r=await learnerRequest<Review>('/reviews/'+review.id+(action==='answer'?'/answer':'/defer'),action==='answer'?{answer,help}:{action});setReview(r)}catch(e){setFailure((e as Error).message)}finally{setBusy(false)}}
  const openRounds=data?.history.filter(round=>round.status==='open')||[];
  const pendingKeys=new Set(openRounds.filter(round=>round.id!==review?.id||review.status==='open').map(round=>reviewKey(round.skill)));
  if(review?.status==='open')pendingKeys.add(reviewKey(review.skill));
@@ -26,7 +27,7 @@ export function ReviewPractice(){
  const selected=data?.items.find(item=>item.skill.stageId===stage);
  const selectedRound=selected&&openRounds.find(round=>reviewKey(round.skill)===reviewKey(selected.skill));
  return <div className="page narrow learner-page"><div className="page-title"><h1>复习</h1><Link className="button secondary" to="/profile">查看画像<ArrowRight size={15} aria-hidden="true"/></Link></div>
- {error&&<p role="alert">{error} <button className="button secondary" onClick={reload}>重新读取</button></p>}{!data&&!error&&<p role="status">正在读取复习安排…</p>}
+ {error&&<p role="alert">{error} <button className="button secondary" onClick={reload}>重新读取</button></p>}{!data&&!error&&<PageSkeleton variant="cards" label="正在读取复习安排…"/>}
  <p className="learner-intro">每题预计5分钟，换个场景验证概念。结果记录在画像中，代码关卡仍按功能与正式理解验证完成。</p>
  {data&&<><section className="profile-panel review-recommendations"><div className="section-heading"><h2>建议复习</h2><span className="text-pill">{data.plan.review_minutes?`每日额外${data.plan.review_minutes}分钟`:'按需选择'}</span></div>{(pending.length>0||recommendations.length>0)?<ul>
   {pending.map(round=><li key={round.id}><div><h3>{round.skill.title}</h3><p>待作答 · {helpLabel(round.help)}</p></div>

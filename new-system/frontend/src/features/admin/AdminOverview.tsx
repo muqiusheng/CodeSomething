@@ -1,6 +1,7 @@
 import {useRef, useState} from 'react';
 import {Activity, CheckCircle2, ClipboardList, Layers3, ShieldCheck, UsersRound} from 'lucide-react';
 import {query} from '../../api/admin-api';
+import {PageSkeleton} from '../../components/shared/LoadingState';
 import {DataState, Pager, Status, formatNumber, formatTime, label, useAdminData} from './admin-controls';
 
 type Overview = {registered: number; administrators: number; activeToday: number; submissions: number; passRate: number | null; pending: number; errors: Record<string,number>};
@@ -24,23 +25,23 @@ export function AdminOverview() {
   ] : [];
   return <>
     <div className="admin-heading"><h1>概览</h1><button className="csx-btn" type="button" onClick={() => {overview.refresh();health.refresh();timeline.refresh();}}>刷新数据</button></div>
-    <DataState loading={!data} error={overview.error} retry={overview.refresh}/>
+    <DataState loading={!data} error={overview.error} retry={overview.refresh} variant="cards"/>
     {data && <dl className="admin-metrics">
       {metrics.map(({label: title, value, icon: Icon}) => <div key={title}><dt><Icon size={17} aria-hidden="true"/>{title}</dt><dd>{value}</dd></div>)}
     </dl>}
     <div className="admin-overview-grid">
       <section className="admin-card">
         <div className="admin-section-heading"><h2>提交趋势</h2><label>时间范围 <select className="csx-select csx-select-sm" value={hours} onChange={event => setHours(Number(event.target.value))}><option value={24}>近24小时</option><option value={168}>近7天</option></select></label></div>
-        <DataState loading={!timeline.data} error={timeline.error} retry={timeline.refresh}/>
+        <DataState loading={!timeline.data} error={timeline.error} retry={timeline.refresh} variant="inline"/>
         {timeline.data && <SubmissionChart key={hours} points={timeline.data}/>}
       </section>
       <section className="admin-card"><h2>判题失败分布</h2>
         {data && Object.keys(data.errors).length > 0 ? <dl className="admin-facts">
           {Object.entries(data.errors).sort((a,b)=>b[1]-a[1]).map(([reason,count]) => <div key={reason}><dt>{label(reason)}</dt><dd>{formatNumber(count)}</dd></div>)}
-        </dl> : <p className="admin-empty">{data ? '暂无判题失败记录。' : '等待读取统计。'}</p>}
+        </dl> : data ? <p className="admin-empty">暂无判题失败记录。</p> : !overview.error && <PageSkeleton className="admin-empty" variant="inline" label="等待读取统计。"/>}
       </section>
     </div>
-    <section className="admin-card"><h2>系统健康</h2><DataState loading={!health.data} error={health.error} retry={health.refresh}/>
+    <section className="admin-card"><h2>系统健康</h2><DataState loading={!health.data} error={health.error} retry={health.refresh} variant="inline"/>
       {health.data && <dl className="admin-facts admin-health"><div><dt>Docker</dt><dd><Status value={health.data.docker.status}/></dd></div><div><dt>SQLite 数据</dt><dd>{size(health.data.database.bytes)}</dd></div><div><dt>SQLite WAL</dt><dd>{health.data.database.journalMode.toUpperCase()} · {size(health.data.database.walBytes)}</dd></div><div><dt>可用磁盘</dt><dd>{size(health.data.diskFreeBytes)}</dd></div></dl>}
     </section>
   </>;

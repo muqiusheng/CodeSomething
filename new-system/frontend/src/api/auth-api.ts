@@ -76,7 +76,10 @@ export function initializeAccess() {
         setStorageOwner('guest');
         await refresh();
         window.addEventListener('storage', event => {
-          if (event.key === sessionEvent) window.location.reload();
+          if (event.key === sessionEvent) {
+            update({...state,user:null});
+            window.location.reload();
+          }
         });
       }
       update({...state, loading: false});
@@ -131,6 +134,8 @@ export async function changePassword(body: Record<string,string>) {
 export async function logout() {
   await json(await apiFetch(prefix + '/logout', {method: 'POST', signal: AbortSignal.timeout(10000)}));
   accessToken = '';
+  setStorageOwner('guest');
+  update({...state, user: null});
   notifyTabs();
   window.location.replace('/login');
 }

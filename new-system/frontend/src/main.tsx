@@ -1,3 +1,4 @@
+import {PageSkeleton} from './components/shared/LoadingState';
 import {localState} from './api/browser-state.mjs';
 import {initializeAccess, currentAccess} from './api/auth-api';
 import {SupplementalPractice} from './features/reviews/SupplementalPractice';
@@ -23,7 +24,7 @@ import {BootLearning} from './features/learning/boot/BootLearning';
 import {LearnerProfile} from './features/profile/LearnerProfile';
 import {SqlLearning} from './features/learning/sql/SqlLearning';
 import {SettingsPage} from './features/settings/SettingsPage';
-import {getPreferences, cachePreferences} from './api/api';
+import {usePreferences, cachePreferences} from './api/api';
 import {LearningPath} from './features/projects/LearningPath';
 import {Journey as FullJourney} from './features/learning/journey/Journey';
 import {LessonWorkspace} from './features/learning/http/LessonWorkspace';
@@ -34,6 +35,7 @@ import {ReviewPractice} from './features/reviews/ReviewPractice';
 const IndependentPortfolio=React.lazy(()=>import('./features/portfolio/Portfolio').then(m=>({default:m.Portfolio})));
 import {usePointerFeedback} from './hooks/usePointerFeedback';
 import './styles/styles.css';
+import './styles/loading.css';
 import './styles/design-system.css';
 import './styles/learning.css';
 import './styles/themes.css';
@@ -64,14 +66,18 @@ function App(){
   return '60';
  });
  usePointerFeedback();
+ const {data:preferences}=usePreferences();
  useEffect(()=>{
-  let active=true;
   try {document.documentElement.dataset.motion=localState.getItem('cs-motion')||'system'}catch{}
-  void getPreferences().then(value=>{
-   if(active){cachePreferences(value);setDuration(String(value.dailyMinutes));}
-  }).catch(()=>{});
-  return()=>{active=false;};
- },[pathname]);
+  const onLocalDuration=(event: Event)=>setDuration((event as CustomEvent<string>).detail);
+  window.addEventListener('learning-duration',onLocalDuration);
+  return()=>window.removeEventListener('learning-duration',onLocalDuration);
+ },[]);
+ useEffect(()=>{
+  if(!preferences)return;
+  cachePreferences(preferences);
+  setDuration(String(preferences.dailyMinutes));
+ },[preferences]);
  const [menu,setMenu]=useState(false);
  const [sidebarExpanded,setSidebarExpanded]=useState(false);
  const [isMobile,setIsMobile]=useState(()=>matchMedia('(max-width:640px)').matches);
@@ -100,7 +106,7 @@ function App(){
  },[pathname,title]);
 const navigation=<aside id="site-sidebar" data-expanded={!isMobile&&sidebarExpanded} inert={isMobile&&!menu} className={`sidebar ${compact?'coding-sidebar':''} ${menu?'open':''}`}><Link className="brand" to="/learn" aria-label="码起步" onClick={()=>setMenu(false)}><BrandMark/><span className="brand-name">码起步</span></Link>{!isMobile&&<button type="button" className="btn btn-ghost desktop-sidebar-toggle" aria-expanded={sidebarExpanded} aria-controls="site-sidebar" aria-label={sidebarExpanded?'收起侧边栏':'展开侧边栏'} title={sidebarExpanded?'收起侧边栏':'展开侧边栏'} onClick={()=>setSidebarExpanded(expanded=>!expanded)}>{sidebarExpanded?<PanelLeftClose size={18} aria-hidden="true"/>:<PanelLeftOpen size={18} aria-hidden="true"/>}<span className="sidebar-toggle-label" aria-hidden="true">收起侧栏</span></button>}<nav aria-label="主导航">{nav.map(n=><NavLink key={n.to} to={n.to} aria-label={n.label} title={n.label} className={({isActive})=>isActive?'active':''} onClick={()=>setMenu(false)}><n.icon aria-hidden="true" size={18}/><span className="nav-label">{n.label}</span></NavLink>)}</nav><div className="sidebar-bottom"><PersonalMenu onNavigate={()=>setMenu(false)}/></div>{isMobile&&<HeaderNavigation/>}</aside>;
 return <><a className="skip" href="#main">跳到主要内容</a>{!isMobile&&navigation}
-<div className={`app ${compact?'coding-app':''}`}><header className="topbar"><div className="header-left"><button className="icon-button mobile-menu" aria-expanded={menu} aria-controls="site-sidebar" aria-label={menu?'关闭导航':'打开导航'} onClick={()=>setMenu(!menu)}>{menu?<X aria-hidden="true" size={19}/>:<Menu aria-hidden="true" size={19}/>}</button>{(!home||isMobile)&&<div className="shell-title"><strong>{title}</strong><small>{school?'课内实战':loc.pathname.startsWith('/portfolio')||loc.pathname==='/projects/independent'?'作品证据':loc.pathname.startsWith('/projects/studio')?'研究与生成':loc.pathname.startsWith('/projects/generated/')?'已发布项目':loc.pathname==='/learn'||loc.pathname==='/'||loc.pathname==='/profile'||loc.pathname==='/reviews'?'正式进度':loc.pathname.startsWith('/learn/tlias/')||loc.pathname==='/projects/tlias'?'资料实战':loc.pathname.startsWith('/learn/journey')?'全流程课程':loc.pathname.startsWith('/learn/')||(loc.pathname==='/projects/backend-foundations'||loc.pathname==='/projects/sql-foundations'||loc.pathname==='/projects/boot-foundations'||loc.pathname==='/projects/task-manager'||loc.pathname==='/projects/collaboration')?'正式课程':loc.pathname==='/projects'||loc.pathname==='/path'?'课程目录':'个人学习空间'}</small></div>}{!isMobile&&<HeaderNavigation/>}</div><div className="header-right"><ThemeToggle/><QuickNavigation/>{!home&&<Link className="header-daily" to="/settings" aria-label={'每日 '+duration+' 分钟计划，打开设置'}><Clock3 size={15} aria-hidden="true"/><span>{duration} 分钟</span></Link>}<PersonalMenu compact/></div></header>{isMobile&&<div className="mobile-nav-slot" data-open={menu}><div>{navigation}</div></div>}<main id="main" key={loc.pathname} tabIndex={-1}><React.Suspense fallback={<p role="status">正在读取页面…</p>}><Routes><Route path="/school" element={<SchoolHome/>}/><Route path="/school/:courseId/:labId" element={<SchoolLabWorkspace/>}/><Route path="/" element={<Dashboard duration={duration}/>}/><Route path="/learn" element={<Dashboard duration={duration}/>}/><Route path="/learn/sql/1.0/:stage" element={<SqlLearning/>}/><Route path="/learn/boot-foundations/1.0/:stage" element={<BootLearning course="boot-foundations"/>}/><Route path="/learn/collaboration/1.0/:stage" element={<BootLearning course="collaboration"/>}/><Route path="/learn/task-manager/1.0/:stage" element={<BootLearning course="task-manager"/>}/><Route path="/learn/tlias/:chapter" element={<TliasLearning/>}/><Route path="/learn/:course/:version/:stage" element={<LessonWorkspace/>}/><Route path="/path" element={<Path/>}/><Route path="/learn/journey/:lessonId?" element={<FullJourney/>}/><Route path="/projects" element={<Projects/>}/><Route path="/projects/backend-foundations" element={<FoundationProject/>}/><Route path="/projects/sql-foundations" element={<SqlLearning project/>}/><Route path="/projects/boot-foundations" element={<BootLearning project course="boot-foundations"/>}/><Route path="/projects/collaboration" element={<BootLearning project course="collaboration"/>}/><Route path="/projects/task-manager" element={<BootLearning project course="task-manager"/>}/><Route path="/projects/studio" element={<ProjectStudio/>}/><Route path="/projects/generated/:id" element={<GeneratedLearning/>}/><Route path="/projects/tlias" element={<TliasLearning overview/>}/><Route path="/projects/:id" element={<ProjectDetail/>}/><Route path="/reviews" element={<Reviews/>}/><Route path="/reviews/supplemental" element={<SupplementalPractice/>}/><Route path="/portfolio" element={<Portfolio/>}/><Route path="/portfolio/:id" element={<IndependentPortfolio/>}/><Route path="/projects/independent" element={<IndependentPortfolio/>}/><Route path="/profile" element={<Profile/>}/><Route path="/settings" element={<SettingsPage/>}/><Route path="*" element={<div className="page"><h1>这个页面不存在</h1><Link className="button primary" to="/learn">返回继续学习</Link></div>}/></Routes></React.Suspense></main></div></>}
+<div className={`app ${compact?'coding-app':''}`}><header className="topbar"><div className="header-left"><button className="icon-button mobile-menu" aria-expanded={menu} aria-controls="site-sidebar" aria-label={menu?'关闭导航':'打开导航'} onClick={()=>setMenu(!menu)}>{menu?<X aria-hidden="true" size={19}/>:<Menu aria-hidden="true" size={19}/>}</button>{(!home||isMobile)&&<div className="shell-title"><strong>{title}</strong><small>{school?'课内实战':loc.pathname.startsWith('/portfolio')||loc.pathname==='/projects/independent'?'作品证据':loc.pathname.startsWith('/projects/studio')?'研究与生成':loc.pathname.startsWith('/projects/generated/')?'已发布项目':loc.pathname==='/learn'||loc.pathname==='/'||loc.pathname==='/profile'||loc.pathname==='/reviews'?'正式进度':loc.pathname.startsWith('/learn/tlias/')||loc.pathname==='/projects/tlias'?'资料实战':loc.pathname.startsWith('/learn/journey')?'全流程课程':loc.pathname.startsWith('/learn/')||(loc.pathname==='/projects/backend-foundations'||loc.pathname==='/projects/sql-foundations'||loc.pathname==='/projects/boot-foundations'||loc.pathname==='/projects/task-manager'||loc.pathname==='/projects/collaboration')?'正式课程':loc.pathname==='/projects'||loc.pathname==='/path'?'课程目录':'个人学习空间'}</small></div>}{!isMobile&&<HeaderNavigation/>}</div><div className="header-right"><ThemeToggle/><QuickNavigation/>{!home&&<Link className="header-daily" to="/settings" aria-label={'每日 '+duration+' 分钟计划，打开设置'}><Clock3 size={15} aria-hidden="true"/><span>{duration} 分钟</span></Link>}<PersonalMenu compact/></div></header>{isMobile&&<div className="mobile-nav-slot" data-open={menu}><div>{navigation}</div></div>}<main id="main" key={loc.pathname} tabIndex={-1}><React.Suspense fallback={<PageSkeleton variant="page" className="app-route-loading" label="正在读取页面…"/>}><Routes><Route path="/school" element={<SchoolHome/>}/><Route path="/school/:courseId/:labId" element={<SchoolLabWorkspace/>}/><Route path="/" element={<Dashboard duration={duration}/>}/><Route path="/learn" element={<Dashboard duration={duration}/>}/><Route path="/learn/sql/1.0/:stage" element={<SqlLearning/>}/><Route path="/learn/boot-foundations/1.0/:stage" element={<BootLearning course="boot-foundations"/>}/><Route path="/learn/collaboration/1.0/:stage" element={<BootLearning course="collaboration"/>}/><Route path="/learn/task-manager/1.0/:stage" element={<BootLearning course="task-manager"/>}/><Route path="/learn/tlias/:chapter" element={<TliasLearning/>}/><Route path="/learn/:course/:version/:stage" element={<LessonWorkspace/>}/><Route path="/path" element={<Path/>}/><Route path="/learn/journey/:lessonId?" element={<FullJourney/>}/><Route path="/projects" element={<Projects/>}/><Route path="/projects/backend-foundations" element={<FoundationProject/>}/><Route path="/projects/sql-foundations" element={<SqlLearning project/>}/><Route path="/projects/boot-foundations" element={<BootLearning project course="boot-foundations"/>}/><Route path="/projects/collaboration" element={<BootLearning project course="collaboration"/>}/><Route path="/projects/task-manager" element={<BootLearning project course="task-manager"/>}/><Route path="/projects/studio" element={<ProjectStudio/>}/><Route path="/projects/generated/:id" element={<GeneratedLearning/>}/><Route path="/projects/tlias" element={<TliasLearning overview/>}/><Route path="/projects/:id" element={<ProjectDetail/>}/><Route path="/reviews" element={<Reviews/>}/><Route path="/reviews/supplemental" element={<SupplementalPractice/>}/><Route path="/portfolio" element={<Portfolio/>}/><Route path="/portfolio/:id" element={<IndependentPortfolio/>}/><Route path="/projects/independent" element={<IndependentPortfolio/>}/><Route path="/profile" element={<Profile/>}/><Route path="/settings" element={<SettingsPage/>}/><Route path="*" element={<div className="page"><h1>这个页面不存在</h1><Link className="button primary" to="/learn">返回继续学习</Link></div>}/></Routes></React.Suspense></main></div></>}
 function Path(){return <LearningPath/>}
 function PageTitle({title}:{title:string}){return <div className="page-title"><h1>{title}</h1></div>}
 function Projects(){return <ProjectBrowser/>}
@@ -119,7 +125,7 @@ createRoot(document.getElementById('root')!).render(<React.StrictMode><BrowserRo
     <Route path="/login" element={<AccountPage key="login" mode="login"/>}/>
     <Route path="/register" element={<AccountPage key="register" mode="register"/>}/>
     <Route path="/change-password" element={<AccountPage key="password" mode="password"/>}/>
-    <Route path="/admin/*" element={<RequireAuth admin><React.Suspense fallback={<p role="status">正在加载控制台…</p>}><AdminLayout/></React.Suspense></RequireAuth>}/>
+    <Route path="/admin/*" element={<RequireAuth admin><React.Suspense fallback={<PageSkeleton variant="table" className="admin-route-loading" label="正在加载控制台…"/>}><AdminLayout/></React.Suspense></RequireAuth>}/>
     <Route path="*" element={<RequireAuth><App/></RequireAuth>}/>
   </Routes>
 </AuthProvider></BrowserRouter></React.StrictMode>);

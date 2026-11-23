@@ -1,3 +1,4 @@
+import {useScopedRead} from '../hooks/useScopedRead';
 import {apiFetch} from './auth-api';
 import {localState} from './browser-state.mjs';
 export type LearningPreferences = {
@@ -25,6 +26,10 @@ async function preferencesRequest(method: 'GET' | 'PATCH', patch?: Partial<Pick<
 
 export const getPreferences = () => preferencesRequest('GET');
 export const updatePreferences = (patch: Partial<Pick<LearningPreferences, 'dailyMinutes' | 'motion'>>) => preferencesRequest('PATCH', patch);
+
+export function usePreferences() {
+  return useScopedRead('/profiles/me/preferences',getPreferences,{staleTime:Infinity});
+}
 
 export function cachePreferences(preferences: LearningPreferences) {
   document.documentElement.dataset.motion = preferences.motion;

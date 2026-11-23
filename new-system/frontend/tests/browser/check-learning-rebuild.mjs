@@ -63,6 +63,7 @@ try{
 
  // Exercise the actual review route after a browser-level network failure.
  run('network','route',reviews,'--abort');
+ evaluate('sessionStorage.clear(); true');
  run('reload');
  wait('复习暂未加载');
  run('network','unroute',reviews);
