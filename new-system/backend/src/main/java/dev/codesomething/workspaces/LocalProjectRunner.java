@@ -18,6 +18,7 @@ import tools.jackson.databind.json.JsonMapper;
 /** Native execution for the owner's submitted snapshots. No learner IDE process is reused or stopped. */
 @Component
 public class LocalProjectRunner {
+    @org.springframework.beans.factory.annotation.Value("${cs.runner.mode:local_first}") private String runnerMode;
     private final Path root,javaHome,mavenHome,repository,settings;
     private final int timeout;
     private final JsonMapper json=JsonMapper.builder().build();
@@ -50,7 +51,7 @@ public class LocalProjectRunner {
     }
     @jakarta.annotation.PreDestroy public void close() {closing=true;for(var process:running.values())stop(process);}
     @jakarta.annotation.PostConstruct public void recover() throws IOException {
-        if(!Files.isDirectory(root))return;
+        if("docker_only".equals(runnerMode)||!Files.isDirectory(root))return;
         try(var folders=Files.list(root)){for(Path work:folders.filter(p->p.getFileName().toString().matches("[a-f0-9]{64}")&&Files.isDirectory(p,LinkOption.NOFOLLOW_LINKS)).toList())recover(work);}
     }
     private void recover(Path work)throws IOException {
@@ -130,16 +131,19 @@ public class LocalProjectRunner {
         return args;
     }
     public synchronized Outcome runHttp(String scope,byte[] source,String version,String stage,String policy,BooleanSupplier cancelled) {
+        if ("docker_only".equals(runnerMode)) throw new IllegalStateException("Host execution is disabled");
         return execute(scope,Map.of("TaskServer.java",new String(source,StandardCharsets.UTF_8)),WorkspaceController.hash(source),version,stage,policy,false,cancelled,
             (request,checks)->HttpCourseChecks.verify(policy,request,checks));
     }
     public synchronized Outcome runBoot(String scope,BootProjectSnapshot snapshot,String version,String stage,BooleanSupplier cancelled) {
+        if ("docker_only".equals(runnerMode)) throw new IllegalStateException("Host execution is disabled");
         if(BootCourses.jdbc(stage))return unavailable(snapshot.digest(),version,stage,BootCourses.policy(stage),"本章需要临时数据库和隔离验证。");
         var files=new TreeMap<String,String>();for(var source:snapshot.files())files.put(source.path(),source.content());
         return execute(scope,files,snapshot.digest(),version,stage,BootCourses.policy(stage),true,cancelled,
             (request,checks)->BootHttpChecks.verify(stage,request,checks));
     }
     public synchronized Outcome runProject(String scope,Map<String,String> files,String digest,String version,String stage,String policy,BooleanSupplier cancelled,Verification verifier) {
+        if ("docker_only".equals(runnerMode)) throw new IllegalStateException("Host execution is disabled");
         try {BootProjectSnapshot.fromFiles(files,false);}
         catch(IllegalArgumentException e){return result("compile_error",digest,version,stage,policy,"local-jdk",List.of(),e.getMessage());}
         return execute(scope,files,digest,version,stage,policy,true,cancelled,verifier);

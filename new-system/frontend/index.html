@@ -1,1 +1,273 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="theme-color" content="#f7f3f1"/><title>CodeSomething · 学习工作台</title><script>try{var t=localStorage.getItem('cs-theme');var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=d?'dark':'light';document.documentElement.style.colorScheme=d?'dark':'light';document.querySelector('meta[name="theme-color"]').content=d?'#09002f':'#f7f3f1'}catch(e){document.documentElement.dataset.theme='light'}</script></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-palette="emerald">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#F7FAF8">
+  <title>码起步 · 从零完成 Java 后端项目</title>
+  <meta name="description" content="面向学过 Java 基础的学习者。每天约一小时，从最小配置开始，沿着 HTTP、SQL、Spring Boot 和业务项目，亲手做出可运行、能讲清的后端作品。">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://try.maqibu.online/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="码起步">
+  <meta property="og:title" content="码起步 · 从零完成 Java 后端项目">
+  <meta property="og:description" content="面向学过 Java 基础的学习者。每天约一小时，从最小配置开始，沿着 HTTP、SQL、Spring Boot 和业务项目，亲手做出可运行、能讲清的后端作品。">
+  <meta property="og:url" content="https://try.maqibu.online/">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script src="/theme-init.js"></script>
+  <link rel="stylesheet" href="/src/styles/landing.css">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "name": "码起步",
+      "alternateName": "Maqibu",
+      "url": "https://try.maqibu.online/",
+      "inLanguage": "zh-CN"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "name": "码起步",
+      "alternateName": "Maqibu",
+      "url": "https://try.maqibu.online/",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web browser",
+      "description": "面向学过 Java 基础的学习者。每天约一小时，从最小配置开始，沿着 HTTP、SQL、Spring Boot 和业务项目，亲手做出可运行、能讲清的后端作品。"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "适合什么基础？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "学过 Java 基础就可以开始。会一点数据库有帮助，HTTP、SQL 和 Spring Boot 会在动手实现项目的过程中逐步学到。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "需要在本机配置环境吗？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "公网已开放的 HTTP 和普通 Spring Boot 检查可在网页编辑器完成。选择本机工程路线时，可以用 IDEA 编写同一份源码，并按课程配置 JDK 21、Maven 和所需的数据库环境。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "为什么采用邀请码注册？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "目前开放邀请制试用。持有效邀请码可创建学习账户，登录后进入工作台，使用自己的学习进度和实验记录。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "和看视频、刷题有什么区别？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "你会从最小配置开始，在同一工程里逐章写代码、运行并检查结果。理解验证和变式复习帮助你回顾实现细节，并练习讲清自己的技术选择。"
+          }
+        }
+      ]
+    }
+  ]
+}
+  </script>
+  <script type="module" src="/src/features/landing/landing.ts"></script>
+</head>
+<body class="landing">
+  <a class="landing-skip" href="#main">跳到主要内容</a>
+  <header class="landing-header landing-width">
+    <a class="landing-brand" href="/" aria-label="码起步 产品介绍"><span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 64 64" fill="currentColor" focusable="false"><path d="M26 15 11 30l12 12 5.5-5.5L22 30l9.5-9.5Z"/><path class="brand-stroke-secondary" d="M38 49 53 34 41 22l-5.5 5.5L42 34l-9.5-9.5Z"/></svg></span><span>码起步</span></a>
+    <nav class="landing-nav" aria-label="页面导航"><a href="#teaching">教学方式</a><a href="#route">学习路线</a><a href="#workspace">工作台闭环</a><a href="#faq">常见问题</a></nav>
+    <div class="landing-header-controls">
+      <button type="button" class="csx-btn landing-theme-toggle" aria-label="切换到深色显示" hidden><svg data-theme-icon="dark" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.9 13.35A9 9 0 0 1 10.65 3.1 9 9 0 1 0 20.9 13.35z"/></svg><svg data-theme-icon="light" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.64 5.64l1.42 1.42m9.88 9.88 1.42 1.42m0-12.72-1.42 1.42m-9.88 9.88-1.42 1.42M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"/></svg></button>
+      <details class="landing-appearance">
+        <summary aria-label="页面菜单与外观" title="页面菜单与外观">
+          <svg class="landing-palette-icon" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.65" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M3 12h18M12 3v18M7 7h1m8 0h1m-10 9h1m8 0h1" stroke-linecap="round"/></svg>
+          <svg class="landing-menu-icon" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </summary>
+        <div class="landing-menu">
+          <nav aria-label="页内导航"><a href="#teaching">教学方式</a><a href="#route">学习路线</a><a href="#workspace">工作台闭环</a><a href="#faq">常见问题</a></nav>
+          <div data-appearance hidden>
+            <label>显示模式 <select class="csx-select" id="landing-mode"><option value="light">浅色</option><option value="dark">深色</option><option value="system">跟随系统</option></select></label>
+            <label>配色方案 <select class="csx-select" id="landing-palette"></select></label>
+          </div>
+        </div>
+      </details>
+      <div class="landing-actions" data-access-actions>
+          <a class="csx-btn landing-button landing-primary" data-register href="/register">凭邀请码注册</a>
+          <a class="csx-btn landing-button landing-secondary" data-login href="/login">登录</a>
+        </div>
+    </div>
+  </header>
+  <main id="main" class="landing-width" tabindex="-1">
+    <div class="landing-hero">
+      <section class="landing-panel landing-intro" aria-labelledby="intro-title">
+        <p class="landing-pill"><span class="landing-status-dot" aria-hidden="true"></span>Java 后端实战学习 · 邀请制试用</p>
+        <h1 id="intro-title"><span>从零做出可运行的</span> <span>Java 后端作品</span></h1>
+        <p class="landing-lead">学过 Java 基础？每天花约一小时，从最小配置起步，围绕同一份工程动手编码、运行和验证。</p>
+        <div class="landing-actions" data-access-actions>
+          <a class="csx-btn landing-button landing-primary" data-register href="/register">凭邀请码注册</a>
+          <a class="csx-btn landing-button landing-secondary" data-login href="/login">登录工作台</a>
+        </div>
+        <p class="landing-access-note">当前仅开放此介绍页。进入学习工作台需凭邀请码注册并登录。</p>
+        <ul class="landing-stack" aria-label="学习技术栈"><li>JDK 21</li><li>HTTP / JSON</li><li>MySQL</li><li>Spring Boot</li><li>本机 IDEA / 网页双端</li></ul>
+      </section>
+      <section class="landing-panel landing-sandbox" aria-labelledby="sandbox-title">
+        <h2 id="sandbox-title">接口数据沙盒</h2>
+        <p>切换响应状态，看看 JSON 如何改变网页上的任务。</p>
+        <div class="landing-request">
+          <code><strong>GET</strong> /api/tasks/1</code>
+          <div class="landing-statuses" role="group" aria-label="HTTP 响应状态">
+            <button type="button" class="csx-btn" data-status="200" aria-pressed="true" disabled>200</button>
+            <button type="button" class="csx-btn" data-status="404" aria-pressed="false" disabled>404</button>
+            <button type="button" class="csx-btn" data-status="500" aria-pressed="false" disabled>500</button>
+          </div>
+        </div>
+        <div class="landing-signal" aria-hidden="true"><span></span></div>
+        <div class="landing-code">
+          <div class="landing-code-bar"><span>模拟 JSON 响应</span><strong id="response-status">200 OK</strong></div>
+          <pre><code id="response-body">{
+  "id": <span class="landing-token-value">1</span>,
+  "title": <span class="landing-token-string">"学习制作任务接口"</span>,
+  "completed": <span class="landing-token-value">false</span>
+}</code></pre>
+        </div>
+        <div class="landing-task-preview">
+          <div class="landing-task" role="status"><span id="task-icon" aria-hidden="true"></span><span><strong id="task-title">学习制作任务接口</strong><small id="task-state">待完成</small></span></div>
+          <button type="button" class="csx-btn landing-button landing-secondary" id="task-toggle" aria-pressed="false" disabled>切换完成</button>
+        </div>
+      </section>
+    </div>
+
+    <section id="teaching" class="landing-section" aria-labelledby="teaching-title">
+      <h2 id="teaching-title">为什么这样学</h2>
+      <div class="landing-features">
+        <article class="landing-panel landing-feature">
+          <span class="landing-feature-icon" aria-hidden="true"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 16l9 5 9-5"/></svg></span>
+          <div><h3>同一工程从零演进</h3><p>从最小配置开始，上一章的源码就是下一章的起点。每章说明改哪些文件、运行后会看到什么。</p></div>
+          <figure class="landing-exhibit landing-diff">
+            <figcaption><code>TaskServer.java</code><span>章节演进示意</span></figcaption>
+            <div class="landing-diff-row"><span>第 1 节</span><code>System.out.println("Hello, Java");</code></div>
+            <div class="landing-diff-row landing-diff-added"><span>第 5 节</span><code>+ sendJson(exchange, 200, body);</code></div>
+          </figure>
+        </article>
+        <article class="landing-panel landing-feature">
+          <span class="landing-feature-icon" aria-hidden="true"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m7 9 3 3-3 3m6 0h4"/></svg></span>
+          <div><h3>真实编译与接口评测</h3><p>公网已开放的 HTTP 和普通 Spring Boot 练习可用网页编辑器提交检查。本机模式可与 IDEA 编辑同一份工程，用 JDK 21、Maven、Spring Boot 和隔离 MySQL 验证对应课程的接口与 SQL 结果。</p></div>
+          <figure class="landing-exhibit"><figcaption><code>Maven · JDK 21</code><span>接口检查中 · 示例</span></figcaption><ol class="landing-pipeline" aria-label="检查阶段"><li data-phase="passed"><span aria-hidden="true">01</span>准备依赖</li><li data-phase="passed"><span aria-hidden="true">02</span>编译</li><li data-phase="passed"><span aria-hidden="true">03</span>启动</li><li data-phase="current"><span aria-hidden="true">04</span>接口检查</li><li data-phase="queued"><span aria-hidden="true">05</span>整理结果</li></ol></figure>
+        </article>
+        <article class="landing-panel landing-feature">
+          <span class="landing-feature-icon" aria-hidden="true"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"/></svg></span>
+          <div><h3>课内实战 · 数据库 Web Workbench</h3><p>数据库原理课程含七个实验。可以浏览多库对象、运行所选 SQL、查看结果并导出实验报告。</p></div>
+          <figure class="landing-exhibit landing-query">
+            <figcaption><code>查询结果</code><span>示例数据</span></figcaption>
+            <table class="csx-table" aria-label="学生成绩查询示例"><thead><tr><th scope="col">Sno</th><th scope="col">Sname</th><th scope="col">Grade</th></tr></thead><tbody><tr><td>240101</td><td>林宁</td><td>92</td></tr><tr><td>240102</td><td>陈安</td><td>87</td></tr><tr><td>240103</td><td>周禾</td><td>95</td></tr></tbody></table>
+            <div class="landing-exhibit-footer"><code>3 rows · 12 ms</code><span>导出报告</span></div>
+          </figure>
+        </article>
+        <article class="landing-panel landing-feature">
+          <span class="landing-feature-icon" aria-hidden="true"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16M8 15l4-4 3 2 5-6"/></svg></span>
+          <div><h3>能力画像与主动复习</h3><p>分别记录功能检查与理解验证。五维雷达依据真实编码证据呈现能力覆盖，变式复习帮助你回顾关键概念。</p></div>
+          <figure class="landing-exhibit landing-radar">
+            <figcaption><code>能力画像</code><span>覆盖示意</span></figcaption>
+            <svg viewBox="0 0 324 176" role="img" aria-label="五维能力覆盖示意图"><path class="landing-radar-grid" fill="none" d="M162 30 221 73 198 142 126 142 103 73Z M162 50 201 79 186 125 138 125 123 79Z M162 70 181 84 174 107 150 107 143 84Z M162 92V30 M162 92l59-19m-59 19 36 50m-36-50-36 50m36-50-59-19"/><polygon class="landing-radar-area" points="162,37 211,76 188,128 138,125 128,80"/><g class="landing-radar-points"><circle cx="162" cy="37" r="3"/><circle cx="211" cy="76" r="3"/><circle cx="188" cy="128" r="3"/><circle cx="138" cy="125" r="3"/><circle cx="128" cy="80" r="3"/></g><g class="landing-radar-labels"><text x="162" y="19" text-anchor="middle">HTTP/JSON</text><text x="229" y="75">SQL 与数据</text><text x="201" y="156">Spring Boot</text><text x="123" y="156" text-anchor="end">业务开发</text><text x="94" y="75" text-anchor="end">工程实践</text></g></svg>
+          </figure>
+        </article>
+      </div>
+    </section>
+
+    <section id="route" class="landing-section" aria-labelledby="route-title">
+      <h2 id="route-title">从零到独立作品</h2>
+      <ol class="landing-route" data-preview="1" aria-label="五阶段学习路线">
+        <li class="landing-panel"><span class="landing-stage" aria-hidden="true">01</span><h3><button type="button" data-stage="1" aria-pressed="true" aria-controls="stage-output-1" disabled>HTTP / JSON 基础</button></h3><p class="landing-milestone">8 章</p><p>从 Java 程序起步，写出能返回 JSON 和状态码的 HTTP 接口。</p></li>
+        <li class="landing-panel"><span class="landing-stage" aria-hidden="true">02</span><h3><button type="button" data-stage="2" aria-pressed="false" aria-controls="stage-output-2" disabled>SQL 与数据实验</button></h3><p class="landing-milestone">6 章</p><p>创建数据表，练习查询、关联和更新，验证 SQL 结果。</p></li>
+        <li class="landing-panel"><span class="landing-stage" aria-hidden="true">03</span><h3><button type="button" data-stage="3" aria-pressed="false" aria-controls="stage-output-3" disabled>Spring Boot 入门</button></h3><p class="landing-milestone">4 章</p><p>用 Maven 搭起 Spring Boot 工程，实现并验证接口。</p></li>
+        <li class="landing-panel"><span class="landing-stage" aria-hidden="true">04</span><h3><button type="button" data-stage="4" aria-pressed="false" aria-controls="stage-output-4" disabled>业务项目 A/B</button></h3><p class="landing-milestone">任务管理与协作权限</p><p>从任务 CRUD 走到团队协作、登录与角色权限。</p></li>
+        <li class="landing-panel"><span class="landing-stage" aria-hidden="true">05</span><h3><button type="button" data-stage="5" aria-pressed="false" aria-controls="stage-output-5" disabled>独立作品 C</button></h3><p class="landing-milestone">自主设计与讲解</p><p>自主选题，完成实现与验证，写下运行说明和技术讲解。</p></li>
+      </ol>
+      <div class="landing-panel landing-route-output" aria-live="polite">
+        <article id="stage-output-1"><h3><span>01 · HTTP / JSON 基础产出</span><strong>TaskServer.java</strong></h3><p>启动 JDK HttpServer，用 GET /api/tasks/1 检查状态码与 JSON 字段。</p></article>
+        <article id="stage-output-2"><h3><span>02 · SQL 与数据实验产出</span><strong>MySQL 查询与建表脚本</strong></h3><p>在隔离练习库执行 SQL，用结果集与数据约束核对查询和写入。</p></article>
+        <article id="stage-output-3"><h3><span>03 · Spring Boot 入门产出</span><strong>pom.xml · Spring Boot 控制器</strong></h3><p>编译并启动 Maven 工程，发送请求验证控制器响应。</p></article>
+        <article id="stage-output-4"><h3><span>04 · 业务项目 A/B产出</span><strong>任务管理 REST API · 协作权限</strong></h3><p>检查任务增删改查，再用不同角色验证业务权限。</p></article>
+        <article id="stage-output-5"><h3><span>05 · 独立作品 C产出</span><strong>可运行源码 · README</strong></h3><p>按运行说明复现核心流程，结合检查结果讲清技术选择。</p></article>
+      </div>
+    </section>
+
+    <section id="workspace" class="landing-section" aria-labelledby="workspace-title">
+      <h2 id="workspace-title">编码工作台闭环</h2>
+      <p class="landing-section-note">先读清楚要改哪里，再写代码、运行检查，并按结果修正。以下以读取任务接口为例。</p>
+      <div class="landing-theater" data-run-state="done">
+        <div class="landing-window-bar">
+          <div class="landing-window-id"><span class="landing-project-dot" aria-hidden="true"></span><code>motion-http</code><span class="landing-window-file"><code>TaskController.java</code></span></div>
+          <button type="button" class="csx-btn landing-button landing-primary" id="landing-run" disabled><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5 12 8l-7 4.5z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>运行并检查</span></button>
+        </div>
+        <div class="landing-workspace">
+          <article class="landing-steps">
+            <h3>当前任务 · 返回一条任务</h3>
+            <ol>
+              <li><strong>打开任务控制器</strong><span>在 <code>TaskController.java</code> 中编写读取方法。</span></li>
+              <li><strong>返回任务数据</strong><span>用 <code>GET /api/tasks/1</code> 检查响应。</span></li>
+              <li><strong>对照预期结果</strong><span>预期收到 <code>200 OK</code>，响应含编号、标题和完成状态。</span></li>
+            </ol>
+            <div class="landing-file-tree"><h4>项目文件</h4><ul><li><code>pom.xml</code></li><li><code>Application.java</code></li><li><code>TaskController.java</code></li></ul></div>
+          </article>
+          <article class="landing-editor">
+            <h3><code>TaskController.java</code></h3>
+            <pre class="landing-editor-code"><code><span class="landing-code-line" data-line="1"><span class="landing-token-value">@GetMapping</span>(<span class="landing-token-string">"/api/tasks/1"</span>)</span>
+<span class="landing-code-line" data-line="2">Task getTask() {</span>
+<span class="landing-code-line landing-code-changed" data-line="3">    <span class="landing-token-value">return new</span> Task(1,</span>
+<span class="landing-code-line landing-code-changed" data-line="4">        <span class="landing-token-string">"学习制作任务接口"</span>, <span class="landing-token-value">false</span>);</span>
+<span class="landing-code-line" data-line="5">}</span></code></pre>
+          </article>
+        </div>
+        <section class="landing-run-console" aria-labelledby="run-title">
+          <h3 id="run-title">运行记录 <span>交互演示 · 示例输出</span></h3>
+          <progress class="landing-run-progress" aria-label="检查进度" max="5" value="5"></progress>
+          <ol class="landing-pipeline landing-run-pipeline" aria-label="检查阶段"><li data-phase="passed"><span aria-hidden="true">01</span>准备依赖</li><li data-phase="passed"><span aria-hidden="true">02</span>编译</li><li data-phase="passed"><span aria-hidden="true">03</span>启动</li><li data-phase="passed"><span aria-hidden="true">04</span>接口检查</li><li data-phase="passed"><span aria-hidden="true">05</span>整理结果</li></ol>
+          <p class="landing-run-status" role="status">检查全部通过</p>
+          <div class="landing-run-result">
+            <ul class="landing-assertions" aria-label="通过的断言">
+              <li>服务在 8080 端口就绪</li>
+              <li>HTTP 200 · application/json</li>
+              <li>响应体包含 id / title / completed</li>
+            </ul>
+            <div class="landing-run-response"><strong>200 OK</strong><pre><code>{
+  "id": 1,
+  "title": "学习制作任务接口",
+  "completed": false
+}</code></pre></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="faq" class="landing-section" aria-labelledby="faq-title">
+      <h2 id="faq-title">常见问题</h2>
+      <div class="landing-panel landing-faq">
+        <details><summary>适合什么基础？</summary><p>学过 Java 基础就可以开始。会一点数据库有帮助，HTTP、SQL 和 Spring Boot 会在动手实现项目的过程中逐步学到。</p></details>
+        <details><summary>需要在本机配置环境吗？</summary><p>公网已开放的 HTTP 和普通 Spring Boot 检查可在网页编辑器完成。选择本机工程路线时，可以用 IDEA 编写同一份源码，并按课程配置 JDK 21、Maven 和所需的数据库环境。</p></details>
+        <details><summary>为什么采用邀请码注册？</summary><p>目前开放邀请制试用。持有效邀请码可创建学习账户，登录后进入工作台，使用自己的学习进度和实验记录。</p></details>
+        <details><summary>和看视频、刷题有什么区别？</summary><p>你会从最小配置开始，在同一工程里逐章写代码、运行并检查结果。理解验证和变式复习帮助你回顾实现细节，并练习讲清自己的技术选择。</p></details>
+      </div>
+    </section>
+
+    <section class="landing-panel landing-close" aria-labelledby="close-title">
+      <svg class="landing-close-mark" viewBox="0 0 64 64" aria-hidden="true" fill="currentColor"><path d="M26 15 11 30l12 12 5.5-5.5L22 30l9.5-9.5ZM38 49 53 34 41 22l-5.5 5.5L42 34l-9.5-9.5Z"/></svg>
+      <h2 id="close-title">从第一个 Java 接口开始</h2>
+      <div class="landing-actions" data-access-actions>
+          <a class="csx-btn landing-button landing-primary" data-register href="/register">凭邀请码注册</a>
+          <a class="csx-btn landing-button landing-secondary" data-login href="/login">登录工作台</a>
+        </div>
+    </section>
+  </main>
+  <footer class="landing-footer landing-width"><a href="/">码起步</a><span>Java 后端实战学习</span></footer>
+</body>
+</html>

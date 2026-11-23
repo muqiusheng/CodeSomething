@@ -2,3 +2,4 @@ runtime/
 backend/target/
 tooling/local.ps1
 *.log
+deployment/*.env

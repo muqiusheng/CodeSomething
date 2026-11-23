@@ -1,0 +1,45 @@
+{
+  "id": "database-systems",
+  "title": "数据库原理",
+  "term": "junior-fall",
+  "termTitle": "大三上",
+  "termOrder": 5,
+  "school": "上海电力大学",
+  "major": "数据科学与大数据技术",
+  "summary": "围绕一个学生选课数据库，逐步完成数据库管理、查询、视图、存储过程和完整性验证。",
+  "engine": "mysql",
+  "database": "student_inf_{studentId}",
+  "extraDatabases": [
+    "student_info_other"
+  ],
+  "labs": [
+    {
+      "id": "lab-01-workbench",
+      "title": "实验一 · MySQL 环境与数据库管理"
+    },
+    {
+      "id": "lab-02-ddl-tables",
+      "title": "实验二 · 通过 SQL 创建与管理数据表"
+    },
+    {
+      "id": "lab-03-single-query",
+      "title": "实验三 · 单表查询"
+    },
+    {
+      "id": "lab-04-complex-query",
+      "title": "实验四 · 复杂查询"
+    },
+    {
+      "id": "lab-05-views",
+      "title": "实验五 · 视图的创建与使用"
+    },
+    {
+      "id": "lab-06-procedures",
+      "title": "实验六 · 存储过程与流程控制"
+    },
+    {
+      "id": "lab-07-triggers",
+      "title": "实验七 · 触发器与数据库完整性"
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import {useAuth} from '../../auth/AuthContext';
 import {FrontendBridge} from '../shared/LearningSupport';
 import {CodeCompletion} from '../shared/CodeCompletion';
 import {TutorProvider} from '../../tutor/TutorSession';
@@ -23,6 +24,7 @@ import '../../../styles/boot-learning.css';
 type Chapter={stageId:string;title:string;minutes:number;goal:string;concepts:{title:string;body:string}[];task:string;steps:string[];requirements:string[];pitfall:string;example:string;starterFiles:{path:string;content:string}[]};
 type Course={title:string;subtitle:string;description:string;prerequisites:string[];outcomes:string[];chapters:Chapter[]};
 export function BootLearning({project=false,course:givenCourse}:{project?:boolean;course?:string}) {
+ const {config}=useAuth();
  const verifyRef=useRef<(()=>Promise<void>)|null>(null);
  const params=useParams(),navigate=useNavigate(),courseId=givenCourse||params.course||'boot-foundations';
  const [search,setSearch]=useSearchParams(),rawTab=search.get('tab')||'任务',tab=rawTab==='理解验证'?'检查报告':rawTab;
@@ -64,7 +66,7 @@ export function BootLearning({project=false,course:givenCourse}:{project?:boolea
     </button>
    </li>)}</ol>
   </section>}
-  runReference={courseId==='collaboration'?<>
+  runReference={config?.enabled?<p>用右侧的「运行并检查」提交快照。本章使用的数据库与端口由隔离环境准备。</p>:courseId==='collaboration'?<>
    <p>部署演示默认端口 <code>5196</code>。</p>
    <pre><code>&amp; ./new-system/tooling/deploy-r7.ps1 -Action start -ProjectDirectory 你的工程绝对路径</code></pre>
   </>:usesLocalDatabase?<>

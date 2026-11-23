@@ -1,4 +1,4 @@
-# CodeSomething 后端
+# 码起步 后端
 
 本机服务使用 Java 21、Spring Boot 和 SQLite。它提供课程、学习记录、项目文件、运行检查、复习和辅导接口。Flyway 随应用启动迁移平台数据库，SQL 课程使用独立的 MySQL 教学环境。
 

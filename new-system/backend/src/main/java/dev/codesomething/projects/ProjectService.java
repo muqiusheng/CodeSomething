@@ -53,7 +53,7 @@ public class ProjectService {
     private void submitPlan(String id,List<Map<String,Object>> sources,Map<String,Object> profile){
         var row=draft(id);String interest=row.get("interest").toString(),snapshot=row.get("profile_id").toString();
         String prompt="兴趣题材："+json.writeValueAsString(interest)+"\n画像快照："+snapshot+"；已验证课程数："+((Map<?,?>)profile.get("summary")).get("completed")+"。所有独立编码能力尚待验证。\n参考来源："+json.writeValueAsString(sources)+"\n生成内存REST三关，不增加前置技能范围。";
-        worker.submit(()->{try{String output=planner.plan(prompt,partial->jdbc.update("UPDATE project_drafts SET partial=? WHERE id=? AND status='generating'",partial,id),()->stopped(id,"generating"));if(!stopped(id,"generating"))savePack(id,GeneratedPackage.compile(id,GeneratedPackage.parse(output),snapshot,sources));}catch(Exception e){jdbc.update("UPDATE project_drafts SET status='failed',error=? WHERE id=? AND status='generating'",error(e),id);}});
+        worker.submit(dev.codesomething.storage.LearningDataSource.capture(()->{try{String output=planner.plan(prompt,partial->jdbc.update("UPDATE project_drafts SET partial=? WHERE id=? AND status='generating'",partial,id),()->stopped(id,"generating"));if(!stopped(id,"generating"))savePack(id,GeneratedPackage.compile(id,GeneratedPackage.parse(output),snapshot,sources));}catch(Exception e){jdbc.update("UPDATE project_drafts SET status='failed',error=? WHERE id=? AND status='generating'",error(e),id);}}));
     }
     private boolean stopped(String id,String expected){return closing||!expected.equals(jdbc.queryForObject("SELECT status FROM project_drafts WHERE id=?",String.class,id));}
     private String error(Exception e){return Objects.toString(e.getMessage(),"项目作业失败，请重试。").substring(0,Math.min(Objects.toString(e.getMessage(),"项目作业失败，请重试。").length(),1000));}
@@ -69,7 +69,7 @@ public class ProjectService {
     public synchronized Map<String,Object> validate(String id)throws Exception {
         var row=draft(id);if(!Set.of("draft","rejected","ready").contains(row.get("status")))throw conflict("请先完成或恢复草稿。");idle();var pack=pack(id);sources();
         jdbc.update("UPDATE project_drafts SET status='validating',report=NULL,error=NULL WHERE id=?",id);
-        worker.submit(()->gate(id,pack));return draft(id);
+        worker.submit(dev.codesomething.storage.LearningDataSource.capture(()->gate(id,pack)));return draft(id);
     }
     private void gate(String id,GeneratedPackage.Pack pack){
         var results=new ArrayList<Map<String,Object>>();boolean passed=true;
@@ -109,7 +109,7 @@ public class ProjectService {
         String digest=GeneratedPackage.digest(new TreeMap<>(files));var old=jdbc.queryForList("SELECT id,course_id,stage_id,digest FROM generated_attempts WHERE idempotency_key=?",key);if(!old.isEmpty()){var row=old.getFirst();if(!id.equals(row.get("course_id"))||!stage.equals(row.get("stage_id"))||!digest.equals(row.get("digest")))throw conflict("操作编号已用于其他快照。");return attempt(row.get("id").toString());}
         for(String dependency:chapter.dependsOn())if(jdbc.queryForObject("SELECT count(*) FROM generated_completions WHERE course_id=? AND stage_id=?",Integer.class,id,dependency)==0)throw conflict("先完成上一关的编程任务，再提交本关。");
         idle();String attempt=UUID.randomUUID().toString();jdbc.update("INSERT INTO generated_attempts(id,course_id,stage_id,idempotency_key,digest,files,status,created_at) VALUES(?,?,?,?,?,?,'queued',?)",attempt,id,stage,key,digest,json.writeValueAsString(files),Instant.now().toString());
-        worker.submit(()->{if(jdbc.update("UPDATE generated_attempts SET status='running' WHERE id=? AND status='queued'",attempt)==0)return;var result=runner.run(p,stage,files,()->closing||!"running".equals(jdbc.queryForObject("SELECT status FROM generated_attempts WHERE id=?",String.class,attempt)));jdbc.update("UPDATE generated_attempts SET status=?,report=? WHERE id=? AND status='running'",result.status(),json.writeValueAsString(result.report()),attempt);});return attempt(attempt);
+        worker.submit(dev.codesomething.storage.LearningDataSource.capture(()->{if(jdbc.update("UPDATE generated_attempts SET status='running' WHERE id=? AND status='queued'",attempt)==0)return;var result=runner.run(attempt,p,stage,files,()->closing||!"running".equals(jdbc.queryForObject("SELECT status FROM generated_attempts WHERE id=?",String.class,attempt)));jdbc.update("UPDATE generated_attempts SET status=?,report=? WHERE id=? AND status='running'",result.status(),json.writeValueAsString(result.report()),attempt);}));return attempt(attempt);
     }
     public Map<String,Object> attempt(String id){var rows=jdbc.queryForList("SELECT * FROM generated_attempts WHERE id=?",id);if(rows.isEmpty())throw ProjectController.missing();var row=new LinkedHashMap<>(rows.getFirst());row.remove("files");if(row.get("report")!=null)row.put("report",json.readTree(row.get("report").toString()));return row;}
     public synchronized Map<String,Object> stopAttempt(String id){attempt(id);jdbc.update("UPDATE generated_attempts SET status='cancelled' WHERE id=? AND status IN ('queued','running')",id);return attempt(id);}

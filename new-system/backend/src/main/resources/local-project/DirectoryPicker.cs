@@ -45,7 +45,7 @@ public static class CodeSomethingDirectoryPicker {
    {
     var dialog=(IFileOpenDialog)Activator.CreateInstance(Type.GetTypeFromCLSID(new Guid("DC1C5A9C-E88A-4DDE-A5A1-60F82A20AEF7")));
     try{
-     dialog.SetOptions(0x20|0x40|0x800|0x02000000);dialog.SetTitle("CodeSomething - 选择学习工程根目录");dialog.SetOkButtonLabel("连接此工程");
+     dialog.SetOptions(0x20|0x40|0x800|0x02000000);dialog.SetTitle("码起步 - 选择学习工程根目录");dialog.SetOkButtonLabel("连接此工程");
      int result=dialog.Show(IntPtr.Zero);if(result==unchecked((int)0x800704C7))return 0;Marshal.ThrowExceptionForHR(result);
      IShellItem item;dialog.GetResult(out item);try{IntPtr name;item.GetDisplayName(0x80058000,out name);try{string selected=Marshal.PtrToStringUni(name);using(var output=Console.OpenStandardOutput()){var bytes=new UTF8Encoding(false).GetBytes(selected);output.Write(bytes,0,bytes.Length);output.Flush();}}finally{Marshal.FreeCoTaskMem(name);}}finally{Marshal.ReleaseComObject(item);}
     }finally{Marshal.ReleaseComObject(dialog);}

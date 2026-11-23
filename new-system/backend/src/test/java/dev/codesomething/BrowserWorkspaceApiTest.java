@@ -5,6 +5,22 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BrowserWorkspaceApiTest extends CourseWorkspaceApiTest {
+    @Test void firstBrowserPracticeCanPrintAndExitWithOnlyTheLearnersLineAdded() throws Exception {
+        try(var app=start()) {
+            var opened=ok(request(app,"POST","/browser-workspaces",openBody("workspace")));
+            String source=opened.path("files").get(0).path("content").asText();
+            assertFalse(source.contains("server.start()"),"The console lesson must start with a main that can exit");
+            String edited=source.replace("// 在这里输出你自己的第一句话。","System.out.println(\"你好，Java！\");");
+            var runner=new dev.codesomething.workspaces.LocalProjectRunner(directory.resolve("console-practice").toString(),System.getProperty("java.home"),"",20);
+            var result=runner.runHttp("first",edited.getBytes(java.nio.charset.StandardCharsets.UTF_8),"1.1.0","workspace","console-output-v1",()->false);
+            assertEquals("passed",result.status(),result.toString());
+            assertTrue(result.report().assertions().stream().anyMatch(a->a.actual().equals("你好，Java！")));
+            var token=opened.path("token").asText();
+            ok(authorized(app,"POST","/browser-workspaces/"+opened.path("id").asText()+"/draft",Map.of("expectedRevision",0,"files",Map.of("TaskServer.java",edited)),token));
+            var next=ok(request(app,"POST","/browser-workspaces",openBody("workspace-http-text")));
+            assertEquals(edited,next.path("files").get(0).path("content").asText());
+        }
+    }
     @Test @org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable(named="CS_RUN_LOCAL_TESTS",matches="true")
     void websiteSubmissionRunsLocallyWithoutDockerAndMarksChangedSourceStale()throws Exception {
         try(var app=new org.springframework.boot.builder.SpringApplicationBuilder(CodeSomethingApplication.class).run("--server.port=0",

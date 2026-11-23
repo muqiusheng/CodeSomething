@@ -19,6 +19,7 @@ public class CheckJobController {
     private final SubmissionController submissions;
     private final WorkspaceController workspaces;
     private final boolean enabled;
+    @org.springframework.beans.factory.annotation.Value("${cs.runner.mode:local_first}") private String runnerMode;
     private final JsonMapper json=JsonMapper.builder().build();
     public CheckJobController(JdbcTemplate jdbc,SubmissionController submissions,WorkspaceController workspaces,@Value("${cs.runner.enabled:true}") boolean enabled) {this.jdbc=jdbc;this.submissions=submissions;this.workspaces=workspaces;this.enabled=enabled;}
     public record JobWrite(String submissionId,String idempotencyKey) {}
@@ -39,7 +40,8 @@ public class CheckJobController {
             if(enabled)jdbc.update("UPDATE check_jobs SET status='queued' WHERE id=? AND status='awaiting_runner'",id);
             return read(id,authorization);
         }
-        if(jdbc.queryForObject("SELECT count(*) FROM check_jobs WHERE status IN ('queued','running','cancelling')",Integer.class)>=8)
+        int queueLimit = "docker_only".equals(runnerMode) ? 2 : 8;
+        if(jdbc.queryForObject("SELECT count(*) FROM check_jobs WHERE status IN ('queued','running','cancelling')",Integer.class)>=queueLimit)
             throw new ApiException(HttpStatus.TOO_MANY_REQUESTS,"RUNNER_BUSY","检查队列已满，请等待或取消旧作业。",Map.of());
         String id=UUID.randomUUID().toString();
         jdbc.update("INSERT INTO check_jobs(id,submission_id,binding_id,idempotency_key,status,created_at) VALUES(?,?,?,?,?,?)",id,submission.id(),submission.bindingId(),write.idempotencyKey(),enabled?"queued":"awaiting_runner",Instant.now().toString());
@@ -56,12 +58,13 @@ public class CheckJobController {
         String status=(String)row.get("status");
         boolean console=ConsoleOutputCheck.applies(submission.courseId(),submission.courseVersion(),submission.stageId());
         String message=switch(status) {
-            case "queued"->"检查已排队。";case "running"->"正在按项目配置编译并检查接口；普通练习优先使用本机运行结果。";
+            case "queued"->"检查已排队。";case "running"->"docker_only".equals(runnerMode)
+                ?"正在隔离容器内编译并验证代码。":"正在按项目配置编译并检查接口；普通练习优先使用本机运行结果。";
             case "passed"->console?"程序正常退出，已核对实际输出。":"功能检查通过，可以保存本关编码完成记录。理解巩固可选。";
             case "compile_error"->"编译未通过，请查看错误并修改代码。";
             case "business_error"->console?"这次运行未通过。请查看退出状态和控制台输出。":"接口行为未符合约定，请查看逐项结果。";
             case "environment_error"->"检查环境异常，请重试；不计为代码错误。";
-            case "timed_out"->"检查超时，请排查启动或请求是否阻塞。";
+            case "timed_out"->console?"控制台检查超时。本节要求 main 打印后正常退出。若代码仍包含 HTTP 服务器的创建和启动语句，请先把它们注释掉，再运行检查。":"检查超时，请排查启动或请求是否阻塞。";
             case "cancelling"->"正在取消并释放容器…";case "cancelled"->"检查已取消。";
             default->"检查作业等待隔离运行器启用；尚无功能通过结果。";
         };

@@ -27,11 +27,15 @@ public class PortfolioController {
  private final ExecutorService worker=Executors.newSingleThreadExecutor();
  private final PortfolioRunner runner;
  private final boolean enabled;
- public PortfolioController(JdbcTemplate jdbc,LearnerController learner,@Value("${cs.runner.enabled:true}") boolean enabled,@Value("${cs.runner.docker:docker}") String docker,@Value("${cs.data-directory}") String data){
-  this.jdbc=jdbc;this.learner=learner;this.enabled=enabled;runner=new PortfolioRunner(docker,Path.of(data).toAbsolutePath().resolve("portfolio-runner"),240);
+ public PortfolioController(JdbcTemplate jdbc,LearnerController learner,@Value("${cs.runner.enabled:true}") boolean enabled,@Value("${cs.runner.docker:docker}") String docker,@Value("${cs.data-directory}") String data,@Value("${cs.runner.mode}") String mode,dev.codesomething.storage.LearningDataSource storage){
+  this.jdbc=jdbc;this.learner=learner;this.enabled=enabled;runner=new PortfolioRunner(docker,Path.of(data).toAbsolutePath().resolve("portfolio-runner"),240,"docker_only".equals(mode));
+  var owners=new LinkedHashSet<>(storage.owners(false));owners.add("admin");
+  for(String owner:owners)try(var scope=dev.codesomething.storage.LearningDataSource.asOwner(owner)){recover();}
+ }
+ private void recover(){
   var interrupted=jdbc.queryForList("SELECT * FROM portfolio_checks WHERE status IN ('queued','running','cancelling','cleanup_failed')");
   jdbc.update("UPDATE portfolio_checks SET status='interrupted' WHERE status IN ('queued','running','cancelling')");
-  for(var row:interrupted)worker.submit(()->{try{runner.recover(row.get("id").toString());jdbc.update("UPDATE portfolio_checks SET status='interrupted' WHERE id=?",row.get("id"));}catch(Exception e){var report=Map.of("snapshotDigest",row.get("digest"),"harnessDigest","","assertions",List.of(),"log","服务中断后的隔离资源清理失败，请恢复Docker后重启重试。" );jdbc.update("UPDATE portfolio_checks SET status='cleanup_failed',report=? WHERE id=?",json.writeValueAsString(report),row.get("id"));}});
+  for(var row:interrupted)worker.submit(dev.codesomething.storage.LearningDataSource.capture(()->{try{runner.recover(row.get("id").toString());jdbc.update("UPDATE portfolio_checks SET status='interrupted' WHERE id=?",row.get("id"));}catch(Exception e){var report=Map.of("snapshotDigest",row.get("digest"),"harnessDigest","","assertions",List.of(),"log","服务中断后的隔离资源清理失败，请恢复Docker后重启重试。" );jdbc.update("UPDATE portfolio_checks SET status='cleanup_failed',report=? WHERE id=?",json.writeValueAsString(report),row.get("id"));}}));
  }
  private static ApiException conflict(String message){return new ApiException(HttpStatus.CONFLICT,"PORTFOLIO_CONFLICT",message,Map.of());}
  private static String text(String value,String field,int min,int max){if(value==null||value.strip().length()<min||value.length()>max||value.indexOf('\0')>=0)throw ApiException.invalid(field,"请输入"+min+"—"+max+"字的内容。");return value.strip();}
@@ -99,7 +103,10 @@ public class PortfolioController {
   if(!p.get("design_revision").equals(row(id).get("revision")))throw conflict("设计已变更，请重新预览工程范围。");
   if(!enabled)throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE,"RUNNER_DISABLED","当前实例未启用隔离检查，预览已保存，可在启用后提交。",Map.of());
   if(jdbc.queryForObject("SELECT count(*) FROM portfolio_checks WHERE status IN ('queued','running','cancelling')",Integer.class)>0)throw conflict("已有作品检查运行中，请等待或停止。");
-  String job=UUID.randomUUID().toString();jdbc.update("INSERT INTO portfolio_checks(id,work_id,phase,digest,files,idempotency_key,status,design_revision,created_at) VALUES(?,?,?,?,?,?,?,?,?)",job,id,p.get("phase"),p.get("digest"),p.get("files"),k,"queued",p.get("design_revision"),Instant.now().toString());worker.submit(()->run(job));return work(id);
+  String job=UUID.randomUUID().toString();jdbc.update("INSERT INTO portfolio_checks(id,work_id,phase,digest,files,idempotency_key,status,design_revision,created_at) VALUES(?,?,?,?,?,?,?,?,?)",job,id,p.get("phase"),p.get("digest"),p.get("files"),k,"queued",p.get("design_revision"),Instant.now().toString());enqueueCheck(job);return work(id);
+ }
+ public void enqueueCheck(String id) {
+  worker.submit(dev.codesomething.storage.LearningDataSource.capture(()->run(id)));
  }
  private boolean cancelled(String id){return !"running".equals(jdbc.queryForObject("SELECT status FROM portfolio_checks WHERE id=?",String.class,id));}
  private void run(String id){if(jdbc.update("UPDATE portfolio_checks SET status='running' WHERE id=? AND status='queued'",id)!=1)return;var c=jdbc.queryForList("SELECT * FROM portfolio_checks WHERE id=?",id).getFirst();try{var out=runner.run(id,BootProjectSnapshot.restore(c.get("files").toString()),"1.0.0",c.get("phase").toString(),()->cancelled(id));jdbc.update("UPDATE portfolio_checks SET status=?,report=? WHERE id=?",out.status(),json.writeValueAsString(out.report()),id);}catch(Exception e){jdbc.update("UPDATE portfolio_checks SET status='environment_error' WHERE id=?",id);}}

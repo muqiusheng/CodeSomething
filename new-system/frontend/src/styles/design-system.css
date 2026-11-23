@@ -31,12 +31,18 @@
   --space-4:16px;
   --space-6:24px;
   --space-8:32px;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", "Fira Code", Consolas, Monaco, monospace;
   color:var(--text);
   background:var(--canvas);
-  font-family:"Segoe UI", "Microsoft YaHei", sans-serif;
+  font-family:var(--font-sans);
   font-variant-numeric:tabular-nums;
+  font-feature-settings:"cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
 }
+code, pre, kbd, samp { font-family:var(--font-mono); }
 body { background:var(--canvas); }
 [hidden] { display:none !important; }
 h1, h2, h3 { text-wrap:pretty; }
@@ -220,7 +226,7 @@ h1 { font-size:28px; font-weight:600; letter-spacing:-.6px; }
 .phase-current .phase-surface { border-color:var(--border-strong); box-shadow:0 0 0 1px color-mix(in srgb, var(--shadow-color) 15%, transparent); }
 .phase-heading h2 { font-size:18px; font-weight:600; }
 .phase-outcome { color:var(--text-secondary); }
-.phase-current .phase-rail > span { background:var(--code-bg); border-color:var(--border-strong); color:var(--on-primary); }
+.phase-current .phase-rail > span { background:var(--code-bg); border-color:var(--border-strong); color:var(--code-text); }
 .path-expand { min-height:40px; font-size:12px; border-radius:var(--radius-md); }
 .filter-row { gap:var(--space-4); flex-wrap:wrap; }
 .segmented { background:var(--surface-muted); padding:var(--space-1); gap:var(--space-1); }
@@ -255,7 +261,7 @@ h1 { font-size:28px; font-weight:600; letter-spacing:-.6px; }
 .cover-task { display:flex; gap:var(--space-2); align-items:center; padding:var(--space-2) 0; font-size:8px; border-bottom:1px solid var(--border); }
 .cover-task:last-child { border:0; }
 .cover-task-tag { margin-left:auto; padding:2px var(--space-1); border-radius:var(--radius-sm); background:var(--surface-muted); color:var(--text-secondary); font-size:7px; }
-.cover-check { display:flex; align-items:center; justify-content:center; width:12px; height:12px; border-radius:var(--radius-sm); background:var(--surface-muted); color:var(--on-primary); }
+.cover-check { display:flex; align-items:center; justify-content:center; width:12px; height:12px; border-radius:var(--radius-sm); background:var(--surface-muted); color:var(--primary-ink); }
 .cover-collaboration { border-color:var(--border); color:var(--muted); }
 .cover-collaboration .cover-toolbar { border-color:var(--border); }
 .cover-board { padding:var(--space-3) var(--space-3) var(--space-2); display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--space-2); }
@@ -518,3 +524,21 @@ details[open]>summary>.summary-chevron { transform:rotate(90deg); }
 :is(.lesson-page,.boot-content,.sql-reading-pane,.practice-steps,.journey-article,.learner-page,.tlias-lesson,.local-project-guide) details[open]:not(.coding-chapters,.folder-project-options,.folder-file-directory details)>summary:not(:has(>.summary-chevron))::after { transform:rotate(45deg); }
 @media (prefers-reduced-motion:reduce) { .summary-chevron,summary::after { transition:none; } }
 html[data-motion=reduce] :is(.summary-chevron,summary)::after,html[data-motion=reduce] .summary-chevron { transition:none; }
+
+/* Bento Craft keeps surface and control radii separate. */
+:root {
+ --radius-bento:18px;
+ --radius-inset:13px;
+ --radius-pill:9999px;
+}
+.app :is(.phase-surface,.project-card,.profile-panel,.empty-panel,.interactive-review,.portfolio-empty,.detail-section,.school-course-card,.sql-environment) {
+ border-radius:var(--radius-panel);
+ box-shadow:var(--shadow-panel);
+}
+.app :is(.pill,.text-pill,.knowledge-state,.school-lab-progress,.school-question-status) {border-radius:var(--radius-pill)}
+.app :is(input:not([type=checkbox],[type=radio],[type=range],[type=file]),select,textarea):not(.monaco-editor *) {border-radius:var(--radius-control)}
+.brand-symbol {border-radius:var(--radius-control);flex:none}
+.app .theme-toggle {border-radius:var(--radius-control)}
+.brand-stroke-secondary {fill:var(--brand-accent)}
+.admin-header .brand-stroke-secondary {fill:currentColor}
+.brand-symbol svg {display:block;width:100%;height:100%}

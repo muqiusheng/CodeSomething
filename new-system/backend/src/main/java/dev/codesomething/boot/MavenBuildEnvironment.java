@@ -39,6 +39,20 @@ public final class MavenBuildEnvironment {
         String dependencies=prepareDependencies(docker,root,snapshot,jdbc,baseImage,cancelled);
         return prepareProbes(docker,root,dependencies,cancelled);
     }
+
+    public static String preparePublic(String docker, Path root, BootProjectSnapshot snapshot, String image,
+                                BooleanSupplier cancelled) throws Exception {
+        return preparePublic(docker,root,snapshot,false,image,cancelled);
+    }
+
+    public static String preparePublic(String docker, Path root, BootProjectSnapshot snapshot, boolean jdbc, String image,
+                                       BooleanSupplier cancelled) throws Exception {
+        String pom = snapshot.files().stream().filter(file -> file.path().equals("pom.xml")).findFirst().orElseThrow().content();
+        String dependencies = MavenProjectConfig.parse(pom).dependencyPom();
+        if (!dependencies.equals(MavenProjectConfig.parse(BootProjectSnapshot.trustedPom(jdbc)).dependencyPom()))
+            throw new IOException("公网评测仅使用镜像内预装的固定依赖。");
+        return prepareProbes(docker, root, image, cancelled);
+    }
     /** Only platform resources enter this cache; learner sources are never compiled here. */
     private static String prepareProbes(String docker,Path root,String image,BooleanSupplier cancelled) throws Exception {
         var sources=new TreeMap<String,String>();

@@ -1,3 +1,4 @@
+import {scopedKey} from '../../api/browser-state.mjs';
 /** Writes only declared files into a directory handle selected by the user. */
 export async function writeProjectFiles(directory,files,onWritten=()=>{}){
  const entries=Object.entries(files);

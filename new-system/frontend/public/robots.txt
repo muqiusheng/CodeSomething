@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /$
+Allow: /assets/
+Allow: /theme-init.js
+Allow: /favicon.svg
+Allow: /sitemap.xml
+Allow: /BingSiteAuth.xml$
+Disallow: /
+Sitemap: https://try.maqibu.online/sitemap.xml

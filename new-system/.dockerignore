@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/target
+**/*.tsbuildinfo
+**/runtime
+frontend/tests
+backend/src/test
+idea-plugin
+docs
+deployment/production.env
+deployment/.env

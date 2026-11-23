@@ -65,4 +65,11 @@ class DockerCheckRunnerTest {
         assertEquals("cancelled",cancelled.status(),cancelled.report().toString());
         try(var files=Files.list(directory.resolve("runner"))){assertEquals(0,files.count());}catch(Exception e){fail(e);}
     }
+    @Test void consoleCheckReportsTimedOutExecutionAfterSuccessfulCompilation() throws Exception {
+        var outcome=run(starter(),"workspace","console-output-v1",45,()->false);
+        assertEquals("timed_out",outcome.status(),outcome.report().toString());
+        assertFalse(outcome.report().functionalPassed());
+        assertEquals("控制台程序未在运行时限内退出。",outcome.report().log());
+        assertTrue(outcome.report().assertions().stream().anyMatch(a->a.name().equals("编译")&&a.passed()));
+    }
 }

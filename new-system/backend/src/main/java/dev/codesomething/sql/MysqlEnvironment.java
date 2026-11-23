@@ -7,6 +7,7 @@ import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.BooleanSupplier;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.http.HttpStatus;
@@ -16,12 +17,33 @@ public class MysqlEnvironment {
     public static final String IMAGE="mysql@sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902";
     public static final String PRACTICE="cs_practice";
     private final String docker,container;
+    private final boolean school;
+    private final boolean publicMode;
+    private final String scope;
+    private final int poolLimit;
+    private static final Object PUBLIC_START_LOCK = new Object();
     private final SqlCourse course;
     private volatile String state="not_checked",message="请启动或连接教学环境。",version="";
-    public MysqlEnvironment(SqlCourse course,@Value("${cs.runner.docker}") String docker,@Value("${cs.sql.container:cs-sql-learning}") String container){
-        if(!container.matches("cs-sql-[a-z0-9-]{1,70}"))throw new IllegalArgumentException("Invalid SQL container name");
-        this.course=course;this.docker=docker;this.container=container;
+    @Autowired
+    public MysqlEnvironment(SqlCourse course,@Value("${cs.runner.docker}") String docker,@Value("${cs.sql.container:cs-sql-learning}") String container,
+                            @Value("${cs.public:false}") boolean publicMode,@Value("${cs.data-directory}") String data,
+                            @Value("${cs.sql.public-pool-limit:8}") int poolLimit){
+        this(course,docker,container,false,publicMode,dev.codesomething.admin.RunnerInventory.scopeLabel(java.nio.file.Path.of(data)),poolLimit);
     }
+    private MysqlEnvironment(SqlCourse course,String docker,String container,boolean school,boolean publicMode,String scope,int poolLimit){
+        if(!container.matches("cs-sql-[a-z0-9-]{1,70}"))throw new IllegalArgumentException("Invalid SQL container name");
+        this.course=course;this.docker=docker;this.container=container;this.school=school;this.publicMode=publicMode;this.scope=scope;
+        this.poolLimit=Math.clamp(poolLimit,0,8);
+    }
+    public MysqlEnvironment schoolInstance(String key) {
+        if(!key.matches("[a-f0-9]{24}"))throw new IllegalArgumentException("Invalid school instance");
+        return new MysqlEnvironment(course,docker,"cs-sql-school-"+key,true,publicMode,scope,poolLimit);
+    }
+    public MysqlEnvironment learnerInstance(String key) {
+        if(!key.matches("[a-f0-9]{24}"))throw new IllegalArgumentException("Invalid learner instance");
+        return new MysqlEnvironment(course,docker,"cs-sql-learner-"+key,false,true,scope,poolLimit);
+    }
+    public int publicPoolLimit() { return poolLimit; }
     public record Environment(String status,String message,String version,String image,String container,String database) {}
     public Environment status(){return new Environment(state,message,version,IMAGE,container,PRACTICE);}
     public static String digest(String text){try{return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8)));}catch(Exception e){throw new IllegalStateException(e);}}
@@ -54,17 +76,47 @@ public class MysqlEnvironment {
         var r=command(null,5,()->false,"inspect",container);
         if(r.code()==0)try {
             var info=tools.jackson.databind.json.JsonMapper.builder().build().readTree(r.output()).get(0);
-            if("1".equals(info.path("Config").path("Labels").path("codesomething.sql").asText())&&IMAGE.equals(info.path("Config").path("Image").asText())&&"none".equals(info.path("HostConfig").path("NetworkMode").asText())&&info.path("HostConfig").path("PortBindings").size()==0)return;
+            var labels = info.path("Config").path("Labels");
+            boolean publicSandbox = "1".equals(labels.path("codesomething.public-mysql").asText()) &&
+                scope.equals("codesomething.scope="+labels.path("codesomething.scope").asText()) &&
+                info.path("HostConfig").path("ReadonlyRootfs").asBoolean() &&
+                info.path("HostConfig").path("Memory").asLong() == 512L * 1024 * 1024 &&
+                info.path("HostConfig").path("PidsLimit").asInt() == 64;
+            if((!publicMode || publicSandbox)&&"1".equals(labels.path("codesomething.sql").asText())&&IMAGE.equals(info.path("Config").path("Image").asText())&&"none".equals(info.path("HostConfig").path("NetworkMode").asText())&&info.path("HostConfig").path("PortBindings").size()==0)return;
         }catch(Exception ignored){}
         throw new Failure("environment_error","目标容器的标签、镜像或网络不匹配，已拒绝操作。");
     }
     private String root(String sql){return require(command(sql,8,()->false,"exec","-i",container,"mysql","--protocol=socket","-uroot","--batch","--default-character-set=utf8mb4","--binary-mode=1"));}
     public synchronized void start() {
+        if (publicMode) synchronized (PUBLIC_START_LOCK) { startInternal(); }
+        else startInternal();
+    }
+    private void startInternal() {
         state="starting";message="正在启动MySQL并准备示例数据…";
         try {
             var found=command(null,5,()->false,"inspect","--format","{{.State.Running}}",container);
+            if (publicMode && !"true".equals(found.output().strip())) {
+                if(poolLimit==0) throw new Failure("environment_error","当前部署未启用常驻 MySQL 练习池。");
+                var running = command(null, 5, ()->false, "ps", "--filter", "label=codesomething.public-mysql=1","--filter","label="+scope, "--format", "{{.ID}}");
+                if (require(running).lines().filter(line -> !line.isBlank()).count() >= poolLimit)
+                    throw new Failure("environment_error", "公网 MySQL 练习池已满，请稍后重试。");
+            }
             if(found.code()!=0) {
-                require(command(null,20,()->false,"run","-d","--pull=never","--name",container,"--label","codesomething.sql=1","--network","none","--memory","640m","--cpus","1","--pids-limit","256","--cap-drop","ALL","--cap-add","SETUID","--cap-add","SETGID","--cap-add","DAC_OVERRIDE","--security-opt","no-new-privileges","--mount","type=volume,source="+container+"-data,target=/var/lib/mysql","-e","MYSQL_ALLOW_EMPTY_PASSWORD=yes",IMAGE,"--skip-networking","--local-infile=0","--max-connections=20","--innodb-buffer-pool-size=64M","--performance-schema=OFF","--character-set-server=utf8mb4","--collation-server=utf8mb4_0900_ai_ci"));
+                var arguments=new ArrayList<>(List.of("run","-d","--pull=never","--name",container,"--label","codesomething.sql=1","--network","none","--memory","640m","--cpus","1","--pids-limit","256","--cap-drop","ALL","--cap-add","SETUID","--cap-add","SETGID","--cap-add","DAC_OVERRIDE","--security-opt","no-new-privileges","--mount","type=volume,source="+container+"-data,target=/var/lib/mysql","-e","MYSQL_ALLOW_EMPTY_PASSWORD=yes",IMAGE,"--skip-networking","--local-infile=0","--max-connections=20","--innodb-buffer-pool-size=64M","--performance-schema=OFF","--character-set-server=utf8mb4","--collation-server=utf8mb4_0900_ai_ci"));
+                if (publicMode) {
+                    arguments = new ArrayList<>(List.of("run","-d","--pull=never","--name",container,
+                        "--label=codesomething.sql=1","--label=codesomething.public-mysql=1","--label="+scope,"--network=none","--read-only",
+                        "--memory=512m","--memory-swap=512m","--cpus=1","--pids-limit=64","--cap-drop=ALL",
+                        "--security-opt=no-new-privileges","--user=999:999","--log-driver=none",
+                        "--tmpfs=/var/lib/mysql:rw,nosuid,nodev,size=256m,mode=1777",
+                        "--tmpfs=/var/run/mysqld:rw,nosuid,nodev,size=16m,mode=1777",
+                        "--tmpfs=/tmp:rw,nosuid,nodev,size=32m,mode=1777",
+                        "--env=MYSQL_ALLOW_EMPTY_PASSWORD=yes","--env=MYSQL_ROOT_HOST=localhost",IMAGE,
+                        "--skip-networking","--local-infile=0","--secure-file-priv=NULL","--max-connections=5",
+                        "--innodb-buffer-pool-size=48M","--performance-schema=OFF","--character-set-server=utf8mb4"));
+                }
+                if(school || publicMode)arguments.add("--skip-log-bin");
+                require(command(null,20,()->false,arguments.toArray(String[]::new)));
             } else {owned();if(!found.output().trim().equals("true"))require(command(null,10,()->false,"start",container));}
             owned();
             boolean ready=false;
@@ -74,6 +126,7 @@ public class MysqlEnvironment {
                 version=root("SELECT VERSION();").strip().replace("VERSION()\n","");ready=true;break;
             }catch(Failure e){try{Thread.sleep(500);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new Failure("environment_error","环境启动被中断。");}}}
             if(!ready)throw new Failure("environment_error","MySQL启动超时，请检查Docker后重试。");
+            if(school) {state="ready";message="课内练习库已就绪。";return;}
             root("CREATE DATABASE IF NOT EXISTS cs_practice CHARACTER SET utf8mb4; CREATE USER IF NOT EXISTS 'cs_practice'@'localhost'; GRANT SELECT,INSERT,UPDATE,DELETE,CREATE ON cs_practice.* TO 'cs_practice'@'localhost';");
             String tables=root("SELECT COUNT(*) AS n FROM information_schema.tables WHERE table_schema='cs_practice' AND table_name='tasks';");
             if(tables.strip().endsWith("\n0"))root("USE cs_practice;"+course.seed(false));
@@ -84,6 +137,57 @@ public class MysqlEnvironment {
         }catch(Failure e){state="environment_error";message=e.getMessage();}
     }
     private void ready(){if(!state.equals("ready"))throw new Failure("environment_error","教学MySQL尚未就绪，请先启动环境。");owned();}
+
+    public synchronized void prepareSchool(List<String> schemas,String seed,boolean reset) {
+        if(!school||schemas.isEmpty()||schemas.stream().anyMatch(s->!s.matches("[a-z][a-z0-9_]{0,47}")||s.equals("mysql")||s.equals("sys")||s.endsWith("_schema")))
+            throw new IllegalArgumentException("Invalid school schemas");
+        if(!state.equals("ready") || !command(null,5,()->false,"inspect","--format","{{.State.Running}}",container).output().strip().equals("true"))start();
+        ready();
+        String primary=schemas.getFirst();
+        if(!reset&&root("SELECT COUNT(*) FROM mysql.user WHERE user='school_student' AND host='localhost';").strip().endsWith("\n1"))return;
+        for(String schema:schemas)root("DROP DATABASE IF EXISTS `"+schema+"`; CREATE DATABASE `"+schema+"` CHARACTER SET utf8mb4;");
+        if(!seed.isBlank())root("USE `"+primary+"`;\n"+seed);
+        root("CREATE USER IF NOT EXISTS 'school_student'@'localhost';");
+        for(String schema:schemas)grantSchoolDatabase(schema);
+    }
+
+    public synchronized void grantSchoolDatabase(String schema) {
+        if(!school || !schoolDatabaseName(schema) || Set.of("mysql","sys","information_schema","performance_schema")
+                .contains(schema.toLowerCase(Locale.ROOT)))
+            throw new ApiException(HttpStatus.BAD_REQUEST,"SCHOOL_DATABASE_NAME","请输入以英文字母开头的库名，可包含数字和下划线，最多 64 个字符。MySQL 系统库保留。",Map.of());
+        ready();
+        // Escape underscores because MySQL interprets them as wildcards in database grants.
+        root("GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,DROP,ALTER,INDEX,REFERENCES,CREATE VIEW,SHOW VIEW,CREATE ROUTINE,ALTER ROUTINE,EXECUTE,TRIGGER,CREATE TEMPORARY TABLES ON `"
+            +schema.replace("_","\\_")+"`.* TO 'school_student'@'localhost';");
+    }
+
+    public static boolean schoolDatabaseName(String name) {
+        return name != null && name.matches("[A-Za-z][A-Za-z0-9_]{0,63}");
+    }
+
+    public synchronized String schoolQuery(String schema,String sql) {
+        if(!school||schema!=null&&!schoolDatabaseName(schema))throw new IllegalArgumentException("Invalid school query");
+        ready();
+        var args=new ArrayList<>(List.of("exec","-i","--user=mysql",container,"mysql","--no-defaults","--protocol=socket",
+            "-uschool_student","--xml","--default-character-set=utf8mb4","--binary-mode=1","--local-infile=0","--skip-reconnect"));
+        if(schema!=null)args.add("--database="+schema);
+        ProcessResult result;
+        try {
+            result=command(sql,6,()->false,args.toArray(String[]::new));
+        } catch(Failure failure) {
+            if(Set.of("timeout","output_limit").contains(failure.status)) {
+                for(String id:root("SELECT ID FROM information_schema.PROCESSLIST WHERE USER='school_student';").lines().skip(1).toList())
+                    if(id.matches("[0-9]+"))root("KILL "+id+";");
+            }
+            throw failure;
+        }
+        if(result.code()!=0) {
+            String error=result.output().lines().filter(line->line.startsWith("ERROR ")).findFirst().orElse("课内 MySQL 连接失败。");
+            String status=error.startsWith("ERROR 3024")?"timeout":error.startsWith("ERROR 2002")||error.startsWith("ERROR 1045")||!error.startsWith("ERROR ")?"environment_error":"sql_error";
+            throw new Failure(status,error.substring(0,Math.min(error.length(),1500)));
+        }
+        return result.output();
+    }
     public synchronized void reset(String target) {
         if(!PRACTICE.equals(target))throw new ApiException(HttpStatus.BAD_REQUEST,"RESET_TARGET_REJECTED","只允许重置cs_practice教学练习库。",Map.of());
         ready();

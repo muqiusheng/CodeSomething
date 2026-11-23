@@ -1,5 +1,6 @@
 # Local state, dependencies and build output
 /.cache/
+/.wrangler/
 **/node_modules/
 **/.npm-cache/
 **/dist/

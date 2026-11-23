@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class WorkspaceController {
     private final JdbcTemplate jdbc;
     private final CourseController courses;
+    @org.springframework.beans.factory.annotation.Value("${cs.runner.mode:local_first}") private String runnerMode;
     public WorkspaceController(JdbcTemplate jdbc, CourseController courses) { this.jdbc=jdbc; this.courses=courses; }
     public record PreviewWrite(String directory, String courseId, String courseVersion, String stageId) {}
     public record PairWrite(String previewId, String pairingCode) {}
@@ -39,6 +40,7 @@ public class WorkspaceController {
     private static ApiException error(HttpStatus status, String code, String message) { return new ApiException(status,code,message,Map.of()); }
 
     public Captured capture(String directory) {
+        requireLocal();
         if (directory == null || directory.isBlank() || directory.length()>1024) throw ApiException.invalid("directory", "请输入练习目录的绝对路径。");
         try {
             Path root = Path.of(directory).normalize();
@@ -73,12 +75,16 @@ public class WorkspaceController {
             var snapshot=dev.codesomething.boot.BootProjectSnapshot.restore(encoded);
             return new Captured(encoded.getBytes(java.nio.charset.StandardCharsets.UTF_8),snapshot.digest(),files.stream().map(f->new FileEntry(f.path(),f.content().getBytes(java.nio.charset.StandardCharsets.UTF_8).length,hash(f.content()))).toList());
         }
+        requireLocal();
         if(!dev.codesomething.boot.BootCourses.supports(course))return capture(directory);
         try {
             var snapshot=dev.codesomething.boot.BootProjectSnapshot.capture(Path.of(directory),dev.codesomething.boot.BootCourses.jdbc(stage));
             byte[] bytes=tools.jackson.databind.json.JsonMapper.builder().build().writeValueAsString(snapshot.files()).getBytes(java.nio.charset.StandardCharsets.UTF_8);
             return new Captured(bytes,snapshot.digest(),snapshot.files().stream().map(f->new FileEntry(f.path(),f.content().getBytes(java.nio.charset.StandardCharsets.UTF_8).length,hash(f.content()))).toList());
         } catch(Exception e){throw ApiException.invalid("directory",e.getMessage()==null?"无法读取工程范围。":e.getMessage());}
+    }
+    private void requireLocal() {
+        if ("docker_only".equals(runnerMode)) throw error(HttpStatus.FORBIDDEN, "LOCAL_RUNNER_DISABLED", "公网仅允许网页工作区读取源码。");
     }
     @PostMapping(value="/workspace-previews", consumes="application/json")
     public Preview preview(@RequestBody PreviewWrite write) {

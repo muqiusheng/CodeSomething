@@ -1,5 +1,6 @@
 package dev.codesomething.workspaces;
 
+import dev.codesomething.storage.LearningDataSource;
 import java.time.Instant;
 import java.util.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,9 +22,32 @@ public class CheckJobWorker {
     private final boolean localEnabled;
     private final dev.codesomething.boot.BootCheckRunner boot;
     private final dev.codesomething.boot.BootProjectRunner bootRecovery;
+    private final dev.codesomething.boot.CollaborationRunner publicCollaboration;
+    private final LearningDataSource storage;
+    private final boolean publicMode;
+    private final boolean dockerOnly;
+    private String previousOwner = "";
     private final JsonMapper json=JsonMapper.builder().build();
-    public CheckJobWorker(JdbcTemplate jdbc,DockerCheckRunner runner,@Value("${cs.runner.enabled:true}") boolean enabled,@Value("${cs.runner.docker}") String docker,@Value("${cs.data-directory}") String data,LocalProjectRunner local,@Value("${cs.runner.local-enabled:true}")boolean localEnabled){this.jdbc=jdbc;this.runner=runner;this.enabled=enabled;this.local=local;this.localEnabled=localEnabled;this.boot=new dev.codesomething.boot.BootCheckRunner(docker,java.nio.file.Path.of(data).resolve("boot-runner"),180);this.bootRecovery=new dev.codesomething.boot.BootProjectRunner(docker,java.nio.file.Path.of(data).resolve("boot-runner"),180);}
+    public CheckJobWorker(JdbcTemplate jdbc,DockerCheckRunner runner,@Value("${cs.runner.enabled:true}") boolean enabled,
+                          @Value("${cs.runner.docker}") String docker,@Value("${cs.data-directory}") String data,
+                          LocalProjectRunner local,@Value("${cs.runner.local-enabled:true}") boolean localEnabled,
+                          LearningDataSource storage,@Value("${cs.public}") boolean publicMode,@Value("${cs.runner.mode}") String mode) {
+        this.jdbc=jdbc;this.runner=runner;this.enabled=enabled;this.local=local;
+        this.storage=storage;this.publicMode=publicMode;this.dockerOnly="docker_only".equals(mode);
+        this.localEnabled=localEnabled && !dockerOnly;
+        var root=java.nio.file.Path.of(data).resolve("boot-runner");
+        this.boot=new dev.codesomething.boot.BootCheckRunner(docker,root,180);
+        this.bootRecovery=new dev.codesomething.boot.BootProjectRunner(docker,root,180,dockerOnly);
+        this.publicCollaboration=new dev.codesomething.boot.CollaborationRunner(docker,root,180,true);
+    }
     @PostConstruct void recover() {
+        if (publicMode) {
+            var owners = new LinkedHashSet<>(storage.owners(false));
+            owners.add("admin");
+            for (String id : owners) try (var scope = LearningDataSource.asOwner(id)) { recoverCurrent(); }
+        } else recoverCurrent();
+    }
+    private void recoverCurrent() {
         for(String id:jdbc.queryForList("SELECT id FROM check_jobs WHERE status IN ('running','cancelling')",String.class)) {
             try {runner.cleanup(id);bootRecovery.recover(id);}catch(Exception ignored){}
             var row=jdbc.queryForMap("SELECT s.* FROM submissions s JOIN check_jobs j ON s.id=j.submission_id WHERE j.id=?",id);
@@ -39,9 +63,21 @@ public class CheckJobWorker {
     @Scheduled(fixedDelay=200)
     public void tick() {
         if(!enabled)return;
+        if (!publicMode) { tickCurrent(); return; }
+        var owners = new ArrayList<>(storage.queuedOwners("check"));
+        if (owners.isEmpty()) return;
+        int start = Collections.binarySearch(owners, previousOwner);
+        Collections.rotate(owners, -(start >= 0 ? start + 1 : -start - 1));
+        for (String owner : owners) {
+            try (var scope = LearningDataSource.asOwner(owner)) {
+                if (tickCurrent()) { previousOwner = owner; return; }
+            }
+        }
+    }
+    private boolean tickCurrent() {
         var ids=jdbc.queryForList("SELECT id FROM check_jobs WHERE status='queued' ORDER BY created_at LIMIT 1",String.class);
-        if(ids.isEmpty())return;String id=ids.getFirst();
-        if(jdbc.update("UPDATE check_jobs SET status='running' WHERE id=? AND status='queued'",id)!=1)return;
+        if(ids.isEmpty())return false;String id=ids.getFirst();
+        if(jdbc.update("UPDATE check_jobs SET status='running' WHERE id=? AND status='queued'",id)!=1)return false;
         var row=jdbc.queryForMap("SELECT s.* FROM submissions s JOIN check_jobs j ON s.id=j.submission_id WHERE j.id=?",id);
         String stage=(String)row.get("stage_id"), version=(String)row.get("course_version");
         String course=(String)row.get("course_id");
@@ -52,8 +88,13 @@ public class CheckJobWorker {
         CheckProgress.begin(id);
         try {
         java.util.function.Supplier<LocalProjectRunner.Outcome> isolated=()->{
-            if(isBoot){var result=boot.run(id,dev.codesomething.boot.BootProjectSnapshot.restore(new String((byte[])row.get("source"),java.nio.charset.StandardCharsets.UTF_8)),version,stage,cancelled);return new LocalProjectRunner.Outcome(result.status(),result.report());}
-            var result=runner.run(id,(byte[])row.get("source"),(String)row.get("digest"),version,stage,policy,cancelled);return new LocalProjectRunner.Outcome(result.status(),result.report());
+            if(isBoot){var snapshot=dev.codesomething.boot.BootProjectSnapshot.restore(new String((byte[])row.get("source"),java.nio.charset.StandardCharsets.UTF_8));var result=dockerOnly?(dev.codesomething.boot.BootCourses.COLLAB.contains(stage)?publicCollaboration.run(id,snapshot,version,stage,cancelled):bootRecovery.run(id,snapshot,version,stage,cancelled)):boot.run(id,snapshot,version,stage,cancelled);return new LocalProjectRunner.Outcome(result.status(),result.report());}
+            try(var slot=dockerOnly?dev.codesomething.boot.PublicJdbcSandbox.acquire(cancelled):null) {
+                if(dockerOnly&&slot==null) return new LocalProjectRunner.Outcome("cancelled",new CheckReport(
+                    (String)row.get("digest"),version,stage,policy,"","",false,List.of(),"检查已取消。",Instant.now().toString()));
+                var result=runner.run(id,(byte[])row.get("source"),(String)row.get("digest"),version,stage,policy,cancelled);
+                return new LocalProjectRunner.Outcome(result.status(),result.report());
+            }
         };
         LocalProjectRunner.Outcome result;
         if(localEnabled&&(!isBoot||!dev.codesomething.boot.BootCourses.jdbc(stage)))result=LocalFirstCheck.run(()->isBoot?
@@ -71,5 +112,6 @@ public class CheckJobWorker {
             report=new CheckReport(report.snapshotDigest(),version,stage,policy,report.image(),report.harnessDigest(),false,report.assertions(),"cancelled".equals(status)?"检查已取消。":report.log(),Instant.now().toString());
             jdbc.update("UPDATE check_jobs SET status=?,report=?,finished_at=? WHERE id=? AND status='cancelling'",status,json.writeValueAsString(report),report.finishedAt(),id);
         }
+        return true;
     }
 }

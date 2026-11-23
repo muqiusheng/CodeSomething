@@ -1,3 +1,4 @@
+import {localState} from '../../api/browser-state.mjs';
 import {Link,useLocation} from 'react-router-dom';
 import {useEffect, useState} from 'react';
 import {Check} from 'lucide-react';
@@ -7,7 +8,7 @@ import {TutorConnection} from './TutorConnection';
 import {ThemeSettings} from '../../components/shared/ThemeControls';
 import '../../styles/settings.css';
 
-function localDuration() {try {const value=localStorage.getItem('cs-duration');return value&&['30','60','90'].includes(value)?value:'60';} catch {return '60';}}
+function localDuration() {try {const value=localState.getItem('cs-duration');return value&&['30','60','90'].includes(value)?value:'60';} catch {return '60';}}
 
 export function SettingsPage() {
  const location=useLocation();useEffect(()=>{if(location.hash){requestAnimationFrame(()=>{document.getElementById(location.hash.slice(1))?.scrollIntoView({block:'start'});document.getElementById(location.hash.slice(1))?.focus({preventScroll:true})})}},[location.hash]);
@@ -29,7 +30,7 @@ export function SettingsPage() {
   async function saveDuration() {
     setSaving(true); setStatus('');
     let cached=false;
-    try {localStorage.setItem('cs-duration', duration);cached=true;} catch { /* Report actual persistence below. */ }
+    try {localState.setItem('cs-duration', duration);cached=true;} catch { /* Report actual persistence below. */ }
     try {
       const result = await updatePreferences({dailyMinutes: Number(duration)});
       setSaved(result); setConnected(true); cachePreferences(result); setStatus('已保存到本机数据库');

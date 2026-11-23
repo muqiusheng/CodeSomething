@@ -233,7 +233,7 @@
   overflow: auto;
   max-height: 40%;
  }
- .coding-app .local-first-workspace .workspace-dock-results[data-expanded="true"] {
+ .coding-app .local-first-workspace .workspace-dock-results[data-expanded="true"]:not([data-floating]) {
   height: clamp(var(--dock-min-size),var(--results-dock-height,30%),60%);
  }
  .coding-app .local-first-workspace .dock-divider {

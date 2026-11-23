@@ -9,7 +9,7 @@ import {HttpProjectPractice} from './HttpProjectPractice';
 import {webChapter} from './web-chapter';
 import {useRef,useCallback,useEffect,useState} from 'react';
 import {Link,useParams,useSearchParams} from 'react-router-dom';
-import {ArrowLeft,ArrowRight,ChevronRight,Check,Clock3,ShieldCheck} from 'lucide-react';
+import {ArrowLeft,ArrowRight,ChevronRight,Check,ShieldCheck} from 'lucide-react';
 import {Tabs,TabsList,TabsTrigger,TabsContent} from '../../../components/ui/tabs';
 import {LessonTutorDrawer} from '../../tutor/LessonTutor';
 import {TutorProvider} from '../../tutor/TutorSession';
@@ -59,8 +59,10 @@ export function LessonWorkspace(){
  const tutorScope=chapter.stageId==='workspace'&&journeyLesson?.id==='02'?{...context,stageId:'workspace-http-text'}:context;
  const identity=context.courseVersion+tutorScope.stageId;const currentCheck=checkState?.identity===identity?checkState:null;
  const tabs=chapter.mode==='code'?['教学','任务',...(currentCheck?.job?['检查报告']:[]),'理解验证']:['教学','任务'];
- return <TutorProvider key={identity} scope={tutorScope} submissionId={currentCheck?.submissionId} job={currentCheck?.job} token={currentCheck?.token}><div className="lesson-page foundation-lesson" data-practice={tab==='任务'}><header className="lesson-header-bar"><div className="header-title-group"><div className="lesson-breadcrumb"><Link to={foundationProjectRoute}>{project.title}</Link><ChevronRight size={13} aria-hidden="true"/><span>{!isLegacy&&milestoneTitles[chapter.stageId]||'第'+(index+1)+'章 · '+chapter.phase}</span><span className="saved">本地工程学习 · v{version}{isLegacy?' · 原版单元':''}</span></div>
- <div className="lesson-title"><div><h1>{legacy?.title||milestoneTitles[chapter.stageId]||chapter.title}</h1></div></div></div><div className="header-action-group"><div className="lesson-title-tools"><span className="lesson-duration"><Clock3 size={14} aria-hidden="true"/>{chapter.stageId==='workspace'?'建议20—45分钟，安装排错另计':`参考${chapter.minutes}分钟，可分次完成`}</span><LessonTutorDrawer/></div>
+ return <TutorProvider key={identity} scope={tutorScope} submissionId={currentCheck?.submissionId} job={currentCheck?.job} token={currentCheck?.token}><div className="lesson-page foundation-lesson" data-practice={tab==='任务'}><nav className="http-workspace-location" aria-label="当前位置">
+  <Link to={foundationProjectRoute}>{project.title}</Link><ChevronRight size={13} aria-hidden="true"/><span aria-current="page">{!isLegacy&&milestoneTitles[chapter.stageId]||'第'+(index+1)+'章 · '+chapter.phase}</span>
+ </nav><header className="lesson-header-bar"><div className="header-title-group">
+ <div className="lesson-title"><div><h1>{legacy?.title||milestoneTitles[chapter.stageId]||chapter.title}</h1></div></div></div><div className="header-action-group"><div className="lesson-title-tools"><LessonTutorDrawer/></div>
  <details className="coding-chapters"><summary>章节目录</summary><nav className="chapter-strip" aria-label="项目章节">{project.chapters.map((item,position)=>{
   const complete=completedStages.has(item.stageId);
   const current=!isLegacy&&position===index;

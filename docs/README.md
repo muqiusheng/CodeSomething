@@ -14,6 +14,7 @@
 - [32 零 Web 基础到独立后端作品的学习流程](32-零Web基础到独立后端作品的学习流程.md)
 - [33 Java 后端全流程课表](33-Java后端全流程逐课课表.md)
 - [34 全站学习体验重构计划](34-CodeSomething全站学习体验重构计划.md)
+- [36 课内实战课程包与工作台](36-课内实战课程包与工作台.md)
 
 ## 产品、架构与设计
 
@@ -46,6 +47,7 @@
 - [22 R7完整业务项目B](22-R7完整业务项目B契约.md)
 - [23 R8独立作品与首轮验收](23-R8独立作品与首轮验收契约.md)
 - [24 学习画像与网页编程改进](24-学习画像与网页编程改进计划.md)
+- [37 公网上线登录权限与管理控制台实施计划](37-公网上线登录权限与管理控制台实施计划.md)
 
 ## 工程与证据
 
@@ -53,6 +55,7 @@
 - [35 命名、版本与 GitHub 发布约定](35-命名版本与GitHub发布约定.md)
 - [当前工程](../new-system/README.md)、[前端](../new-system/frontend/README.md)、[后端](../new-system/backend/README.md)
 - [阶段验收](../new-system/docs/acceptance/README.md)、[目录整理记录](../new-system/docs/acceptance/project-structure/README.md)
+- [公网账户与管理控制台验收](../new-system/docs/acceptance/public-access/README.md)、[公网部署与备份](../new-system/deployment/README.md)
 - [抖音参考](references/douyin/作品内容与采用说明.md)
 - [技能来源](tooling/frontend-skills-manifest.json)、[初始交付核验](交付核验记录.json)
 

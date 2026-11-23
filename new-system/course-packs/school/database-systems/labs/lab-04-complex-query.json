@@ -1,0 +1,210 @@
+{
+  "id": "lab-04-complex-query",
+  "objective": "掌握多表连接、嵌套查询、按组排名及跨库集合查询。",
+  "requirements": "沿用三表模型。运行前确认有未选课学生和无人选修课程；跨库题使用预建的 student_info_other。",
+  "questions": [
+    {
+      "id": "q01",
+      "title": "比较出生日期",
+      "requirement": "查询比林红年长的男学生。",
+      "hint": "出生日期越早，年龄越大。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（1）查询比“林红”年纪大的男学生信息。"
+    },
+    {
+      "id": "q02",
+      "title": "检索所有学生选课",
+      "requirement": "显示学号、姓名、课号、课程名和成绩。",
+      "hint": "比较保留所有学生与只保留匹配行的结果。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（2）查询所有学生的选课信息，包括学号、姓名、课号、课程名、成绩。"
+    },
+    {
+      "id": "q03",
+      "title": "只查询已选课学生",
+      "requirement": "返回已选课学生的学号、姓名、课程名、成绩。",
+      "hint": "用三表内连接。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（3）查询已选课学生的学号、姓名、课程名、成绩。"
+    },
+    {
+      "id": "q04",
+      "title": "按课程名称筛选",
+      "requirement": "查询选修 C 语言程序设计的学生学号和姓名。",
+      "hint": "按课程名筛选，按学号关联学生。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（4）查询选修了“C语言程序设计”的学生的学号和姓名。"
+    },
+    {
+      "id": "q05",
+      "title": "查询同班学生",
+      "requirement": "查询与张虹同班的学生学号、姓名、家庭住址。",
+      "hint": "先得到张虹的班级，再筛选。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（5）查询与“张虹”在同一个班级的学生学号、姓名、家庭住址。"
+    },
+    {
+      "id": "q06",
+      "title": "与全班年龄比较",
+      "requirement": "返回其他班级中比 051 班所有学生都年长的学生。",
+      "hint": "比较出生日期的最小值或用 ALL。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（6）查询其他班级中比“051”班所有学生年龄大的学生的学号、姓名。"
+    },
+    {
+      "id": "q07",
+      "title": "查询选修全部课程的学生",
+      "requirement": "查找选了全部课程的学生姓名。",
+      "hint": "考虑双层 NOT EXISTS，或比较去重后的选课数。",
+      "optional": true,
+      "starterSql": "",
+      "originalText": "（7）（选做）查询选修了全部课程的学生姓名。"
+    },
+    {
+      "id": "q08",
+      "title": "覆盖指定同学的选课集合",
+      "requirement": "查找至少选修了 20110002 同学全部课程的学生。",
+      "hint": "检查目标课程集中是否有尚未选修的一门。",
+      "optional": true,
+      "starterSql": "",
+      "originalText": "（8）（选做）查询至少选修了学生“20110002”选修的全部课程的学生的学号、姓名。"
+    },
+    {
+      "id": "q09",
+      "title": "列出课程与成绩",
+      "requirement": "查询学生学号、姓名、课程名及课程成绩。",
+      "hint": "显式选择列，核对课程与成绩对应。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（9）查询学生的学号、姓名、学习课程名及课程成绩。"
+    },
+    {
+      "id": "q10",
+      "title": "课程间成绩比较",
+      "requirement": "查询高数成绩高于选修 002 课程的至少一条成绩记录的学生，按成绩降序列出学号、课号与成绩。",
+      "hint": "用 ANY 处理多项比较，考虑空成绩。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（10）查询选修了“高数”课且成绩至少高于选修课程号为“002”课程的学生的学号、课程号、成绩，并按成绩从高到低次序排列。"
+    },
+    {
+      "id": "q11",
+      "title": "达标总成绩",
+      "requirement": "查询选修 3 门以上课程的学生及总成绩，不计不及格课程的分数，按总成绩降序。",
+      "hint": "分清门数条件和成绩汇总条件。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（11）查询选修3门以上课程的学生的学号、总成绩（不统计不及格的课程），并要求按总成绩的降序排列出来。"
+    },
+    {
+      "id": "q12",
+      "title": "筛选符合条件的课程分组",
+      "requirement": "查找多于 3 名学生选修且课号以 3 结尾的课程平均成绩。",
+      "hint": "分别处理课号筛选和人数分组。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（12）查询多于3名学生选修的并以3结尾的课程号的平均成绩。"
+    },
+    {
+      "id": "q13",
+      "title": "最高与最低分之差",
+      "requirement": "查询分差大于 5 的学生学号、姓名、最高分、最低分。",
+      "hint": "先按学生聚合，再筛选 MAX 与 MIN 的差。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（13）查询最高分与最低分之差大于5分的学生的学号、姓名、最高分、最低分。"
+    },
+    {
+      "id": "q14",
+      "title": "每人最高两门课",
+      "requirement": "列出每位学生分数最高的两门课。",
+      "hint": "用窗口函数分区并确定并列规则。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（14）查询每个同学分数最高的两门课选课情况（提示：可以使用开窗函数）。"
+    },
+    {
+      "id": "q15",
+      "title": "表间集合查询",
+      "requirement": "建 student_other，加入部分重叠记录，查询交集和合集。",
+      "hint": "注意集合操作两边列的顺序与类型。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（15）创建一个表student_other，结构同Student，输入若干记录，部分记录和Student表中的相同。\na．查询同时出现在Student表和student_other表中的记录。\nb．查询Student表和student_other表中的全部记录。"
+    },
+    {
+      "id": "q16",
+      "title": "跨库复制与查询",
+      "requirement": "将 student_other 复制到 student_info_other，并查询跨库交集。",
+      "hint": "限定表名所属库；先复制结构，再复制数据。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "2．多个数据库间的多表查询\n创建一个数据库student_info_other。\n（1）当前数据库为Student_info，将student_info数据库中的表student_other复制到student_info_other中。\n（2）查询同时出现在Student表和student_info_other数据库student_other表中的记录。"
+    },
+    {
+      "id": "q17",
+      "title": "保留未匹配记录",
+      "requirement": "查询所有课程及选课信息，再组合查询同时保留未选课学生和无人选修课程。",
+      "hint": "用外连接与集合操作验证两侧未匹配行。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "3．外连接查询\n（1）查询所有课程信息及其选课信息，包含未被学生选修的课程。\n（2）查询所有学生信息，所有课程信息及其选课信息，包含未选修课程的学生及未被学生选修的课程。"
+    },
+    {
+      "id": "q18",
+      "title": "班内加权排名",
+      "requirement": "查询无不及格记录且加权平均成绩位列班级前 10 的学生。",
+      "hint": "用课程学分加权；排名按班级分区。",
+      "optional": true,
+      "starterSql": "",
+      "originalText": "（补充）查询没有不及格记录且加权平均成绩在班级排名前10的学生基本信息"
+    },
+    {
+      "id": "q19",
+      "title": "找出尚无成绩的具体课程",
+      "requirement": "用三表连接列出有选课记录但成绩缺失的学生姓名、课程名称。与完全没有选课的学生名单对照。",
+      "hint": "以 SC 的实际记录判断缺考。预置数据中许宁的 C 语言成绩为空，王泽没有选课。",
+      "optional": true,
+      "starterSql": ""
+    },
+    {
+      "id": "q20",
+      "title": "含无人选修课程的及格率",
+      "requirement": "列出所有课号、课名、到考人数和及格率。及格率以有成绩人数为分母，到考人数为零时显示 NULL。",
+      "hint": "以 Course 为保留侧做 LEFT JOIN。用 COUNT(Grade)、条件聚合和 NULLIF，核对 Visual_Basic 仍在结果里。",
+      "optional": true,
+      "starterSql": ""
+    },
+    {
+      "id": "q21",
+      "title": "找出高于本课程均分的成绩",
+      "requirement": "返回高于各自课程平均分的学生姓名、课名、成绩及课程均分，按课号和分差排序。",
+      "hint": "可先按课号汇总再连接，或使用相关子查询。NULL 成绩不参与均分，也不会进入结果。",
+      "optional": true,
+      "starterSql": ""
+    },
+    {
+      "id": "q22",
+      "title": "查找从未选过 002 的学生",
+      "requirement": "列出所有从未选修课号 002 的学生，保留完全未选课的人，并排除虽然缺考但已选 002 的人。",
+      "hint": "用 NOT EXISTS 按学号关联选课记录。预置数据中王泽应保留，许宁应排除。",
+      "optional": true,
+      "starterSql": ""
+    },
+    {
+      "id": "q23",
+      "title": "为选课最多的学生保留并列",
+      "requirement": "统计每位学生选课数，输出选课数最高的所有学生及姓名。点出统计值是门次还是有成绩门次。",
+      "hint": "先汇总 SC，再和最大门次比较。预置数据中最高为 5 门，缺考也算选课。",
+      "optional": true,
+      "starterSql": ""
+    }
+  ],
+  "originalObjective": "掌握两个表以上的连接查询的应用，包括嵌套查询。"
+}

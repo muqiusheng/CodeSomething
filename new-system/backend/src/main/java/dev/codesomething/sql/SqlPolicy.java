@@ -9,7 +9,7 @@ public final class SqlPolicy {
     private SqlPolicy() {}
     private static final Set<String> WORDS=Set.of("select","as","connected","current_database","database","version","count","from","where","order","by","asc","desc","limit","offset","and","or","not","is","null","true","false","in","insert","into","values","update","set","delete","create","table","primary","key","int","integer","varchar","boolean","bool","tinyint","default","unsigned","tasks","bookmarks","id","title","completed","saved");
     public static void validate(String stage,String sql) {
-        if(sql==null||sql.isBlank()||sql.length()>8192)throw ApiException.invalid("sql","请输入1—8192个字符的SQL。");
+        validateSize(sql);
         StringBuilder stripped=new StringBuilder();boolean quoted=false;
         for(int i=0;i<sql.length();i++) {
             char c=sql.charAt(i);
@@ -44,5 +44,10 @@ public final class SqlPolicy {
             if(first.equals("create")&&!s.strip().matches("create\\s+table\\s+(tasks|bookmarks)\\s*\\([\\s\\S]*\\)"))throw ApiException.invalid("sql","只允许CREATE TABLE tasks或bookmarks及显式字段定义。");
         }
         if(statements.isEmpty())throw ApiException.invalid("sql","请输入SQL语句。");
+    }
+
+    public static void validateSize(String sql) {
+        if(sql==null||sql.isBlank()||sql.length()>8192||sql.indexOf(0)>=0)
+            throw ApiException.invalid("sql","请输入1—8192个字符的有效SQL。");
     }
 }

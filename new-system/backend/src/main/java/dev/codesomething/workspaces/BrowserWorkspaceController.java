@@ -45,6 +45,14 @@ public class BrowserWorkspaceController {
             if(boot) {
                 @SuppressWarnings("unchecked") var values=(List<Map<String,String>>)stage.get("starterFiles");
                 files=values.stream().filter(f->f.get("path").equals("pom.xml")||f.get("path").endsWith("/Application.java")).map(f->new BootProjectSnapshot.Source(f.get("path"),f.get("path").equals("pom.xml")?BootProjectSnapshot.trustedPom(BootCourses.jdbc(input.stageId())):f.get("content"))).toList();
+            } else if(ConsoleOutputCheck.applies(input.courseId(),input.courseVersion(),input.stageId())) {
+                files=List.of(new BootProjectSnapshot.Source("TaskServer.java", """
+public class TaskServer {
+    public static void main(String[] args) {
+        // 在这里输出你自己的第一句话。
+    }
+}
+"""));
             } else files=List.of(new BootProjectSnapshot.Source("TaskServer.java", """
 import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;

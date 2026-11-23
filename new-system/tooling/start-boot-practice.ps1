@@ -5,12 +5,21 @@ $practiceDirectory=Join-Path $systemDirectory 'runtime/boot-practice'
 New-Item -ItemType Directory -Force $practiceDirectory | Out-Null
 $image='mysql@sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902'
 $container='cs-boot-practice';$network='cs-boot-practice-local'
-function Invoke-Docker([string[]]$Arguments){$output=& $Docker @Arguments 2>&1 | Out-String;if($LASTEXITCODE -ne 0){throw 'Boot practice Docker operation failed; check the engine, image and local port13318.'};return $output.Trim()}
+$port=13318
+function Invoke-Docker([string[]]$Arguments){$output=& $Docker @Arguments 2>&1 | Out-String;if($LASTEXITCODE -ne 0){throw 'Boot practice Docker operation failed; check the engine, image and local port.'};return $output.Trim()}
 $found=& $Docker container inspect $container 2>$null
+if($LASTEXITCODE -ne 0 -and (Test-Path -LiteralPath (Join-Path $systemDirectory 'runtime/local-compose/settings.env'))){
+    & (Join-Path $PSScriptRoot 'local-compose.ps1') up -d boot-practice
+    if($LASTEXITCODE -ne 0){throw 'Could not start the local Compose Boot practice service.'}
+    $found=& $Docker container inspect $container 2>$null
+    if($LASTEXITCODE -ne 0){throw 'Could not inspect the local Compose Boot practice service.'}
+}
 if($LASTEXITCODE -eq 0){
     $info=($found | ConvertFrom-Json)[0]
     $binding=$info.HostConfig.PortBindings.'3306/tcp'
-    if($info.Config.Labels.'codesomething.boot-practice' -ne '1' -or $info.Config.Image -ne $image -or $binding.HostIp -ne '127.0.0.1' -or $binding.HostPort -ne '13318'){throw 'Existing container does not match the owned practice configuration.'}
+    $isLocalCompose=$info.Config.Labels.'com.docker.compose.project' -eq 'codesomething-local' -and $info.Config.Labels.'com.docker.compose.service' -eq 'boot-practice'
+    if($isLocalCompose -and $binding.HostPort -match '^\d{1,5}$'){$port=[int]$binding.HostPort}
+    if($info.Config.Labels.'codesomething.boot-practice' -ne '1' -or $info.Config.Image -ne $image -or $binding.HostIp -ne '127.0.0.1' -or $port -lt 1 -or $port -gt 65535 -or $binding.HostPort -ne [string]$port){throw 'Existing container does not match the owned practice configuration.'}
     Invoke-Docker @('start',$container) | Out-Null
 }else{
     $found=& $Docker network inspect $network 2>$null
@@ -36,7 +45,7 @@ Invoke-Docker @('exec',$container,'mysql','-uroot','--protocol=socket','-e',$sql
 if(-not (Test-Path -LiteralPath $configPath)){
     Invoke-Docker @('exec',$container,'mysql','-uroot','--default-character-set=utf8mb4','-e',"USE cs_lab; INSERT INTO tasks VALUES(1,'学习 HTTP',0),(2,'复习 SQL',1),(3,'练习 JDBC',0),(4,'阅读 Java',1),(5,'完成项目',0); INSERT INTO bookmarks VALUES(1,'Java文档',0),(2,'SQL手册',1),(3,'接口笔记',0),(4,'开发指南',1),(5,'数据库指南',0);") | Out-Null
 }
-[ordered]@{url='jdbc:mysql://127.0.0.1:13318/cs_lab?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8';username='learner';password=$password;systemDirectory=$systemDirectory} | ConvertTo-Json | Set-Content -LiteralPath $configPath -Encoding utf8NoBOM
+[ordered]@{url="jdbc:mysql://127.0.0.1:${port}/cs_lab?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8";username='learner';password=$password;systemDirectory=$systemDirectory} | ConvertTo-Json | Set-Content -LiteralPath $configPath -Encoding utf8NoBOM
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'run-boot-practice.ps1') -Destination (Join-Path $practiceDirectory 'run.ps1')
-Write-Output 'Boot practice MySQL ready at 127.0.0.1:13318/cs_lab. Existing practice records were preserved.'
+Write-Output "Boot practice MySQL ready at 127.0.0.1:${port}/cs_lab. Existing practice records were preserved."
 Write-Output 'Use runtime/boot-practice/run.ps1 -ProjectDirectory <absolute-project-path> to run your application. Credentials remain in the local runtime directory.'

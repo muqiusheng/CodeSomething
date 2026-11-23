@@ -1,0 +1,100 @@
+name: codesomething
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: deployment/backend.Dockerfile
+    restart: unless-stopped
+    environment:
+      CS_PUBLIC: "true"
+      CS_RUNNER_MODE: docker_only
+      CS_PUBLIC_MYSQL_POOL_LIMIT: ${CS_PUBLIC_MYSQL_POOL_LIMIT:-2}
+      CS_DATA_DIRECTORY: ${CS_PROD_DATA_DIRECTORY:?Set an absolute host data directory}
+      CS_BACKEND_PORT: "5188"
+      SERVER_ADDRESS: 0.0.0.0
+      SERVER_FORWARD_HEADERS_STRATEGY: native
+      SERVER_TOMCAT_REMOTEIP_INTERNAL_PROXIES: '172\.30\.37\.2'
+      SERVER_TOMCAT_REMOTEIP_REMOTE_IP_HEADER: X-Forwarded-For
+      SERVER_TOMCAT_REMOTEIP_PROTOCOL_HEADER: X-Forwarded-Proto
+      CS_DOCKER_BIN: /usr/local/bin/docker
+      DOCKER_HOST: unix:///run/runner-docker.sock
+      CS_FRONTEND_ORIGIN: https://${CS_PUBLIC_HOST:?Set the HTTPS hostname}
+      CS_INITIAL_ADMIN_PASSWORD: ${CS_INITIAL_ADMIN_PASSWORD:-}
+      CS_JWT_SECRET: ${CS_JWT_SECRET:?Set a random Base64 signing key}
+      CS_INVITE_REQUIRED: ${CS_INVITE_REQUIRED:-true}
+      CS_RUNNER_LOCAL_ENABLED: "false"
+      JAVA_TOOL_OPTIONS: ${CS_API_JVM_OPTIONS:--Xms512m -Xmx1g}
+      CS_PUBLIC_TUTOR_ENABLED: ${CS_PUBLIC_TUTOR_ENABLED:-false}
+      CS_CODEX_BIN: ${CS_CODEX_BIN:-codex}
+      CS_TUTOR_ARGUMENTS: ${CS_TUTOR_ARGUMENTS:-}
+    volumes:
+      - type: bind
+        source: ${CS_PROD_DATA_DIRECTORY:?Set an absolute host data directory}
+        target: ${CS_PROD_DATA_DIRECTORY:?Set an absolute host data directory}
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${CS_RUNNER_DOCKER_SOCKET:?Set the dedicated rootless daemon socket}
+        target: /run/runner-docker.sock
+        bind:
+          create_host_path: false
+    read_only: true
+    # SQLite JDBC extracts its native library here in the trusted API container.
+    tmpfs: ["/tmp:rw,exec,nosuid,nodev,size=128m"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: ${CS_API_MEMORY:-1536m}
+    pids_limit: 192
+    logging:
+      options: {max-size: "10m", max-file: "3"}
+    networks:
+      api:
+        ipv4_address: 172.30.37.3
+    healthcheck:
+      test: [CMD, curl, -fsS, http://127.0.0.1:5188/api/v1/health]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  edge:
+    build:
+      context: ..
+      dockerfile: deployment/edge.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      CS_PUBLIC_HOST: ${CS_PUBLIC_HOST:?Set the HTTPS hostname}
+      CS_ALLOW_INDEXING: ${CS_ALLOW_INDEXING:-0}
+      NGINX_ENVSUBST_FILTER: '^CS_(PUBLIC_HOST|ALLOW_INDEXING)$'
+    volumes:
+      - type: bind
+        source: ${CS_TLS_DIRECTORY:?Set the directory with fullchain.pem and privkey.pem}
+        target: /etc/nginx/tls
+        read_only: true
+        bind:
+          create_host_path: false
+    ports:
+      - "${CS_BIND_ADDRESS:-127.0.0.1}:${CS_HTTP_PORT:-80}:8080"
+      - "${CS_BIND_ADDRESS:-127.0.0.1}:${CS_HTTPS_PORT:-443}:8443"
+    read_only: true
+    tmpfs: ["/var/cache/nginx:rw,nosuid,nodev,size=64m", "/var/run:rw,nosuid,nodev,size=8m", "/etc/nginx/conf.d:rw,nosuid,nodev,size=8m"]
+    security_opt: [no-new-privileges:true]
+    mem_limit: ${CS_EDGE_MEMORY:-256m}
+    pids_limit: 64
+    logging:
+      options: {max-size: "10m", max-file: "3"}
+    networks:
+      api:
+        ipv4_address: 172.30.37.2
+      edge: {}
+
+networks:
+  api:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.30.37.0/24
+  edge: {}

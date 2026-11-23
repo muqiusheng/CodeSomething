@@ -1,6 +1,7 @@
 package dev.codesomething.sql;
 
 import dev.codesomething.api.ApiException;
+import dev.codesomething.storage.LearningDataSource;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
@@ -18,16 +19,41 @@ import tools.jackson.databind.json.JsonMapper;
 @DependsOn("flyway")
 public class SqlLearningController {
     private final JdbcTemplate jdbc;
-    private final MysqlEnvironment mysql;
+    private final MysqlEnvironment environment;
+    private final LearningDataSource storage;
+    private final boolean publicMode;
+    private final String dataDirectory;
+    private final Map<String, MysqlEnvironment> instances = new ConcurrentHashMap<>();
+    private int nextOwner;
     private final SqlCourse course;
     private final boolean enabled;
     private final JsonMapper json=JsonMapper.builder().build();
     private final ExecutorService environmentWorker=Executors.newSingleThreadExecutor();
-    public SqlLearningController(JdbcTemplate jdbc,MysqlEnvironment mysql,SqlCourse course,@org.springframework.beans.factory.annotation.Value("${cs.sql.enabled:true}") boolean enabled){this.jdbc=jdbc;this.mysql=mysql;this.course=course;this.enabled=enabled;}
-    @PostConstruct void recover(){jdbc.update("UPDATE sql_attempts SET status='environment_error',report=?,finished_at=? WHERE status IN ('running','cancelling')",json.writeValueAsString(Map.of("message","平台曾中断检查，请重试；未计为SQL错误。")),Instant.now().toString());}
+    public SqlLearningController(JdbcTemplate jdbc,MysqlEnvironment mysql,SqlCourse course,
+        @org.springframework.beans.factory.annotation.Value("${cs.sql.enabled:true}") boolean enabled, LearningDataSource storage,
+        @org.springframework.beans.factory.annotation.Value("${cs.public:false}") boolean publicMode,
+        @org.springframework.beans.factory.annotation.Value("${cs.data-directory}") String dataDirectory) {
+        this.jdbc=jdbc;this.environment=mysql;this.course=course;this.enabled=enabled;this.storage=storage;
+        this.publicMode=publicMode;this.dataDirectory=java.nio.file.Path.of(dataDirectory).toAbsolutePath().normalize().toString();
+    }
+    private MysqlEnvironment mysql() {
+        if (!publicMode) return environment;
+        return instances.computeIfAbsent(LearningDataSource.owner(), id -> environment.learnerInstance(instanceKey(id)));
+    }
+    private String instanceKey(String id) { return MysqlEnvironment.digest(dataDirectory+"\n"+id).substring(0,24); }
+    public String publicContainer(String id) { return environment.learnerInstance(instanceKey(id)).status().container(); }
+    public int publicPoolLimit() { return environment.publicPoolLimit(); }
+    @PostConstruct void recover(){
+        var owners = new LinkedHashSet<>(publicMode ? storage.owners(false) : List.<String>of());
+        owners.add("admin");
+        for (String owner : owners) try (var scope = LearningDataSource.asOwner(owner)) {
+            jdbc.update("UPDATE sql_attempts SET status='environment_error',report=?,finished_at=? WHERE status IN ('running','cancelling')",json.writeValueAsString(Map.of("message","平台曾中断检查，请重试；未计为SQL错误。")),Instant.now().toString());
+        }
+    }
     @PreDestroy void close(){environmentWorker.shutdownNow();}
-    @GetMapping("/environment") public MysqlEnvironment.Environment environment(){return mysql.status();}
+    @GetMapping("/environment") public MysqlEnvironment.Environment environment(){return mysql().status();}
     @PostMapping("/environment/start") public synchronized MysqlEnvironment.Environment start(){
+        var mysql=mysql();
         if(!Set.of("starting","ready").contains(mysql.status().status()))environmentWorker.submit(mysql::start);
         else if(mysql.status().status().equals("ready"))environmentWorker.submit(mysql::start);
         return mysql.status();
@@ -43,7 +69,7 @@ public class SqlLearningController {
     @PostMapping("/environment/reset") public synchronized Map<String,String> reset(@RequestBody ResetWrite write){
         if(!MysqlEnvironment.PRACTICE.equals(write.target()))throw conflict("RESET_TARGET_REJECTED","只允许重置cs_practice练习库。");
         if(write.token()==null||jdbc.queryForObject("SELECT count(*) FROM sql_reset_tokens WHERE token=? AND target=? AND expires_at>?",Integer.class,write.token(),write.target(),Instant.now().toString())!=1)throw conflict("RESET_EXPIRED","重置预览已失效，请重新查看目标后确认。");
-        try{mysql.reset(write.target());}catch(MysqlEnvironment.Failure e){throw conflict(e.status,e.getMessage());}
+        try{mysql().reset(write.target());}catch(MysqlEnvironment.Failure e){throw conflict(e.status,e.getMessage());}
         jdbc.update("DELETE FROM sql_reset_tokens WHERE token=?",write.token());
         return Map.of("message","cs_practice已恢复6条初始任务。","target",write.target());
     }
@@ -60,7 +86,7 @@ public class SqlLearningController {
             if(!write.sql().equals(row.get("source"))||!write.stageId().equals(row.get("stage_id"))||!write.mode().equals(row.get("mode"))||!write.courseVersion().equals(row.get("course_version")))throw conflict("IDEMPOTENCY_CONFLICT","此请求编号已用于其他SQL。");
             return attempt(row);
         }
-        if(jdbc.queryForObject("SELECT count(*) FROM sql_attempts WHERE status IN ('queued','running','cancelling')",Integer.class)>=20)throw conflict("QUEUE_FULL","SQL检查队列已满，请等待已有任务结束。");
+        if(jdbc.queryForObject("SELECT count(*) FROM sql_attempts WHERE status IN ('queued','running','cancelling')",Integer.class) >= (publicMode ? 2 : 20))throw conflict("QUEUE_FULL","SQL检查队列已满，请等待已有任务结束。");
         String id=UUID.randomUUID().toString();
         jdbc.update("INSERT INTO sql_attempts(id,course_version,stage_id,mode,source,digest,idempotency_key,status,created_at) VALUES(?,?,?,?,?,?,?,'queued',?)",id,write.courseVersion(),write.stageId(),write.mode(),write.sql(),MysqlEnvironment.digest(write.sql()),write.idempotencyKey(),Instant.now().toString());
         return read(id);
@@ -71,11 +97,23 @@ public class SqlLearningController {
     private Attempt attempt(Map<String,Object> r){return new Attempt((String)r.get("id"),(String)r.get("course_version"),(String)r.get("stage_id"),(String)r.get("mode"),(String)r.get("source"),(String)r.get("digest"),(String)r.get("status"),r.get("report")==null?null:json.readValue((String)r.get("report"),Object.class),(String)r.get("created_at"),jdbc.queryForList("SELECT id,rule_version,passed,created_at FROM sql_understanding WHERE attempt_id=? ORDER BY created_at DESC",r.get("id")));}
     @Scheduled(fixedDelay=200) public void tick(){
         if(!enabled)return;
+        if (!publicMode) { tickCurrent(); return; }
+        var owners = storage.queuedOwners("sql");
+        for (int offset=0; offset<owners.size(); offset++) {
+            int index = Math.floorMod(nextOwner+offset, owners.size());
+            try (var scope = LearningDataSource.asOwner(owners.get(index))) {
+                if (tickCurrent()) { nextOwner=index+1; return; }
+            }
+        }
+    }
+    private boolean tickCurrent() {
         var ids=jdbc.queryForList("SELECT id FROM sql_attempts WHERE status='queued' ORDER BY created_at LIMIT 1",String.class);
-        if(ids.isEmpty())return;String id=ids.getFirst();
-        if(jdbc.update("UPDATE sql_attempts SET status='running' WHERE id=? AND status='queued'",id)!=1)return;
+        if(ids.isEmpty())return false;String id=ids.getFirst();
+        if(jdbc.update("UPDATE sql_attempts SET status='running' WHERE id=? AND status='queued'",id)!=1)return false;
         var attempt=read(id);String status;Report report;
         try {
+            var mysql = mysql();
+            if (publicMode && !"ready".equals(mysql.status().status())) mysql.start();
             java.util.function.BooleanSupplier cancelled=()->Thread.currentThread().isInterrupted()||!"running".equals(jdbc.queryForObject("SELECT status FROM sql_attempts WHERE id=?",String.class,id));
             MysqlEnvironment.Outcome outcome;
             if(attempt.mode().equals("practice"))outcome=new MysqlEnvironment.Outcome("executed",List.of(),mysql.practice(attempt.sql(),cancelled),"试运行完成；未写入关卡完成证据。",MysqlEnvironment.digest(course.seed(false)+course.seed(true)));
@@ -85,6 +123,7 @@ public class SqlLearningController {
         catch(Exception e){status="environment_error";report=failed(attempt,"检查服务中断，请重试；不计为SQL错误。");}
         if(jdbc.update("UPDATE sql_attempts SET status=?,report=?,finished_at=? WHERE id=? AND status='running'",status,json.writeValueAsString(report),report.finishedAt(),id)==0)
             jdbc.update("UPDATE sql_attempts SET status='cancelled',report=?,finished_at=? WHERE id=? AND status='cancelling'",json.writeValueAsString(failed(attempt,"检查已取消，未生成完成证据。")),Instant.now().toString(),id);
+        return true;
     }
     private Report failed(Attempt a,String message){return new Report(SqlCourse.ID,a.courseVersion(),a.stageId(),a.digest(),"sql-"+a.stageId()+"-1",SqlCourse.RULE,MysqlEnvironment.IMAGE,MysqlEnvironment.digest(course.seed(false)+course.seed(true)),List.of(),null,message,Instant.now().toString());}
     @GetMapping("/rules/{stage}") public Map<String,Object> rule(@PathVariable String stage){return Map.of("courseId",SqlCourse.ID,"courseVersion",SqlCourse.VERSION,"stageId",stage,"ruleVersion",SqlCourse.RULE,"questions",course.questions(stage));}

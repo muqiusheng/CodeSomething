@@ -1,3 +1,4 @@
+import {apiFetch} from '../../api/auth-api';
 import {useEffect,useState} from 'react';
 import {learningRequest} from '../../api/learning-api';
 import {Bot, Check, RefreshCw, ShieldCheck, WifiOff, LoaderCircle} from 'lucide-react';
@@ -5,7 +6,7 @@ type Connection={status:string;message:string;model?:string};
 export function TutorConnection(){
  const [connection,setConnection]=useState<Connection|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
  useEffect(()=>{let live=true;void learningRequest<Connection>('/tutor/connection').then(value=>{if(live)setConnection(value)}).catch(()=>{if(live)setError('暂时无法读取连接，请检查本机服务。')});return()=>{live=false}},[]);
- async function check(){setBusy(true);setError('');try{const response=await fetch('/api/v1/tutor/connection',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(60000)});const result=await response.json();if(!response.ok)throw new Error(result.message);setConnection(result as Connection)}catch(e){setError(e instanceof Error?e.message:'连接检查失败，请重试。')}finally{setBusy(false)}}
+ async function check(){setBusy(true);setError('');try{const response=await apiFetch('/api/v1/tutor/connection',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(60000)});const result=await response.json();if(!response.ok)throw new Error(result.message);setConnection(result as Connection)}catch(e){setError(e instanceof Error?e.message:'连接检查失败，请重试。')}finally{setBusy(false)}}
  const ready=connection?.status==='ready'&&!error;
  const state=busy?'checking':error?'error':ready?'ready':'idle';
  const StatusIcon=busy?LoaderCircle:ready?Check:WifiOff;

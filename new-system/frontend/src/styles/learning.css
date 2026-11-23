@@ -107,7 +107,7 @@ input,textarea { caret-color:var(--primary); }
 .runbook-nav button:hover { background:var(--primary-soft); }
 .step-marker { width:23px; height:23px; display:grid; place-items:center; border:1px solid var(--border); border-radius:50%; font-size:11px; flex-shrink:0; color:var(--text-secondary); }
 [aria-current=step] .step-marker { background:var(--primary); border-color:var(--primary); color:var(--on-primary); }
-.step-marker.marked { background:var(--learning-teal); border-color:var(--learning-teal); color:var(--on-primary); }
+.step-marker.marked { background:var(--learning-teal-soft); border-color:var(--learning-teal); color:var(--learning-teal); }
 .runbook-current { padding:var(--space-6); min-width:0; }
 .step-position { font-size:11px; color:var(--primary-ink); }
 .foundation-lesson .runbook-current h4 { font-size:18px; margin:var(--space-3) 0; font-weight:600; }

@@ -1,0 +1,137 @@
+{
+  "id": "lab-06-procedures",
+  "objective": "掌握无参、输入与输出参数的存储过程，使用条件流程并管理过程定义。",
+  "requirements": "在同一选课库完成例程。Workbench 与网页均接受 DELIMITER；例程用独立的 CALL 验证。如果需要用户变量，将 SET、CALL、SELECT 写进同一题。",
+  "questions": [
+    {
+      "id": "q01",
+      "title": "无参过程 stu_pr",
+      "requirement": "查询 051 班的学生基本资料和选课记录，包含未选课同学。",
+      "hint": "用 LEFT JOIN 保留未匹配学生。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（1）创建一个名为stu_pr的存储过程，该存储过程能查询出051班学生的所有资料，包括学生的基本信息、学生的选课信息（含未选课同学的信息）。"
+    },
+    {
+      "id": "q02",
+      "title": "按系汇总平均成绩",
+      "requirement": "创建无参过程，查询各系数据结构、数据库原理、操作系统三门课的平均分。",
+      "hint": "先准备这三门课与相关数据，再按系与课程分组。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（2）创建存储过程，查询各系“数据结构”、“数据库原理”、“操作系统”的平均分，参考格式如下："
+    },
+    {
+      "id": "q03",
+      "title": "带输入参数 stu_proc1",
+      "requirement": "根据系别和姓名筛选学号、姓名、年龄、课程名、成绩。缺省筛选为 % 与 林%，用多组参数测试。",
+      "hint": "MySQL 可在过程内部用 COALESCE 为 NULL 输入补默认筛选词。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（1）创建一个名为stu_proc1的存储过程，查询某系、某姓名的学生的学号、姓名、年龄、选修课程名、成绩。系名和姓名在调用该存储过程时输入，其默认值分别为“%”       与“林%”。执行该存储过程，用多种参数加以测试。"
+    },
+    {
+      "id": "q04",
+      "title": "学号区间 student_sc",
+      "requirement": "输入起止学号，输出学号、姓名与总成绩。",
+      "hint": "用区间条件后汇总，写出边界测试。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（2）创建一个名为student_sc的存储过程，可查询出某学号段的同学的学号、姓名、总成绩。（学号起始号与终止号在调用时输入，可设默认值。）执行该存储过程。"
+    },
+    {
+      "id": "q05",
+      "title": "定向更新 update_sc",
+      "requirement": "按学号与课号修改指定学生成绩，比较更新前后。",
+      "hint": "补充新成绩输入，用两个编号联合定位。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（3）创建一个名为update_sc的存储过程，可更新指定学号、指定课程号的学生的课程成绩。（学号、课程号作为输入参数）"
+    },
+    {
+      "id": "q06",
+      "title": "输出均分与条件提示",
+      "requirement": "用 course_average 输出课程均分。编写调用和分支，在低于 60 时提示未达标。",
+      "hint": "用 OUT 参数、会话变量及 IF，检查等于 60 与无成绩的情况。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "3．创建带输出参数的存储过程\n（1）创建一个名为course_average的存储过程，可查询某门课程考试的平均成绩。总成绩可以输出，以便进一步调用。\n（2）创建一执行该存储过程的批处理，要求当平均成绩小于60时，显示信息为：“XX课程的平均成绩为：XX，其平均分未达60分”。超过60时，显示信息为：“XX课程的平均成绩为：XX”。"
+    },
+    {
+      "id": "q07",
+      "title": "查询与维护过程",
+      "requirement": "用 SHOW CREATE PROCEDURE、SHOW PROCEDURE STATUS 和 information_schema.ROUTINES 查看定义；删除并重建 stu_pr，改查 051 班女生，最后删除练习对象。",
+      "hint": "复现 Workbench 管理动作并保留定义与调用结果。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "4．使用SQL语句管理和维护存储过程\n（1）使用SHOW CREATE  PROCEDURE查看存储过程student_sc的定义脚本。语句格式如下：\nSHOW CREATE  PROCEDURE  [ like  <存储过程名匹配表达式>];\n（2）存储过程的定义记录在information_schema数据库的Routines表中，使用select语句查看student_sc存储过程的相关信息。\n（3）使用SHOW PROCEDURE STATUS语句查看存储过程的信息，语句格式如下：\nSHOW PROCEDURE STATUS  [ like  <存储过程名匹配表达式>];\n（4）删除存储过程stu_pr。\n6．使用MySQL Workbench管理存储过程\n（1）在MySQL Workbench  中重新创建刚删除的存储过程stu_pr。\n（2）查看存储过程stu_pr，并将该过程修改为查询051班女生的所有资料。\n（3）删除存储过程stu_pr。"
+    },
+    {
+      "id": "q08",
+      "title": "按课号查询缺考登记",
+      "requirement": "新建专用 IN 参数过程 practice_absences，输入课号，输出该课程缺考学生学号与姓名。分别调用有、无缺考的课程。",
+      "hint": "使用 SC.Grade IS NULL。预置 002 有一人缺考，001 没有。",
+      "optional": true,
+      "starterSql": ""
+    },
+    {
+      "id": "q09",
+      "title": "用两个 OUT 参数统计到考情况",
+      "requirement": "写 practice_exam_counts，输入课号，输出选课数和到考数。调用后读取两个会话变量，覆盖一门有缺考的课和一门无人选修的课。",
+      "hint": "把 CALL 和 SELECT 写在同一题。预置的 002 两个数应不同，004 两个数均为零。",
+      "optional": true,
+      "starterSql": ""
+    },
+    {
+      "id": "q10",
+      "title": "用 INOUT 参数模拟加学分",
+      "requirement": "创建 practice_add_credit，输入课号，并通过 INOUT 接收并修改学分累计值。分别验证 001 和不存在的课号，约定后者保持累计值。",
+      "hint": "先初始化会话变量。正常调用后增加课程学分，找不到课程时保留原值。",
+      "optional": true,
+      "starterSql": ""
+    },
+    {
+      "id": "q11",
+      "title": "写一个不含更新操作的及格判定过程",
+      "requirement": "创建 practice_grade_status，根据输入分数返回缺考、不及格或及格，另为低于 0 或高于 100 的分数返回无效。用 NULL、-1、59、60、100、101 六组输入测试。",
+      "hint": "可使用 IF、ELSEIF 或 CASE。先处理缺考与非法值，再检查 60 的边界。",
+      "optional": true,
+      "starterSql": ""
+    },
+    {
+      "id": "q12",
+      "title": "在过程中汇总成绩区间",
+      "requirement": "写 practice_grade_band，接受课号、下限与上限，返回区间内的成绩数。用正常区间、两端相等和上下限颠倒三组参数测试，并为颠倒的范围约定明确反馈。",
+      "hint": "BETWEEN 包含两端。用过程分支处理非法范围，避免把参数错误误认为没有匹配数据。",
+      "optional": true,
+      "starterSql": ""
+    }
+  ],
+  "originalObjective": "（1）掌握SQL流控制语句。\n（2）掌握创建存储过程的方法。\n（3）掌握存储过程的执行方法。\n（4）掌握存储过程的管理和维护。",
+  "sourceTables": [
+    {
+      "title": "第 1（2）题 · 各系平均分参考格式",
+      "columns": [
+        "sdept",
+        "数据结构",
+        "数据库原理",
+        "操作系统"
+      ],
+      "rows": [
+        [
+          "计算机系",
+          "83",
+          "70",
+          "77"
+        ],
+        [
+          "软件工程",
+          "76",
+          "73",
+          "75"
+        ]
+      ]
+    }
+  ],
+  "originalNotes": "参考表中的数值来自原题截图，用于说明输出格式。运行结果取决于你的选课数据。原题所列 SHOW CREATE PROCEDURE 应接过程名，如 student_sc。"
+}

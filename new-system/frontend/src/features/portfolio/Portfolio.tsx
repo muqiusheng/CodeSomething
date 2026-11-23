@@ -1,3 +1,4 @@
+import {localState} from '../../api/browser-state.mjs';
 import {LocalProjectGuide} from '../learning/shared/LocalProjectGuide';
 import {RunExperience} from '../learning/shared/RunExperience';
 import {PracticeSteps} from '../learning/shared/PracticeSteps';
@@ -23,7 +24,7 @@ const stateName:Record<string,string>={draft:'设计草稿','in-progress':'正�
 const helpNames:Record<string,string>={none:'自述未使用帮助',concept:'使用概念或定位帮助',example:'使用示例或答案帮助'};
 const time=(value:string)=>new Date(value).toLocaleString('zh-CN');
 function download(name:string,text:string,type='text/plain'){const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-function restoreDraft(work:Work):{design:string;revision:number}{try{const raw=localStorage.getItem('cs-portfolio-draft-'+work.id);if(raw){const draft=JSON.parse(raw);if(typeof draft.design==='string'&&Number.isInteger(draft.revision))return draft}}catch{}return {design:work.design,revision:work.revision}}
+function restoreDraft(work:Work):{design:string;revision:number}{try{const raw=localState.getItem('cs-portfolio-draft-'+work.id);if(raw){const draft=JSON.parse(raw);if(typeof draft.design==='string'&&Number.isInteger(draft.revision))return draft}}catch{}return {design:work.design,revision:work.revision}}
 export function Portfolio(){
  const {id}=useParams();const navigate=useNavigate();
  const [journeySearch]=useSearchParams();
@@ -43,13 +44,13 @@ export function Portfolio(){
 }
 function WorkEditor({work,busy,action,update,notice}:{work:Work;busy:boolean;action:(fn:()=>Promise<void>)=>Promise<void>;update:(w:Work)=>void;notice:(s:string)=>void}){
  const [draft]=useState(()=>restoreDraft(work));const [design,setDesign]=useState(draft.design);const [designRevision,setDesignRevision]=useState(draft.revision);const [directory,setDirectory]=useState('');const [search,setSearch]=useSearchParams();const [phase,setPhase]=useState(()=>work.transfer&&search.get('journey')==='71'?'transfer':'core');const [preview,setPreview]=useState<Preview|null>(null);const [tab,updateTab]=useState(()=>{const s=search.get('step')||work.step;return ['design','practice','explain','archive'].includes(s)?s:'design'});function setTab(s:string){updateTab(s);setSearch(keepJourney(search,{step:s}),{replace:true});void request<Work>('/'+work.id+'/position',{step:s}).then(update).catch(()=>notice('作品位置保存失败，可重新选择页签重试。'))};const [help,setHelp]=useState('none');const [answers,setAnswers]=useState({flow:'',failure:'',tradeoff:'',deployment:''});const [observation,setObservation]=useState('');const [nextAction,setNextAction]=useState('');const [starter,setStarter]=useState<Record<string,string>|null>(null);const checkKey=useRef(crypto.randomUUID());
- const sourceKey='cs-portfolio-source-'+work.id;const [sourceFiles,setSourceFiles]=useState<Record<string,string>>(()=>{try{return JSON.parse(localStorage.getItem(sourceKey)||'{}')}catch{return {}}});
+ const sourceKey='cs-portfolio-source-'+work.id;const [sourceFiles,setSourceFiles]=useState<Record<string,string>>(()=>{try{return JSON.parse(localState.getItem(sourceKey)||'{}')}catch{return {}}});
  useEffect(()=>{if(tab==='practice'&&!Object.keys(sourceFiles).length)void request<Record<string,string>>('/starter').then(setSourceFiles).catch(()=>notice('启动代码读取失败，请重试。'))},[tab,work.id]);
- function editSources(next:Record<string,string>){setSourceFiles(next);setPreview(null);try{localStorage.setItem(sourceKey,JSON.stringify(next))}catch{notice('浏览器无法保存代码草稿，请先保存到本地目录。')}};
+ function editSources(next:Record<string,string>){setSourceFiles(next);setPreview(null);try{localState.setItem(sourceKey,JSON.stringify(next))}catch{notice('浏览器无法保存代码草稿，请先保存到本地目录。')}};
 
  const last=work.checks.at(-1);const core=[...work.checks].reverse().find(j=>j.phase==='core');const transfer=[...work.checks].reverse().find(j=>j.phase==='transfer');const currentExplanation=work.explanations.find(e=>e.check_id===transfer?.id);const dirty=design!==work.design;
  useEffect(()=>{if(designRevision!==work.revision)notice('发现旧版本本地草稿，请核对已保存设计后合并。')},[designRevision,work.revision]);
- useEffect(()=>{try{localStorage.setItem('cs-portfolio-draft-'+work.id,JSON.stringify({design,revision:designRevision}))}catch{}},[design,designRevision,work.id]);
+ useEffect(()=>{try{localState.setItem('cs-portfolio-draft-'+work.id,JSON.stringify({design,revision:designRevision}))}catch{}},[design,designRevision,work.id]);
  async function mutate(path:string,body:unknown){const w=await request<Work>('/'+work.id+path,body);update(w);return w;}
  async function saveDesign(){const w=await mutate('/design',{design,revision:designRevision});setDesignRevision(w.revision);notice('设计已保存到本机数据库。')}
  return <><div className="portfolio-overview"><span className="text-pill">{stateName[work.state]}</span><span>{work.independence}</span><span>规则 {work.ruleVersion}</span></div>{work.prerequisites.map(p=><p className="portfolio-prerequisite" key={p.route}>{p.title} <Link to={p.route}>查看先修</Link>。也可以先保存设计或试做。</p>)}

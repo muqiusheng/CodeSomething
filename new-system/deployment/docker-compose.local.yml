@@ -1,0 +1,91 @@
+name: codesomething-local
+
+x-mysql: &mysql
+  image: mysql@sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902
+  pull_policy: never
+  cpus: 1
+  mem_limit: 640m
+  pids_limit: 256
+  environment:
+    MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+
+services:
+  backend:
+    build: !reset null
+    image: cs-public-followup-backend:latest
+    pull_policy: never
+    environment:
+      SERVER_TOMCAT_REMOTEIP_INTERNAL_PROXIES: '172\.30\.38\.2'
+    volumes: !override
+      - type: volume
+        source: local-runtime
+        target: ${CS_PROD_DATA_DIRECTORY}
+      - type: bind
+        source: ${CS_RUNNER_DOCKER_SOCKET}
+        target: /run/runner-docker.sock
+        bind:
+          create_host_path: false
+    networks:
+      api:
+        ipv4_address: 172.30.38.3
+
+  edge:
+    build: !reset null
+    image: cs-public-followup-edge:latest
+    pull_policy: never
+    networks:
+      api:
+        ipv4_address: 172.30.38.2
+
+  sql-practice:
+    <<: *mysql
+    profiles: [sql]
+    container_name: cs-sql-learning
+    labels:
+      codesomething.sql: "1"
+    network_mode: none
+    cap_drop: [ALL]
+    cap_add: [DAC_OVERRIDE, SETGID, SETUID]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - sql-data:/var/lib/mysql
+    command:
+      - --skip-networking
+      - --local-infile=0
+      - --max-connections=20
+      - --innodb-buffer-pool-size=64M
+      - --performance-schema=OFF
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+
+  boot-practice:
+    <<: *mysql
+    profiles: [boot]
+    container_name: cs-boot-practice
+    labels:
+      codesomething.boot-practice: "1"
+    memswap_limit: 640m
+    ports:
+      - "127.0.0.1:${CS_LOCAL_BOOT_PORT:-13318}:3306"
+    networks: [boot]
+    volumes:
+      - boot-data:/var/lib/mysql
+    command: [--local-infile=0, --performance-schema=OFF, --innodb-buffer-pool-size=64M]
+
+networks:
+  api:
+    ipam:
+      config: !override
+        - subnet: 172.30.38.0/24
+  boot: {}
+
+volumes:
+  local-runtime:
+    external: true
+    name: cs-public-followup_cs-followup-runtime
+  sql-data:
+    external: true
+    name: cs-sql-learning-data
+  boot-data:
+    external: true
+    name: cs-boot-practice-data

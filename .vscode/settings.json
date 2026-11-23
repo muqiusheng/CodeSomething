@@ -26,5 +26,6 @@
     "**/new-system/runtime/**": true,
     "**/idea-plugin/build/**": true,
     "**/idea-plugin/.gradle/**": true
-  }
+  },
+  "java.configuration.updateBuildConfiguration": "interactive"
 }

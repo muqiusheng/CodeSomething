@@ -1,4 +1,4 @@
-# CodeSomething前端
+# 码起步前端
 
 前端使用 React 19、TypeScript 5.9、Vite 7.2，以及 Cupcake 浅色和 Synthwave 深色主题。当前版本见[package.json](package.json)，组件来源见[COMPONENTS.md](COMPONENTS.md)。
 

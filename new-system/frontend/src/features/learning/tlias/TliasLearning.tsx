@@ -1,3 +1,4 @@
+import {localState} from '../../../api/browser-state.mjs';
 import {LocalProjectGuide} from '../shared/LocalProjectGuide';
 import {useEffect,useRef,useState} from 'react';
 import {Link,useNavigate,useParams,useSearchParams} from 'react-router-dom';
@@ -12,8 +13,8 @@ export function LocalMaterialLinks({courseId}:{courseId:string}){
  return <section className="local-material-links" aria-label="本机资料课程"><p>{courseId==='sql-foundations'?'补充讲义：先读SQL与约束，再结合当前任务练习；多表查询和事务在Tlias实战使用。':'已加入本机JavaWeb资料：Tlias使用独立Boot 3.2.10/MyBatis工程，可在完成项目A后学习。'}</p><div className="button-row">{courseId==='sql-foundations'&&<a href={material+'mysql-basic.pdf#page=14'} target="_blank" rel="noreferrer">阅读MySQL基础讲义</a>}<Link to="/projects/tlias">查看Tlias完整业务实战</Link></div></section>;
 }
 
-function readPosition(){try{const id=localStorage.getItem('cs-tlias-chapter-v1');return tliasChapters.some(c=>c.id===id)?id:'start'}catch{return 'start'}}
-function readStep(chapter:string){try{return localStorage.getItem('cs-tlias-step-v1-'+chapter)||'1'}catch{return '1'}}
+function readPosition(){try{const id=localState.getItem('cs-tlias-chapter-v1');return tliasChapters.some(c=>c.id===id)?id:'start'}catch{return 'start'}}
+function readStep(chapter:string){try{return localState.getItem('cs-tlias-step-v1-'+chapter)||'1'}catch{return '1'}}
 function MaterialReader(){
  const [text,setText]=useState(''),[status,setStatus]=useState(''),[selected,setSelected]=useState('api.txt');
  async function load(name:string){setSelected(name);setText('');setStatus('正在读取资料…');try{const r=await fetch(material+name);if(!r.ok)throw new Error('HTTP '+r.status);const content=await r.text();if(content.trimStart().startsWith('<!doctype'))throw new Error('文件未部署');setText(content);setStatus('')}catch(e){setStatus('资料读取失败：'+(e as Error).message)}}
@@ -26,15 +27,15 @@ export function TliasLearning({overview=false}:{overview?:boolean}){
  const requested=Number(params.get('step')||readStep(chapter.id));const current=Number.isInteger(requested)&&requested>=1&&requested<=chapter.steps.length?requested-1:0;
  const lesson=chapter.steps[current];const [mode,setMode]=useState<'reading'|'coding'>('reading');
  const [draftError,setDraftError]=useState(''),[storageBlocked,setStorageBlocked]=useState(false);
- const [files,setFiles]=useState<Record<string,string>>(()=>{try{return parseTliasDraft(localStorage.getItem(tliasStorageKey))}catch{return {...tliasStarter}}});
+ const [files,setFiles]=useState<Record<string,string>>(()=>{try{return parseTliasDraft(localState.getItem(tliasStorageKey))}catch{return {...tliasStarter}}});
  const [selected,setSelected]=useState('src/main/java/dev/codesomething/tlias/Application.java');
  const [newPath,setNewPath]=useState('src/main/java/dev/codesomething/tlias/HealthController.java');
  const revision=useRef<string|null>(null);const heading=useRef<HTMLHeadingElement>(null);
- useEffect(()=>{try{revision.current=localStorage.getItem(tliasStorageKey);parseTliasDraft(revision.current)}catch(e){setStorageBlocked(true);setDraftError('原草稿无法读取，已保留原数据。可先编辑并保存到本地目录；浏览器草稿暂不覆盖。'+(e as Error).message)}},[]);
+ useEffect(()=>{try{revision.current=localState.getItem(tliasStorageKey);parseTliasDraft(revision.current)}catch(e){setStorageBlocked(true);setDraftError('原草稿无法读取，已保留原数据。可先编辑并保存到本地目录；浏览器草稿暂不覆盖。'+(e as Error).message)}},[]);
  useEffect(()=>{const update=(e:StorageEvent)=>{if(e.key===tliasStorageKey){setStorageBlocked(true);setDraftError('另一个标签页修改了此工程。当前内容仍保留，请先保存到本地目录，再刷新读取最新草稿。')}};window.addEventListener('storage',update);return()=>window.removeEventListener('storage',update)},[]);
- useEffect(()=>{if(!overview&&chapterIndex>=0)try{localStorage.setItem('cs-tlias-chapter-v1',chapter.id)}catch{setDraftError('阅读位置暂不能保存；可收藏当前网址继续。')}},[overview,chapter.id,chapterIndex]);
- useEffect(()=>{if(!overview&&chapterIndex>=0)try{localStorage.setItem('cs-tlias-step-v1-'+chapter.id,String(current+1))}catch{setDraftError('小节位置暂不能保存；可收藏当前网址继续。')}},[overview,chapter.id,chapterIndex,current]);
- function change(next:Record<string,string>){setFiles(next);if(storageBlocked)return;try{if(localStorage.getItem(tliasStorageKey)!==revision.current){setStorageBlocked(true);setDraftError('工程已在其他标签页变化。请先保存当前内容到本地目录，再刷新。');return}const raw=JSON.stringify(next);localStorage.setItem(tliasStorageKey,raw);revision.current=raw;setDraftError('')}catch{setStorageBlocked(true);setDraftError('浏览器草稿未保存，当前编辑仍在内存中。请保存到本地目录后继续。')}}
+ useEffect(()=>{if(!overview&&chapterIndex>=0)try{localState.setItem('cs-tlias-chapter-v1',chapter.id)}catch{setDraftError('阅读位置暂不能保存；可收藏当前网址继续。')}},[overview,chapter.id,chapterIndex]);
+ useEffect(()=>{if(!overview&&chapterIndex>=0)try{localState.setItem('cs-tlias-step-v1-'+chapter.id,String(current+1))}catch{setDraftError('小节位置暂不能保存；可收藏当前网址继续。')}},[overview,chapter.id,chapterIndex,current]);
+ function change(next:Record<string,string>){setFiles(next);if(storageBlocked)return;try{if(localState.getItem(tliasStorageKey)!==revision.current){setStorageBlocked(true);setDraftError('工程已在其他标签页变化。请先保存当前内容到本地目录，再刷新。');return}const raw=JSON.stringify(next);localState.setItem(tliasStorageKey,raw);revision.current=raw;setDraftError('')}catch{setStorageBlocked(true);setDraftError('浏览器草稿未保存，当前编辑仍在内存中。请保存到本地目录后继续。')}}
  function create(){const name=newPath.trim();if(!validTliasPath(name)){setDraftError('请使用项目内相对路径，如src/main/java/dev/codesomething/tlias/Dept.java；支持Java/XML/SQL/配置/笔记文件。');return}if(!(name in files)){const java=name.endsWith('.java');const packageName=name.replace(/^src\/(main|test)\/java\//,'').split('/').slice(0,-1).join('.');change({...files,[name]:java?`package ${packageName};\n\npublic class ${name.split('/').pop()!.replace('.java','')} {\n}\n`:''})}setSelected(name)}
  function move(index:number){const next=new URLSearchParams(params);next.set('step',String(index+1));setParams(next);requestAnimationFrame(()=>heading.current?.focus())}
  if(!overview&&chapterIndex<0)return <div className="page"><h1>没有找到这一章</h1><Link to="/projects/tlias">返回Tlias课程目录</Link></div>;

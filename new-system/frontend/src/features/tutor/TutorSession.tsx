@@ -1,3 +1,5 @@
+import {apiFetch} from '../../api/auth-api';
+import {localState, sessionState} from '../../api/browser-state.mjs';
 import {useSearchParams} from 'react-router-dom';
 import {curriculumFor,resolveLesson} from '../learning/shared/curriculum';
 import {createContext,useContext,useEffect,useRef,useState,type ReactNode} from 'react';
@@ -11,19 +13,19 @@ function useTutorSession(scope:Scope,submissionId?:string,job?:CheckJob|null,tok
  const [params]=useSearchParams();
  const legacyKey='cs-tutor-'+scope.courseVersion+'-'+scope.stageId;
  const storageKey=scope.courseId==='http-json-basics'?legacyKey:legacyKey+'-'+scope.courseId;
- const [receipt,setReceipt]=useState<Receipt>(()=>{try{return JSON.parse(sessionStorage.getItem(storageKey)||'{}')}catch{return {}}});
+ const [receipt,setReceipt]=useState<Receipt>(()=>{try{return JSON.parse(sessionState.getItem(storageKey)||'{}')}catch{return {}}});
  const [open,setOpen]=useState(false);
  const [question,setQuestion]=useState('');const [level,setLevel]=useState('concept');const [includeLesson,setIncludeLesson]=useState(true);const [includeCode,setIncludeCode]=useState(false);const [includeReport,setIncludeReport]=useState(false);
  const [answer,setAnswer]=useState<TutorAnswer|null>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [resume,setResume]=useState(0);
  const pending=useRef<Receipt>(receipt);
- const save=(next:Receipt)=>{pending.current=next;setReceipt(next);try{sessionStorage.setItem(storageKey,JSON.stringify(next))}catch{}};
+ const save=(next:Receipt)=>{pending.current=next;setReceipt(next);try{sessionState.setItem(storageKey,JSON.stringify(next))}catch{}};
  useEffect(()=>{setIncludeCode(false);setIncludeReport(false)},[submissionId,job?.id,token,sqlReportId]);
  useEffect(()=>{
   if(!receipt.id)return;const controller=new AbortController();let live=true;
   async function follow(){try{
    setError('');const saved=await learningRequest<TutorAnswer>('/tutor/requests/'+receipt.id,undefined,receipt.token);
    if(!live)return;setAnswer(saved);if(!tutorActive(saved.status))return;
-   const response=await fetch('/api/v1/tutor/requests/'+receipt.id+'/events?after='+saved.revision,{headers:receipt.token?{Authorization:'Bearer '+receipt.token}:{},signal:controller.signal,cache:'no-store'});
+   const response=await apiFetch('/api/v1/tutor/requests/'+receipt.id+'/events?after='+saved.revision,{headers:receipt.token?{Authorization:'Bearer '+receipt.token}:{},signal:controller.signal,cache:'no-store'});
    if(!response.ok||!response.body)throw new Error('回答连接中断，请恢复回答。');
    const reader=response.body.getReader(),decoder=new TextDecoder();let buffer='',terminal=false;
    while(live){const chunk=await reader.read();if(chunk.done)break;buffer+=decoder.decode(chunk.value,{stream:true}).replaceAll('\r','');let boundary;
@@ -43,7 +45,7 @@ function useTutorSession(scope:Scope,submissionId?:string,job?:CheckJob|null,tok
     if(!saved){
      const localScope=scope.courseId==='sql-foundations'?'sql-'+scope.stageId
       :scope.courseId==='http-json-basics'?(scope.stageId==='workspace'?'http-project-':scope.courseVersion)+scope.stageId:scope.courseId+scope.stageId;
-     try{saved=localStorage.getItem('cs-practice-lessons-v2-'+localScope)}catch{}
+     try{saved=localState.getItem('cs-practice-lessons-v2-'+localScope)}catch{}
     }
     const lessonId=plan.lessons[resolveLesson(plan.lessons,saved)]?.id;
     const body={...scope,lessonId,learningStep:({教学:'teaching',任务:'task',检查报告:'report',理解验证:'understanding'} as Record<string,string>)[params.get('tab')||'任务']||'task',question:question.trim(),level,includeLesson,submissionId:includeCode?submissionId:null,jobId:includeReport?job?.id:null,sqlAttemptId:includeReport?sqlReportId:null,idempotencyKey:'tutor-'+crypto.randomUUID()};

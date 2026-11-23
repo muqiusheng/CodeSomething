@@ -81,6 +81,12 @@ FoundationProject、LessonBlocks、HttpAnatomy为项目自行实现的React组�
 LessonTutor复用既有Radix Modal与Lucide；帮助等级、上下文选择和问题使用原生select/checkbox/textarea。TutorSession为项目自行实现的React Context，桌面与抽屉共用请求、SSE连接、停止与恢复状态；TutorConnection提供本机账户连接检查。没有新增LeiBox或shadcn组件，没有新增运行依赖。样式集中在design-system.css，沿用已有变量、断点和焦点规则。
 
 
+## 0.29.0 多配色外观
+
+`ThemeControls.tsx` 复用 Radix 非模态 Dialog、Lucide 图标和具名原生单选组。样式位于 `src/styles/theme-controls.css`。快捷面板和设置卡片在局部容器上声明目标配色及明暗，复用 `theme-palettes.css` 中的真实色值。登录和注册表单沿用现有 daisyUI 5 构建配置及 `csx-` 组件。新增主题功能沿用已有依赖。
+
+`public/theme-init.js` 持有首屏及运行期外观状态，`src/theme/theme.ts` 通过 React 外部状态订阅暴露元数据和切换方法。薄荷霓虹沿用 daisyUI 官方 Cupcake/Synthwave OKLCH 颜色，Cupcake 主内容色按对比度调整为 `oklch(28% 0.065 188.216)`。来源及 MIT 许可见 [调色板 CSS](src/styles/theme-palettes.css) 和 [许可](src/styles/theme-palettes.LICENSE)。浏览器验收见 [多配色主题](../docs/acceptance/palette-settings/README.md)。
+
 ## 0.13.0 双主题与官方daisyUI技能
 
 用户选定Cupcake浅色、Synthwave深色。官方调色板值来源于saadeghi/daisyui master的packages/daisyui/src/themes/cupcake.css与synthwave.css，本地theme-palettes.css保留颜色值，尺寸变量--border改名--theme-border-width以避免与应用边框颜色冲突；许可证保存在src/styles/theme-palettes.LICENSE（MIT，Pouya Saadeghi）。themes.css通过语义角色适配现有组件，没有安装daisyUI/Tailwind运行依赖。

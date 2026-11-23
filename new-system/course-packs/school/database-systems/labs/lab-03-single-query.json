@@ -1,0 +1,175 @@
+{
+  "id": "lab-03-single-query",
+  "objective": "掌握单表查询，包括条件筛选、排序、聚合、分组和汇总。",
+  "requirements": "接续实验二的 student、course、sc。预置数据含缺考、并列分数、未选课学生和无人选修课程。每题可以在同一编辑器提交多条查询，结果按顺序显示。",
+  "questions": [
+    {
+      "id": "q01",
+      "title": "基本查询",
+      "requirement": "查询全体学生的全部信息；再仅检索全体学生的学号与姓名。",
+      "hint": "比较 SELECT * 和显式指定列。",
+      "optional": false,
+      "starterSql": "-- 在这里编写两条 SELECT 查询\n",
+      "originalText": "1、基本查询\n（1）查询学生表中全体学生的全部信息。\n（2）检索全体学生的学号、姓名。"
+    },
+    {
+      "id": "q02",
+      "title": "修改列标题",
+      "requirement": "检索学号、姓名、家庭地址，并依次命名为“学号”“学生”“家庭地址”。",
+      "hint": "使用 AS 设置别名。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "2、查询时改变列标题的显示\n检索全体学生的学号、姓名、家庭地址信息，并分别加上“学号”、“学生”、“家庭地址”的别名信息。"
+    },
+    {
+      "id": "q03",
+      "title": "条件查询",
+      "requirement": "分别查询成绩大于 80、成绩在 75—80（含端点）、选修 002 且成绩大于 80、存在选课但缺少成绩的记录。按原题输出学号、课号和成绩等指定字段。",
+      "hint": "缺考成绩用 IS NULL；80 的比较区分大于与不小于。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "3、条件查询\n（1）查询成绩大于80分的学生的学号及课程号、成绩。\n（2）查询成绩介于75～80分的学生的学号及课程号、成绩。\n（3）查询选修了课程号为“002”，且成绩大于80的学生的学号。\n（4）某些学生选修某门课程后没有参加考试，所以有选课记录，但没有考试成绩，请查询缺少成绩的学生的学号和相应的课程号。"
+    },
+    {
+      "id": "q04",
+      "title": "IN 子句",
+      "requirement": "从课程表中找到高数和 C 语言程序设计的所有课程信息。",
+      "hint": "使用 IN 匹配两个课程名。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "4、基于IN子句的数据查询\n从课程表中查询出“高数”、“C语言程序设计”的所有信息。"
+    },
+    {
+      "id": "q05",
+      "title": "BETWEEN … AND",
+      "requirement": "查询成绩在 70—80 之间的选课信息，核对 70 与 80 是否都被包含。",
+      "hint": "BETWEEN 的两端都包含。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "5、基于BETWEEN。。。。AND子句的数据查询\n查询所有成绩在70-80之间的学生选课信息。(between···and为闭区间)"
+    },
+    {
+      "id": "q06",
+      "title": "LIKE 与转义",
+      "requirement": "分别查找姓张、名字第二字为红或虹的学生；用 ESCAPE 匹配课程名 Visual_Basic 的字面下划线并返回学分。",
+      "hint": "未转义的下划线表示任意一个字符。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "6、基于Like子句的查询\n（1）从学生表中分别检索出姓张的所有同学的资料；检索名字的第二个字是“红”或“虹”的所有同学的资料。\n（2）查询课程名为Visual_Basic的课程的学分。（提示：使用ESCAPE短语）"
+    },
+    {
+      "id": "q07",
+      "title": "LIMIT 与排名",
+      "requirement": "找出选课人数最多的前三门课程；检索学生平均成绩第 3—5 名的学号。",
+      "hint": "先 ORDER BY 排序，再用 LIMIT/OFFSET；用学号处理同分的稳定顺序。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "7、使用LIMIT关键字查询\n（1）从选课表中检索出选课人数最多的前3门课程课号。\n（2）从选课表中检索出平均成绩位列第3到第5的同学学号。"
+    },
+    {
+      "id": "q08",
+      "title": "去除重复行",
+      "requirement": "从选课表检索已选课程的不同课程号。",
+      "hint": "使用 DISTINCT。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "8、消除重复行\n检索出学生已选课程的课程号，要求显示的课程号不重复。"
+    },
+    {
+      "id": "q09",
+      "title": "计算年龄",
+      "requirement": "查询全体学生的姓名和年龄。",
+      "hint": "用 TIMESTAMPDIFF 与当前日期计算已满周岁。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "9、查询经过计算的值。\n查询全体学生的姓名及其年龄（提示：利用系统函数now()）"
+    },
+    {
+      "id": "q10",
+      "title": "ORDER BY 排序",
+      "requirement": "按班号、学号依次排序学生；分别显示姓名及年龄并按年龄降序。",
+      "hint": "第一个排序键相同时才比较下一个。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "10、使用ORDER BY语句对查询的结果进行排序\n(1)显示所有学生的基本信息，按班号排列，班号相同则再按学号排列。\n查询全体学生的姓名及其年龄,并按学生的年龄的降序排列。"
+    },
+    {
+      "id": "q11",
+      "title": "聚集函数",
+      "requirement": "统计学生总人数；计算课程 002 的平均成绩、最高分和最低分。",
+      "hint": "使用 COUNT、AVG、MAX、MIN，并先筛选课号。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "11、使用聚合函数\n（1）查询学生总人数。\n计算“002”号课程的学生平均成绩、最高分、最低分。"
+    },
+    {
+      "id": "q12",
+      "title": "GROUP BY 与 HAVING",
+      "requirement": "统计各班人数、总分大于 150 的学生学号及总成绩、各课选课人数。",
+      "hint": "WHERE 筛选原始行，HAVING 筛选聚合后的组。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "12、使用Group子句进行查询\n（1）查询各班级学生总人数。\n汇总总分大于150分的学生的学号及总成绩。\n查询各个课程号相应的选课人数。"
+    },
+    {
+      "id": "q13",
+      "title": "ROLLUP 总计",
+      "requirement": "汇总每位学生的选课门次和平均成绩，并追加所有学生的选课总门次和总体平均成绩。",
+      "hint": "使用 WITH ROLLUP；区分选课门次和有成绩记录数。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "13．使用ROLL  UP子句进行查询\n汇总每个学生的学号、选修课程门次、平均成绩以及全部学生的选课总门次及平均成绩。"
+    },
+    {
+      "id": "q14",
+      "title": "REGEXP 正则匹配",
+      "requirement": "查找姓名中包含张、林、赵任一字符的学生。",
+      "hint": "用字符集合或分支表达式，再用不匹配的姓名对照。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "14.正则函数的使用\n查询姓名中包含“张”、“林”、“赵”的学生信息。"
+    },
+    {
+      "id": "q15",
+      "title": "区分选课、到考和缺考人数",
+      "requirement": "按课号统计选课记录数、已有成绩数及缺考数。比较哪几门课的前两个计数不同。",
+      "hint": "比较 COUNT(*) 与 COUNT(Grade)。预置数据中 002 有 1 条缺考记录，每组的到考数与缺考数相加应等于选课数。",
+      "optional": true,
+      "starterSql": ""
+    },
+    {
+      "id": "q16",
+      "title": "用 CASE 生成成绩状态",
+      "requirement": "把 SC 的记录标成缺考、及格、未及格三类，保留学号、课号和原成绩。用 59、60 和 NULL 核对分界。",
+      "hint": "CASE 应先识别 NULL，再判断是否达到 60 分。预置数据里可以找到三种状态。",
+      "optional": true,
+      "starterSql": ""
+    },
+    {
+      "id": "q17",
+      "title": "查询同时符合两类条件的学生",
+      "requirement": "找出 051 班中姓名以“张”开头或以“红”结尾的学生，只返回学号、姓名和班号。检查其他班的张姓学生没有出现在结果里。",
+      "hint": "先对两个姓名条件加括号，再与班号条件组合。预置数据应命中张虹和林红。",
+      "optional": true,
+      "starterSql": ""
+    },
+    {
+      "id": "q18",
+      "title": "筛选学时学分比偏高的课程",
+      "requirement": "计算每学分对应的学时，保留两位小数，显示该比值大于 14 的课程。按比值从大到小排序，相同则按课号升序。",
+      "hint": "可用 ROUND 呈现数值。考虑学分缺失时计算结果为 NULL，过滤用原始比值。",
+      "optional": true,
+      "starterSql": ""
+    },
+    {
+      "id": "q19",
+      "title": "按班级找出最早出生的学生日期",
+      "requirement": "按班号汇总学生人数以及最早、最晚出生日期，只保留至少两人的班级，按人数降序显示。",
+      "hint": "MIN(Birth) 表示最早日期。预置班级 062 只有一人，应该被过滤。",
+      "optional": true,
+      "starterSql": ""
+    }
+  ],
+  "originalNotes": "说明：如果有些查询数据实验二中未插入，请在本实验中自行插入。",
+  "originalObjective": "掌握简单SQL查询语句的应用，包括like、limit、order by、聚集函数的应用。"
+}

@@ -1,0 +1,405 @@
+{
+  "id": "lab-01-workbench",
+  "objective": "熟悉 MySQL Workbench，掌握建立数据库、设计表结构和维护学生选课数据的方法。",
+  "requirements": "在本机 Workbench 完成学校要求的界面操作。网页练习库用于复现 SQL 和记录运行结果，可以将建模阶段切换到空库。Student、Course、SC 的列名与后续实验一致。",
+  "questions": [
+    {
+      "id": "q01",
+      "title": "确认数据库与连接",
+      "requirement": "在 Workbench 创建并选中练习库，查看服务器版本、库列表和当前数据库。把用于验证的语句记录在本题。",
+      "hint": "SHOW DATABASES；SELECT DATABASE()。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "通过MySQL Workbench创建数据库\n2、查看、验证创建的数据库\n方法1：执行show databases查看所有的数据库。\n方法2：MySQL Workbench中查看数据库student_info的信息，包括表、字段、索引、触发器等。"
+    },
+    {
+      "id": "q02",
+      "title": "创建 Student、Course、SC",
+      "requirement": "按实验表 2—4 建表。Student 主键是 Sno，Course 主键是 Cno，SC 使用复合主键 (Sno, Cno) 和两条外键。核对课程学分 1—6 与成绩 0—100。",
+      "hint": "先建父表，再建选课表。用 SHOW CREATE TABLE 检查最终约束。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "3、通过MySQL Workbench在student_info数据库中创建表\nStudent_info数据库包含3张表：Student表、Course表及SC表，分别代表学生信息、课程信息及学生选课信息。3张表的结构及其约束见表2、表3、表4."
+    },
+    {
+      "id": "q03",
+      "title": "管理列与默认值",
+      "requirement": "依次新增身高、系别、邮编，验证身高和邮编的约束后移除身高列。添加入学晚于出生的约束，并演示设置和取消 Grade 默认值。",
+      "hint": "在 Workbench 的表设计编辑器完成同样操作，再记下所产生的 ALTER TABLE。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "6、通过MySQL Workbench管理表结构\n（1）添加和删除列\na. 给Student表增加身高（以米单位）Stature列 ，类型为numeric(4，2）,允许为空值，且身高值需小于3.0米。\nb. 给Student表增加所在系Sdept列，字符型，长度20，不允许为空值。\nc. 给Student表增加邮政编码Postcode列，字符型，长度为6，可以为空，若不为空时，则要求其值只能出现数字，不能是其它字符。\nd.删除Student表中身高Stature列。\n（2）添加和删除约束\na.在Student表添加约束：入学时间必须在出生年月之后。\nb.给SC表的成绩Grade列增加默认值约束，默认值为0.\nc.删除Grade列的默认值约束"
+    },
+    {
+      "id": "q04",
+      "title": "录入种子数据",
+      "requirement": "按实验表 5—7 先录入学生及课程，再录入选课记录。按课堂要求在自己的库补录学生与选课记录。",
+      "hint": "用显式列名的 INSERT，避免字段顺序变化造成错位。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（1）插入数据，Student表、Course表、SC表的记录见表5、表6、表7。\n其它数据可自行添加。要求Student表和SC表中数据包括了每位同学自己的学号。"
+    },
+    {
+      "id": "q05",
+      "title": "修改与删除记录",
+      "requirement": "修改指定学生出生日期为 1993-10-01、课程 002 为 64 学时/4 学分。删除指定选课记录，尝试删除仍被引用的课程并记录约束反馈。",
+      "hint": "先 SELECT 核对所选行。保留初始化脚本供下一章恢复。",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（2）修改数据\na.将Student表中的学号为’20110103’的同学的出生年月改为1993年10月1日。\nb.将Course表中的课程号为’002’的学分改为4，总学时改为64。\n（3）删除数据 （请注意约束的限制）\na.删除SC表中20110103同学的选课记录\nb.删除Course表中课程号为002的记录。如果不能成功删除该记录，请分析原因。"
+    },
+    {
+      "id": "q06",
+      "title": "核对当前连接和默认字符集",
+      "requirement": "在 Workbench 的练习连接中查看当前数据库和它的默认字符集。把连接到的库名和字符集写在 SQL 注释里，并附上实际查询。",
+      "hint": "查看当前数据库后，在 Schemas 面板打开该库属性，或者用 SHOW CREATE DATABASE 核对。预置练习库使用 utf8mb4。",
+      "optional": true,
+      "starterSql": ""
+    },
+    {
+      "id": "q07",
+      "title": "沿外键追踪一条选课记录",
+      "requirement": "在表结构界面找到 SC 的两条外键。选一条已有记录，分别在 Student 和 Course 中查出对应行，记录两条关系各自使用的列。",
+      "hint": "先从 SC 选一个真实的学号和课号。两次查询应该分别返回一位学生和一门课。",
+      "optional": true,
+      "starterSql": ""
+    },
+    {
+      "id": "q08",
+      "title": "查看复合主键的列顺序",
+      "requirement": "在 Workbench 查看 SC 的主键和其他索引。用 SQL 复查主键中第一列和第二列是什么，并结合一个学生选多门课解释为何学号可以重复。",
+      "hint": "查看 SHOW INDEX 的 Key_name、Seq_in_index 和 Column_name。复合主键约束的是学号与课号这一对。",
+      "optional": true,
+      "starterSql": ""
+    },
+    {
+      "id": "q09",
+      "title": "新建并修改一条测试课程",
+      "requirement": "在 Workbench 的数据网格加入一门专用测试课程，例如从未使用的 980，并查看 Apply 对话框生成的 SQL。提交后修改它的总学时，核对结果，最后只删除这门测试课。",
+      "hint": "先确认编号未被占用。将插入、更新、查询与清理 SQL 一起保存，便于重做。",
+      "optional": true,
+      "starterSql": ""
+    },
+    {
+      "id": "q10",
+      "title": "导出三表结构快照",
+      "requirement": "在 Workbench 导出 Student、Course、SC 的结构到一个本地 SQL 文件，并在网页记录三张表的建表定义。检查定义中是否含复合主键、外键和成绩范围。",
+      "hint": "可以用三条 SHOW CREATE TABLE 保留网页结果。仅导出结构时，导出文件应包含定义，不包含学生记录。",
+      "optional": true,
+      "starterSql": ""
+    }
+  ],
+  "originalObjective": "（1）熟悉MySQL Workbench。\n（2）掌握通过MySQL Workbench管理数据库的方法。\n（3）掌握通过MySQL Workbench管理数据表的方法。",
+  "sourceTables": [
+    {
+      "title": "表 2 · Student 表结构和约束",
+      "columns": [
+        "列名称",
+        "类型",
+        "宽度",
+        "允许空值",
+        "缺省值",
+        "约束",
+        "主键",
+        "说明"
+      ],
+      "rows": [
+        [
+          "Sno",
+          "char",
+          "8",
+          "否",
+          "",
+          "",
+          "是",
+          "学号"
+        ],
+        [
+          "Sname",
+          "varchar",
+          "8",
+          "否",
+          "",
+          "",
+          "",
+          "学生姓名"
+        ],
+        [
+          "Sex",
+          "char",
+          "2",
+          "否",
+          "男",
+          "",
+          "",
+          "性别"
+        ],
+        [
+          "Birth",
+          "datetime",
+          "",
+          "否",
+          "",
+          "",
+          "",
+          "出生年月"
+        ],
+        [
+          "Classno",
+          "char",
+          "3",
+          "否",
+          "",
+          "",
+          "",
+          "班级号"
+        ],
+        [
+          "Entrance_date",
+          "datetime",
+          "",
+          "否",
+          "",
+          "",
+          "",
+          "入学时间"
+        ],
+        [
+          "Home_addr",
+          "varchar",
+          "40",
+          "是",
+          "",
+          "",
+          "",
+          "家庭地址"
+        ]
+      ]
+    },
+    {
+      "title": "表 3 · Course 表结构和约束",
+      "columns": [
+        "列名称",
+        "类型",
+        "宽度",
+        "允许空值",
+        "缺省值",
+        "约束",
+        "主键",
+        "说明"
+      ],
+      "rows": [
+        [
+          "Cno",
+          "char",
+          "3",
+          "否",
+          "",
+          "",
+          "是",
+          "课程号"
+        ],
+        [
+          "Cname",
+          "varchar",
+          "20",
+          "否",
+          "",
+          "",
+          "",
+          "课程名称"
+        ],
+        [
+          "Total_perior",
+          "smallint",
+          "",
+          "是",
+          "",
+          "大于0",
+          "",
+          "总学时"
+        ],
+        [
+          "Credit",
+          "tinyint",
+          "",
+          "是",
+          "",
+          "大于0，小于等于6",
+          "",
+          "学分"
+        ]
+      ]
+    },
+    {
+      "title": "表 4 · SC 表结构和约束",
+      "columns": [
+        "列名称",
+        "类型",
+        "宽度",
+        "允许空值",
+        "缺省值",
+        "约束",
+        "主键",
+        "外键",
+        "说明"
+      ],
+      "rows": [
+        [
+          "Sno",
+          "char",
+          "8",
+          "否",
+          "",
+          "",
+          "是",
+          "是",
+          "学号"
+        ],
+        [
+          "Cno",
+          "char",
+          "3",
+          "否",
+          "",
+          "",
+          "",
+          "是",
+          "课程号"
+        ],
+        [
+          "Grade",
+          "tinyint",
+          "",
+          "是",
+          "",
+          "大于等于0，小于等于100",
+          "",
+          "否",
+          "成绩"
+        ]
+      ]
+    },
+    {
+      "title": "表 5 · Student 初始数据",
+      "columns": [
+        "Sno",
+        "Sname",
+        "Sex",
+        "Birth",
+        "Classno",
+        "Entrance_date",
+        "Home_addr",
+        "Sdept",
+        "Postcode"
+      ],
+      "rows": [
+        [
+          "20110001",
+          "张虹",
+          "男",
+          "1992/09/01",
+          "051",
+          "2011/09/01",
+          "南京",
+          "计算机系",
+          "200413"
+        ],
+        [
+          "20110002",
+          "林红",
+          "女",
+          "1991/11/12",
+          "051",
+          "2011/09/01",
+          "北京",
+          "计算机系",
+          "100010"
+        ],
+        [
+          "20110103",
+          "赵青",
+          "男",
+          "1993/05/11",
+          "061",
+          "2011/09/01",
+          "上海",
+          "软件工程",
+          "200013"
+        ]
+      ]
+    },
+    {
+      "title": "表 6 · Course 初始数据",
+      "columns": [
+        "Cno",
+        "Cname",
+        "Total_perior",
+        "Credit"
+      ],
+      "rows": [
+        [
+          "001",
+          "高数",
+          "96",
+          "6"
+        ],
+        [
+          "002",
+          "C语言程序设计",
+          "80",
+          "5"
+        ],
+        [
+          "003",
+          "JAVA语言程序设计",
+          "48",
+          "3"
+        ],
+        [
+          "004",
+          "Visual_Basic",
+          "48",
+          "4"
+        ]
+      ]
+    },
+    {
+      "title": "表 7 · SC 初始数据",
+      "columns": [
+        "Sno",
+        "Cno",
+        "Grade"
+      ],
+      "rows": [
+        [
+          "20110001",
+          "001",
+          "89"
+        ],
+        [
+          "20110001",
+          "002",
+          "78"
+        ],
+        [
+          "20110001",
+          "003",
+          "89"
+        ],
+        [
+          "20110002",
+          "002",
+          "60"
+        ],
+        [
+          "20110103",
+          "001",
+          "80"
+        ]
+      ]
+    }
+  ],
+  "fixtureSql": "INSERT INTO student (Sno, Sname, Sex, Birth, Classno, Entrance_date, Home_addr, Sdept, Postcode) VALUES\n  ('20110001', '张虹', '男', '1992-09-01', '051', '2011-09-01', '南京', '计算机系', '200413'),\n  ('20110002', '林红', '女', '1991-11-12', '051', '2011-09-01', '北京', '计算机系', '100010'),\n  ('20110103', '赵青', '男', '1993-05-11', '061', '2011-09-01', '上海', '软件工程', '200013');\n\nINSERT INTO course (Cno, Cname, Total_perior, Credit) VALUES\n  ('001', '高数', 96, 6),\n  ('002', 'C语言程序设计', 80, 5),\n  ('003', 'JAVA语言程序设计', 48, 3),\n  ('004', 'Visual_Basic', 48, 4);\n\nINSERT INTO sc (Sno, Cno, Grade) VALUES\n  ('20110001', '001', 89),\n  ('20110001', '002', 78),\n  ('20110001', '003', 89),\n  ('20110002', '002', 60),\n  ('20110103', '001', 80);\n",
+  "originalNotes": "表 2—7 保留原材料的列、约束标记和记录。表 6 的高数学分为 6。下载的脚本只含原表 5—7 的数据，适合已经建表的空练习库；已有相同主键时不要直接重复导入。学校要求补录自己的学号时，在自己的练习库填写。"
+}

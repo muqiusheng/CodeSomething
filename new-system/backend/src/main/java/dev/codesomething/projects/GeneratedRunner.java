@@ -19,15 +19,22 @@ import tools.jackson.databind.json.JsonMapper;
 @Component
 public class GeneratedRunner {
     private final String docker;private final Path root;private final int timeout;
+    private final boolean hardened;
     private dev.codesomething.workspaces.LocalProjectRunner local;
     @org.springframework.beans.factory.annotation.Autowired
-    public void configureLocal(dev.codesomething.workspaces.LocalProjectRunner runner,@Value("${cs.runner.local-enabled:true}")boolean enabled){if(enabled)this.local=runner;}
+    public void configureLocal(dev.codesomething.workspaces.LocalProjectRunner runner,@Value("${cs.runner.local-enabled:true}")boolean enabled){if(enabled&&!hardened)this.local=runner;}
     private final JsonMapper json=JsonMapper.builder().build();
     private record Command(int code,String output){}
     private record Response(int code,String type,String text,JsonNode body){}
     public record Result(String status,CheckReport report){}
     private static final class Stop extends Exception {final String status;Stop(String status){this.status=status;}}
-    public GeneratedRunner(@Value("${cs.runner.docker}")String docker,@Value("${cs.data-directory}")String data,@Value("${cs.projects.timeout-seconds:120}")int timeout){this.docker=docker;this.root=Path.of(data).toAbsolutePath().normalize().resolve("generated-runner");this.timeout=Math.clamp(timeout,10,180);}
+    public GeneratedRunner(String docker,String data,int timeout){this(docker,data,timeout,"local_first");}
+    @org.springframework.beans.factory.annotation.Autowired
+    public GeneratedRunner(@Value("${cs.runner.docker}")String docker,@Value("${cs.data-directory}")String data,
+                           @Value("${cs.projects.timeout-seconds:120}")int timeout,@Value("${cs.runner.mode}")String mode){
+        this.docker=docker;this.root=Path.of(data).toAbsolutePath().normalize().resolve("generated-runner");
+        this.hardened="docker_only".equals(mode);this.timeout=hardened?30:Math.clamp(timeout,10,180);
+    }
     private String scope(){return GeneratedPackage.digest(root.toString());}
     public String fingerprint(){try{var hashes=new ArrayList<String>();for(String resource:List.of("/dev/codesomething/projects/GeneratedRunner.class","/dev/codesomething/projects/GeneratedPackage.class","/runner/boot/image-lock.json","/runner/boot/BootProbe.java","/dev/codesomething/workspaces/LocalProjectRunner.class","/dev/codesomething/workspaces/LocalFirstCheck.class"))try(var in=getClass().getResourceAsStream(resource)){hashes.add(WorkspaceController.hash(Objects.requireNonNull(in).readAllBytes()));}return GeneratedPackage.digest(hashes);}catch(IOException e){throw new UncheckedIOException(e);}}
     public void recover()throws Exception{
@@ -65,24 +72,38 @@ public class GeneratedRunner {
                 if(stage.equals("transfer")){r=request.call("GET","/api/"+pack.plan().resource(),null);localAssertion(checks,"resource-isolation",r.json(200)&&r.body().isArray()&&r.body().size()==1&&r.body().get(0).path("title").asText().equals(pack.plan().itemTitle()),"原资源保持一项初始记录",r);}
     }
     public Result run(GeneratedPackage.Pack pack,String stage,Map<String,String> files,BooleanSupplier cancelled){
-        if(local==null)return runIsolated(pack,stage,files,cancelled);
+        return run(UUID.randomUUID().toString(),pack,stage,files,cancelled);
+    }
+    public Result run(String job,GeneratedPackage.Pack pack,String stage,Map<String,String> files,BooleanSupplier cancelled){
+        if(!UUID.fromString(job).toString().equals(job))throw new IllegalArgumentException("Invalid job ID");
+        if(hardened) {
+            try(var slot=dev.codesomething.boot.PublicJdbcSandbox.acquire(cancelled)) {
+                if(slot!=null)return runIsolated(job,pack,stage,files,cancelled);
+            }
+            return new Result("cancelled",new CheckReport(GeneratedPackage.digest(new TreeMap<>(files)),pack.version(),
+                stage,GeneratedPackage.RULE,"","",false,List.of(),"检查已取消。",Instant.now().toString()));
+        }
+        if(local==null)return runIsolated(job,pack,stage,files,cancelled);
         var result=dev.codesomething.workspaces.LocalFirstCheck.run(
             ()->local.runProject("generated-"+pack.id(),files,GeneratedPackage.digest(new TreeMap<>(files)),pack.version(),stage,GeneratedPackage.RULE,cancelled,(request,checks)->verify(pack,stage,request,checks)),
-            ()->{var isolated=runIsolated(pack,stage,files,cancelled);return new dev.codesomething.workspaces.LocalProjectRunner.Outcome(isolated.status(),isolated.report());});
+            ()->{var isolated=runIsolated(job,pack,stage,files,cancelled);return new dev.codesomething.workspaces.LocalProjectRunner.Outcome(isolated.status(),isolated.report());});
         return new Result(result.status(),result.report());
     }
-    private Result runIsolated(GeneratedPackage.Pack pack,String stage,Map<String,String> files,BooleanSupplier cancelled){
-        String job=UUID.randomUUID().toString(),name="cs-r6-"+job,owner=UUID.randomUUID().toString(),image="",harness="",status="environment_error",log="";
+    private Result runIsolated(String job,GeneratedPackage.Pack pack,String stage,Map<String,String> files,BooleanSupplier cancelled){
+        String name="cs-r6-"+job,owner=UUID.randomUUID().toString(),image="",harness="",status="environment_error",log="";
         Path input=root.resolve(job);boolean created=false,attempted=false;var checks=new ArrayList<CheckReport.Assertion>();long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(timeout);
         try{
             var snapshot=BootProjectSnapshot.fromFiles(files,false);
             byte[] lock,probe;try(var in=getClass().getResourceAsStream("/runner/boot/image-lock.json")){lock=Objects.requireNonNull(in).readAllBytes();}try(var in=getClass().getResourceAsStream("/runner/boot/BootProbe.java")){probe=Objects.requireNonNull(in).readAllBytes();}
             var config=json.readTree(lock);image=config.path("image").asText();if(!image.matches("sha256:[a-f0-9]{64}")||!WorkspaceController.hash(BootProjectSnapshot.trustedPom().getBytes(StandardCharsets.UTF_8)).equals(config.path("pomDigest").asText()))throw new IOException("运行镜像与POM锁不匹配");
-            image=dev.codesomething.boot.MavenBuildEnvironment.prepare(docker,root,snapshot,false,image,cancelled);deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(timeout);
+            image=hardened?dev.codesomething.boot.MavenBuildEnvironment.preparePublic(docker,root,snapshot,image,cancelled):
+                dev.codesomething.boot.MavenBuildEnvironment.prepare(docker,root,snapshot,false,image,cancelled);
+            deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(timeout);
             byte[] engine;try(var in=getClass().getResourceAsStream("GeneratedRunner.class")){engine=Objects.requireNonNull(in).readAllBytes();}
             harness=GeneratedPackage.digest(List.of(GeneratedPackage.RULE,WorkspaceController.hash(lock),WorkspaceController.hash(probe),WorkspaceController.hash(engine),WorkspaceController.hash(dev.codesomething.boot.MavenBuildEnvironment.READINESS_SOURCE.getBytes(StandardCharsets.UTF_8)),pack.plan(),GeneratedPackage.tests(stage)));
             Files.createDirectories(root);Files.createDirectory(input);created=true;for(var entry:files.entrySet()){Path file=input.resolve("project").resolve(entry.getKey());Files.createDirectories(file.getParent());Files.writeString(file,entry.getValue());}Files.write(input.resolve("BootProbe.java"),probe);Files.writeString(input.resolve("WaitForHttp.java"),dev.codesomething.boot.MavenBuildEnvironment.READINESS_SOURCE);
-            attempted=true;require(cmd(cancelled,deadline,"create","--name",name,"--label=codesomething.r6-owner="+owner,"--label=codesomething.r6-scope="+scope(),"--pull=never","--network=none","--read-only","--cpus=1","--memory=640m","--memory-swap=640m","--pids-limit=128","--cap-drop=ALL","--security-opt=no-new-privileges","--user=65534:65534","--log-driver=none","--tmpfs=/tmp:rw,nosuid,nodev,size=256m,mode=1777","--env=MAVEN_OPTS=-Xmx192m -XX:ActiveProcessorCount=1 -Duser.home=/tmp","--mount","type=bind,source="+input+",target=/input,readonly","--workdir=/tmp",image,"sleep","240"));require(cmd(cancelled,deadline,"start",name));require(cmd(cancelled,deadline,"exec",name,"cp","-R","/input/project","/tmp/project"));
+            String memory=hardened?"512m":"640m";
+            attempted=true;require(cmd(cancelled,deadline,"create","--name",name,"--label=codesomething.r6-owner="+owner,"--label=codesomething.r6-scope="+scope(),"--label="+dev.codesomething.admin.RunnerInventory.scopeLabel(root.getParent()),"--pull=never","--network=none","--read-only","--cpus=1","--memory="+memory,"--memory-swap="+memory,hardened?"--pids-limit=64":"--pids-limit=128","--cap-drop=ALL","--security-opt=no-new-privileges","--user=65534:65534","--log-driver=none","--tmpfs=/tmp:rw,nosuid,nodev,size=256m,mode=1777","--env=MAVEN_OPTS=-Xmx192m -XX:ActiveProcessorCount=1 -Duser.home=/tmp","--mount","type=bind,source="+input+",target=/input,readonly","--workdir=/tmp",image,"sleep",hardened?"30":"240"));require(cmd(cancelled,deadline,"start",name));require(cmd(cancelled,deadline,"exec",name,"cp","-R","/input/project","/tmp/project"));
             var build=cmd(cancelled,deadline,"exec","--workdir=/tmp/project",name,"sh","/opt/maven/bin/mvn","-B","-ntp","-o","-s","/opt/settings.xml","-Dmaven.repo.local=/opt/repository","-DskipTests","package");checks.add(new CheckReport.Assertion("offline-build",build.code()==0,"Java21固定依赖离线构建",build.output()));
             if(build.code()!=0){status=build.output().contains("COMPILATION ERROR")?"compile_error":"environment_error";log=build.output();}
             else{

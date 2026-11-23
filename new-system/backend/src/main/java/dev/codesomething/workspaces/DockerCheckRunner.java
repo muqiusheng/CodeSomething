@@ -50,19 +50,23 @@ public class DockerCheckRunner {
     }
     private static void require(Command command) throws IOException {if(command.exit()!=0)throw new IOException(command.output());}
     public Outcome run(String id,byte[] source,String digest,String version,String stage,String policy,BooleanSupplier cancelled) {
+        if (!UUID.fromString(id).toString().equals(id)) throw new IllegalArgumentException("Invalid job ID");
+        int hardTimeout = Math.min(timeout, 30);
         String status="environment_error", log="", harnessDigest="";
+        String timeoutLog="检查超出"+hardTimeout+"秒限制。";
         var checks=new ArrayList<CheckReport.Assertion>();
-        Path input=root.resolve(id);long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(timeout);
+        Path input=root.resolve(id);long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(hardTimeout);
         try {
             if(cancelled.getAsBoolean())throw new Stopped("cancelled");
             Files.createDirectories(input);
             byte[] probe;try(var in=getClass().getResourceAsStream("/runner/Probe.java")){probe=Objects.requireNonNull(in).readAllBytes();}
             harnessDigest=WorkspaceController.hash(probe);
             Files.write(input.resolve("TaskServer.java"),source);Files.write(input.resolve("Probe.java"),probe);
-            var create=docker(deadline,cancelled,"create","--name",containerName(id),"--pull=never","--network=none","--read-only",
-                "--cpus=1","--memory=256m","--memory-swap=256m","--pids-limit=96","--cap-drop=ALL","--security-opt=no-new-privileges",
+            var create=docker(deadline,cancelled,"create","--name",containerName(id),"--label=codesomething.check-job="+id,
+                "--label="+dev.codesomething.admin.RunnerInventory.scopeLabel(root.getParent()),"--pull=never","--network=none","--read-only",
+                "--cpus=1","--memory=512m","--memory-swap=512m","--pids-limit=64","--cap-drop=ALL","--security-opt=no-new-privileges",
                 "--user=65534:65534","--log-driver=none","--tmpfs=/tmp:rw,nosuid,nodev,size=64m,mode=1777",
-                "--mount","type=bind,source="+input+",target=/input,readonly","--workdir=/tmp",IMAGE,"sleep","150");
+                "--mount","type=bind,source="+input+",target=/input,readonly","--workdir=/tmp",IMAGE,"sleep",Integer.toString(hardTimeout));
             require(create);require(docker(deadline,cancelled,"start",containerName(id)));
             var compile=docker(deadline,cancelled,"exec",containerName(id),"javac","-J-Xmx96m","-proc:none","--release","21","--add-modules","jdk.httpserver","-encoding","UTF-8","-d","/tmp/classes","/input/TaskServer.java");
             if(compile.exit()!=0) {
@@ -82,7 +86,10 @@ public class DockerCheckRunner {
                     String mainClass=LocalProjectRunner.httpMainClass(artifact.substring("/tmp/classes/".length()));
                     if(ConsoleOutputCheck.POLICY.equals(policy)) {
                         CheckProgress.update("starting","正在隔离运行 TaskServer.main",3);
+                        String jobTimeoutLog=timeoutLog;
+                        timeoutLog="控制台程序未在运行时限内退出。";
                         var execution=docker(Math.min(deadline,System.nanoTime()+TimeUnit.SECONDS.toNanos(10)),cancelled,"exec",containerName(id),"sh","-c","exec java -Xmx96m -cp /tmp/classes \"$1\" 2>/tmp/console.err","java",mainClass);
+                        timeoutLog=jobTimeoutLog;
                         require(docker(deadline,cancelled,"inspect","--format","{{.State.Running}}",containerName(id)));
                         CheckProgress.update("checking","正在核对控制台输出和退出状态",4);
                         status=ConsoleOutputCheck.verify(execution.exit(),execution.output(),checks);
@@ -122,7 +129,8 @@ public class DockerCheckRunner {
                     }
                 }
             }
-        } catch(Stopped e){status=e.status;log="cancelled".equals(status)?"检查已取消。":"检查超出"+timeout+"秒限制。";}
+        } catch(Stopped e){status=e.status;log="cancelled".equals(status)?"检查已取消。":timeoutLog;
+            try {docker(System.nanoTime()+TimeUnit.SECONDS.toNanos(3),()->false,"kill",containerName(id));} catch(Exception ignored) { /* Cleanup also forcibly removes the container. */ }}
         catch(Exception e){status="environment_error";log=e.getClass().getSimpleName()+": "+e.getMessage();}
         finally {
             try{cleanup(id);}catch(Exception e){status="environment_error";log+="\n容器清理失败："+e.getMessage();}

@@ -1,3 +1,4 @@
+import {localState, scopedKey} from '../../../api/browser-state.mjs';
 import {nativeDirectory} from './native-project.mjs';
 // Directory handles stay in the browser. Only the chapter snapshot is uploaded.
 function parts(path){const values=path.split('/');if(values.some(v=>!v||v==='.'||v==='..'||v.includes('\\')||v.includes(':')||/[\u0000-\u001f]/.test(v)))throw new Error('文件路径无效。');return values}
@@ -63,7 +64,7 @@ export async function projectStamp(root,course){
  if(course==='http-json-basics')await add('TaskServer.java');else{await add('pom.xml');const src=await root.getDirectoryHandle('src');for(const kind of ['main','test'])for(const type of ['java','resources']){let directory;try{directory=await(await src.getDirectoryHandle(kind)).getDirectoryHandle(type)}catch(e){if(e.name==='NotFoundError'||e.message==='Not found')continue;throw explain(e,'src/'+kind+'/'+type)}await walk(directory,'src/'+kind+'/'+type+'/')}if((await listDirectory(root)).some(e=>e.name==='RUN.md'&&e.kind==='file'))await add('RUN.md')}
  return JSON.stringify(entries.sort(([a],[b])=>a.localeCompare(b)));
 }
-export async function rememberDirectory(key,handle){if(handle.bridge){localStorage.setItem(key+'-native',JSON.stringify(handle.bridge));return}await database(key,handle,true);localStorage.removeItem(key+'-native')}
+export async function rememberDirectory(key,handle){if(handle.bridge){localState.setItem(key+'-native',JSON.stringify(handle.bridge));return}await database(key,handle,true);localState.removeItem(key+'-native')}
 
-export async function recallDirectory(key){const stored=localStorage.getItem(key+'-native');if(stored)return nativeDirectory(JSON.parse(stored));return database(key,undefined,false)}
-function database(key,value,write){return new Promise((resolve,reject)=>{const request=indexedDB.open('cs-local-project-roots',1);request.onupgradeneeded=()=>request.result.createObjectStore('roots');request.onerror=()=>reject(request.error);request.onsuccess=()=>{const db=request.result;const tx=db.transaction('roots',write?'readwrite':'readonly');const operation=write?tx.objectStore('roots').put(value,key):tx.objectStore('roots').get(key);tx.oncomplete=()=>{resolve(operation.result);db.close()};tx.onerror=()=>{reject(tx.error);db.close()};tx.onabort=()=>{reject(tx.error);db.close()}}})}
+export async function recallDirectory(key){const stored=localState.getItem(key+'-native');if(stored)return nativeDirectory(JSON.parse(stored));return database(key,undefined,false)}
+function database(key,value,write){return new Promise((resolve,reject)=>{const request=indexedDB.open('cs-local-project-roots',1);request.onupgradeneeded=()=>request.result.createObjectStore('roots');request.onerror=()=>reject(request.error);request.onsuccess=()=>{const db=request.result;const tx=db.transaction('roots',write?'readwrite':'readonly');const operation=write?tx.objectStore('roots').put(value,scopedKey(key)):tx.objectStore('roots').get(scopedKey(key));tx.oncomplete=()=>{resolve(operation.result);db.close()};tx.onerror=()=>{reject(tx.error);db.close()};tx.onabort=()=>{reject(tx.error);db.close()}}})}

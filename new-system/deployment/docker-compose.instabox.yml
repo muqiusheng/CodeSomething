@@ -1,0 +1,16 @@
+name: codesomething-instabox
+services:
+  backend:
+    build: !reset null
+    image: codesomething-instabox-backend:0.6.1
+    pull_policy: never
+  edge:
+    build: !reset null
+    image: codesomething-instabox-edge:0.29.3
+    pull_policy: never
+    environment:
+      CS_INGRESS_TOKEN: ${CS_INGRESS_TOKEN:?Set an independent origin gateway secret}
+      NGINX_ENVSUBST_FILTER: '^CS_(PUBLIC_HOST|INGRESS_TOKEN|ALLOW_INDEXING)$'
+    volumes: !reset []
+    ports: !override
+      - "0.0.0.0:17680:8080"
