@@ -1,10 +1,10 @@
-# CodeSomething IDEA插件
+# 码起步 IDEA插件
 
-插件版本为 0.3.1，支持 IntelliJ IDEA 的 262.* 构建系列。阶段验收使用 IntelliJ IDEA 2026.2（IU-262.8665.258，JBR 25）。
+插件在 IDE 插件列表中显示为 Maqibu，在工具窗口中显示为「码起步」。版本为 0.3.2，支持 IntelliJ IDEA 的 262.* 构建系列。阶段验收使用 IntelliJ IDEA 2026.2（IU-262.8665.258，JBR 25）。
 
 ## 当前功能
 
-打开练习工程后，通过View → Tool Windows → CodeSomething打开工具窗口；选择课程，点击“加载课程”，选择后端发布的编码关卡。点击“预览提交范围”可查看当前工程允许的文件、快照摘要与有效期，再点击“确认范围并配对”。可从窗口打开对应网页任务。
+打开练习工程后，通过View → Tool Windows → 码起步打开工具窗口；选择课程，点击“加载课程”，选择后端发布的编码关卡。点击“预览提交范围”可查看当前工程允许的文件、快照摘要与有效期，再点击“确认范围并配对”。可从窗口打开对应网页任务。
 
 支持HTTP/JSON、Boot基础和项目A。SQL课程继续在网页提交.sql。插件预览会保存当前工程内用户尚未落盘的文档，再由本机后端读取允许文件；不修改业务代码内容。切换课程、关卡或服务端口会清除待确认预览。
 
@@ -21,7 +21,7 @@
 ./new-system/tooling/idea-plugin-local.ps1 build
 ```
 
-通过 `CS_IDEA_HOME` 指定本机 IDE 目录。该脚本从 `new-system/runtime/maven-repository` 读取 JUnit。首次使用时可先运行后端测试准备依赖，或使用下方 Gradle 项目。插件包输出至 `build/distributions/codesomething-idea-0.3.1.zip`。
+通过 `CS_IDEA_HOME` 指定本机 IDE 目录。该脚本从 `new-system/runtime/maven-repository` 读取 JUnit。首次使用时可先运行后端测试准备依赖，或使用下方 Gradle 项目。插件包输出至 `build/distributions/codesomething-idea-0.3.2.zip`。
 
 Gradle项目使用官方IntelliJ Platform Gradle Plugin2.20.1、Kotlin2.3.20和本机IDE SDK，运行JDK为IDE附带的25。执行前在当前终端设置CS_IDEA_HOME、JAVA_HOME与GRADLE_USER_HOME；只改变本进程：
 

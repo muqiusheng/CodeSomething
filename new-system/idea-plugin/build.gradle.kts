@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "dev.codesomething"
-version = "0.3.1"
+version = "0.3.2"
 
 repositories {
     // Reuse project-local artifacts when the backend toolchain has prepared them.
@@ -31,7 +31,7 @@ intellijPlatform {
     instrumentCode = false
     pluginConfiguration {
         id = "dev.codesomething.idea"
-        name = "CodeSomething"
+        name = "Maqibu"
         version = project.version.toString()
         ideaVersion { sinceBuild = "262"; untilBuild = "262.*" }
     }

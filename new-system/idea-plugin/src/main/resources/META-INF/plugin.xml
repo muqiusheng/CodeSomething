@@ -1,11 +1,12 @@
 <idea-plugin>
     <id>dev.codesomething.idea</id>
-    <name>CodeSomething</name>
-    <version>0.3.1</version>
+    <name>Maqibu</name>
+    <version>0.3.2</version>
+    <resource-bundle>messages.MaqibuBundle</resource-bundle>
     <idea-version since-build="262" until-build="262.*"/>
-    <vendor>CodeSomething</vendor>
+    <vendor>Maqibu</vendor>
     <description><![CDATA[
-        CodeSomething connects IDEA learning projects to local courses, checks and reports. 在IDEA中配对、提交、检查、恢复作业并在网页继续理解验证。
+        Maqibu connects IntelliJ IDEA projects to local lessons, checks, and reports.可在 IDEA 中配对、提交、检查和恢复作业，并在网页继续理解验证。
     ]]></description>
     <depends>com.intellij.modules.platform</depends>
     <extensions defaultExtensionNs="com.intellij">
