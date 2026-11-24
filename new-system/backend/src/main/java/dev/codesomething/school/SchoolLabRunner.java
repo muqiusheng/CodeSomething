@@ -51,14 +51,26 @@ public class SchoolLabRunner {
         return schemas;
     }
 
-    private MysqlEnvironment instance(SchoolCourseCatalog.Course course, boolean reset, boolean empty) {
+    private <T> T inPractice(SchoolCourseCatalog.Course course, boolean reset, boolean empty,
+                             java.util.function.Function<MysqlEnvironment, T> run) {
+        var instance = examEnvironment(course);
+        try (var activity = instance.activity()) {
+            instance.prepareSchool(schemas(course), empty ? "" : catalog.seed(course), reset);
+            return run.apply(instance);
+        }
+    }
+
+    void touch(SchoolCourseCatalog.Course course) {
+        if (publicMode && enabled && "mysql".equals(course.engine())) examEnvironment(course).touch();
+    }
+
+    MysqlEnvironment examEnvironment(SchoolCourseCatalog.Course course) {
+        requireMysql(course);
         if (!enabled) throw new MysqlEnvironment.Failure("environment_error", "当前服务已停用隔离运行。");
         var schemas = schemas(course);
         String owner = publicMode ? "\n" + dev.codesomething.storage.LearningDataSource.owner() : "";
         String key = MysqlEnvironment.digest(workspace + owner + "\n" + course.id() + "\n" + String.join(",", schemas)).substring(0, 24);
-        var instance = instances.computeIfAbsent(key, environment::schoolInstance);
-        instance.prepareSchool(schemas, empty ? "" : catalog.seed(course), reset);
-        return instance;
+        return instances.computeIfAbsent(key, environment::schoolInstance);
     }
 
     String activeContainer(SchoolCourseCatalog.Course course) {
@@ -71,43 +83,47 @@ public class SchoolLabRunner {
         requireMysql(course);
         scripts.values().forEach(SqlPolicy::validateSize);
         var result = new LinkedHashMap<String, RunResult>();
-        var instance = instance(course, false, false);
-        String current = selectedDatabase == null ? database(course) : validatedDatabase(selectedDatabase);
-        for (var script : scripts.entrySet()) {
-            long start = System.nanoTime();
-            try {
-                String marker = "cs_rows_" + UUID.randomUUID().toString().replace("-", "");
-                String input = "SET SESSION max_execution_time=1500; SET SESSION sql_select_limit=101;\n"
-                    + script.getValue() + "\n;\nDELIMITER ;\nSELECT ROW_COUNT() AS " + marker + ", DATABASE() AS current_database;\n";
-                var target = SchoolDatabaseSql.creationTarget(script.getValue());
-                if (target != null) instance.grantSchoolDatabase(target);
-                var outcome = parse(instance.schoolQuery(current, input), marker, start, 100);
-                result.put(script.getKey(), outcome);
-                if ("ok".equals(outcome.status())) current = outcome.database();
-            } catch (MysqlEnvironment.Failure e) {
-                result.put(script.getKey(), new RunResult(e.status, elapsed(start), null, List.of(), e.getMessage()));
-                if (Set.of("environment_error", "timeout", "output_limit").contains(e.status)) break;
+        return inPractice(course, false, false, instance -> {
+            String current = selectedDatabase == null ? database(course) : validatedDatabase(selectedDatabase);
+            for (var script : scripts.entrySet()) {
+                long start = System.nanoTime();
+                try {
+                    String marker = "cs_rows_" + UUID.randomUUID().toString().replace("-", "");
+                    String input = "SET SESSION max_execution_time=1500; SET SESSION sql_select_limit=101;\n"
+                        + script.getValue() + "\n;\nDELIMITER ;\nSELECT ROW_COUNT() AS " + marker + ", DATABASE() AS current_database;\n";
+                    var target = SchoolDatabaseSql.creationTarget(script.getValue());
+                    if (target != null) instance.grantSchoolDatabase(target);
+                    var outcome = parse(instance.schoolQuery(current, input), marker, start, 100);
+                    result.put(script.getKey(), outcome);
+                    if ("ok".equals(outcome.status())) current = outcome.database();
+                } catch (MysqlEnvironment.Failure e) {
+                    result.put(script.getKey(), new RunResult(e.status, elapsed(start), null, List.of(), e.getMessage()));
+                    if (Set.of("environment_error", "timeout", "output_limit").contains(e.status)) break;
+                }
             }
-        }
-        return result;
+            return result;
+        });
     }
 
     List<String> databases(SchoolCourseCatalog.Course course) {
         requireMysql(course);
-        var instance = instance(course, false, false);
-        String marker = "cs_databases_end";
-        var result = parse(instance.schoolQuery(null, "SHOW DATABASES; SELECT 0 AS " + marker + ";"),
-            marker, System.nanoTime(), Integer.MAX_VALUE);
-        if (!"ok".equals(result.status()) || result.tables().size() != 1)
-            throw new MysqlEnvironment.Failure("result_error", "无法读取数据库列表，请刷新后重试。");
-        return result.tables().getFirst().rows().stream().map(List::getFirst).toList();
+        return inPractice(course, false, false, instance -> {
+            String marker = "cs_databases_end";
+            var result = parse(instance.schoolQuery(null, "SHOW DATABASES; SELECT 0 AS " + marker + ";"),
+                marker, System.nanoTime(), Integer.MAX_VALUE);
+            if (!"ok".equals(result.status()) || result.tables().size() != 1)
+                throw new MysqlEnvironment.Failure("result_error", "无法读取数据库列表，请刷新后重试。");
+            return result.tables().getFirst().rows().stream().map(List::getFirst).toList();
+        });
     }
 
     void createDatabase(SchoolCourseCatalog.Course course, String name) {
         requireMysql(course);
-        var instance = instance(course, false, false);
-        instance.grantSchoolDatabase(name);
-        instance.schoolQuery(null, "CREATE DATABASE IF NOT EXISTS `" + name + "`;");
+        inPractice(course, false, false, instance -> {
+            instance.grantSchoolDatabase(name);
+            instance.schoolQuery(null, "CREATE DATABASE IF NOT EXISTS `" + name + "`;");
+            return null;
+        });
     }
 
     private static String validatedDatabase(String selected) {
@@ -118,30 +134,31 @@ public class SchoolLabRunner {
 
     SchoolSchema schema(SchoolCourseCatalog.Course course, String selectedDatabase) {
         requireMysql(course);
-        var instance = instance(course, false, false);
-        var name = selectedDatabase == null ? database(course) : validatedDatabase(selectedDatabase);
-        if (name == null) throw ApiException.invalid("database", "请先选择数据库。");
-        boolean system = Set.of("information_schema", "performance_schema").contains(name);
-        String connection = system ? null : name;
-        String query = system ? SchoolSchema.QUERY.replace("DATABASE()", "'" + name + "'") : SchoolSchema.QUERY;
-        try {
-            return SchoolSchema.from(name, metadata(instance, connection, query, 5));
-        } catch (MysqlEnvironment.Failure failure) {
-            if (!"output_limit".equals(failure.status)) throw failure;
-            var tables = new ArrayList<ResultTable>();
-            for (String statement : query.strip().split(";")) {
-                var rows = new ArrayList<List<String>>();
-                List<String> columns = List.of();
-                for (int offset = 0; ; offset += 60) {
-                    var page = metadata(instance, connection, statement.strip() + " LIMIT 60 OFFSET " + offset + ";", 1).getFirst();
-                    if (!page.rows().isEmpty()) columns = page.columns();
-                    rows.addAll(page.rows());
-                    if (page.rows().size() < 60) break;
+        return inPractice(course, false, false, instance -> {
+            var name = selectedDatabase == null ? database(course) : validatedDatabase(selectedDatabase);
+            if (name == null) throw ApiException.invalid("database", "请先选择数据库。");
+            boolean system = Set.of("information_schema", "performance_schema").contains(name);
+            String connection = system ? null : name;
+            String query = system ? SchoolSchema.QUERY.replace("DATABASE()", "'" + name + "'") : SchoolSchema.QUERY;
+            try {
+                return SchoolSchema.from(name, metadata(instance, connection, query, 5));
+            } catch (MysqlEnvironment.Failure failure) {
+                if (!"output_limit".equals(failure.status)) throw failure;
+                var tables = new ArrayList<ResultTable>();
+                for (String statement : query.strip().split(";")) {
+                    var rows = new ArrayList<List<String>>();
+                    List<String> columns = List.of();
+                    for (int offset = 0; ; offset += 60) {
+                        var page = metadata(instance, connection, statement.strip() + " LIMIT 60 OFFSET " + offset + ";", 1).getFirst();
+                        if (!page.rows().isEmpty()) columns = page.columns();
+                        rows.addAll(page.rows());
+                        if (page.rows().size() < 60) break;
+                    }
+                    tables.add(new ResultTable(columns, rows));
                 }
-                tables.add(new ResultTable(columns, rows));
+                return SchoolSchema.from(name, tables);
             }
-            return SchoolSchema.from(name, tables);
-        }
+        });
     }
 
     private static List<ResultTable> metadata(MysqlEnvironment instance, String connection, String query, int expectedTables) {
@@ -155,7 +172,7 @@ public class SchoolLabRunner {
 
     void reset(SchoolCourseCatalog.Course course, boolean empty) {
         requireMysql(course);
-        instance(course, true, empty);
+        inPractice(course, true, empty, unused -> null);
     }
 
     private static void requireMysql(SchoolCourseCatalog.Course course) {

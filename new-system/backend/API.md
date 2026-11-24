@@ -1,5 +1,43 @@
 # 平台API契约（R1—R7）
 
+## 课内数据库原理备考
+
+大厅各试卷卡片包含 `questionCount`、`maxScore` 和按题型计数的 `questionCounts`。试卷详情返回当前题目，历史报告使用交卷快照的题量和分值。
+
+以下路径相对于 `/api/school/courses/{courseId}/exams`。公网模式要求学员会话，SQLite 读写选择当前学员库。调试 POST 计入每分钟 20 次的环境桶，SQL 核对与交卷计入每分钟 10 次的判题桶，客观题核对使用单独的每分钟 120 次桶。
+
+| 请求 | 请求字段与响应 |
+| --- | --- |
+| GET 根路径 | 试卷列表、整卷进度、最高分与均分、薄弱知识点、活动草稿及实验标题映射 labTitles |
+| GET `/{paperId}` | 题目投影与该卷历史记录 |
+| POST `/{paperId}/start` | `mode=exam\|practice`、`minutes=0\|60\|90\|120`、`shuffle`。可指定 `fromAttempt` 仅重做未满分题。错题组卷用 `paperId=mistake-review` 并传 `mistakes` 题目 ID 数组（1–25 题） |
+| GET `/{paperId}/drafts/{id}` | 作答模式、开始时间、服务器当前时间、选项映射、题目、作答、存疑标记与 revision |
+| DELETE `/{paperId}/drafts/{id}?revision=N` | 按学员及 revision 放弃当前草稿。成功返回 204，版本冲突返回 409 |
+| POST `/{paperId}/drafts/{id}/save` | `revision`、`answers`（题目 ID → 字符串数组）、`stars`（题目 ID 数组）。旧版本返回 409 |
+| POST `/{paperId}/drafts/{id}/submit` | 与保存同形。返回总分、分项、题项快照和 SQL 检查点。已超时使用服务端草稿，重试返回同一提交 |
+| GET `/{paperId}/attempts/{id}` | 该次交卷快照 |
+| GET `/mistakes` | 错题、最近错误作答、错误次数、源卷和掌握状态 |
+| POST `/mistakes/{questionId}/mastery` | `{mastered:boolean}`，返回更新后错题状态 |
+
+单题端点挂在 `/{paperId}/drafts/{id}/questions/{questionId}`、`/{paperId}/attempts/{id}/questions/{questionId}` 或 `/mistakes/{questionId}` 下。
+
+- POST `/check` 核对 `answer` 数组并返回得分、标准答案、解析及 SQL 检查点。考场草稿禁止核对。错题满分会更新掌握状态。
+- POST `/debug` 接收 `answer`（SQL 脚本单元素数组）、`mode=run\|selection\|trace\|explain\|schema\|reset`、`offset`（选区开始行减一）。返回状态、执行步骤、耗时、结果表、行变化及行号诊断。初始化预览和兼容的空重置可传空数组。前端清空结果使用本地状态。
+- 选择值使用选项 ID、判断用 `"true"` 或 `"false"`，其余为填空或脚本字符串。开放核对的上下文才会含有参考答案。隔离环境停用或不可用时，SQL 题标记为 `unavailable`，客观题仍可交卷。
+
+### 实验判分
+
+| 请求 | 契约 |
+| --- | --- |
+| GET /api/school/courses/{courseId}/labs/{labId} | 配置判分的实验返回 grading=true，work.executions 中可包含 grade |
+| POST /api/school/courses/{courseId}/labs/{labId}/grade | 接收 revision、drafts、questionId，按当前题的执行、基础结果与变式评分，返回更新后的 work 和当前题 results |
+| GET /api/school/courses/{courseId}/labs/{labId}/questions/{questionId}/tables | 读取本题初始隔离库的字段及每表最多三行样例，与判分共用种子和题目初始化。公网限学员使用。 |
+
+选区试运行另传 selection、offset，使用题目沙箱并返回当次结果，作答版本与判分记录维持原值。整题结果随相同 SQL 草稿保存，并在满分时计入通过进度。旧运行记录仍可用于导出。运行器不可用时保留作答，并保留相同脚本的最近判分。
+
+
+评分和隔离契约见[数据库备考规格](../../docs/38-课内数据库应试备考路线与SQL调试判题.md)。
+
 R7新增固定课程`collaboration/1.0.0`，八个关卡为b-login、b-roles、b-plans、b-pagination、b-transaction、b-errors-logs、b-tests、b-deploy。沿用/courses、/workspace-previews、/workspace-bindings、/submissions、/check-jobs、/jobs、/understanding-rules、/understanding-attempts、/learning与/learner接口。正式完成同时要求项目A六关证据和本课程前序关卡证据。画像与复习增加八项，summary.total按实际列表计算。IDE交接支持collaboration；详细业务API属于独立学员工程，见[R7契约](../../docs/22-R7完整业务项目B契约.md)。平台继续使用V12，验收库独立于日常库。
 
 R4.2新增IDE到网页的一次性交接：`POST /ide-handoffs`使用当前绑定Bearer及bindingId/jobId，`POST /ide-handoffs/consume`使用60秒单次code换取当前标签页配对与同一作业。两端响应no-store，失效返回409/HANDOFF_EXPIRED，详细约束见[契约](../../docs/17-R4.2IDE提交检查与网页交接契约.md)。

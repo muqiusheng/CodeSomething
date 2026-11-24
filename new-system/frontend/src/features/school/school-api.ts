@@ -1,7 +1,8 @@
+import type {Item} from './exams/exam-api';
 import {apiFetch} from '../../api/auth-api';
 export type LabProgress = {id: string; title: string; questions: number; executed: number; totalQuestions: number};
 export type SchoolCourse = {id: string; title: string; school: string; major: string; summary: string; engine: 'mysql' | 'manual'};
-export type CourseGroup = {term: string; title: string; courses: {course: SchoolCourse; labs: LabProgress[]}[]};
+export type CourseGroup = {term: string; title: string; courses: {course: SchoolCourse; labs: LabProgress[]; examCount?: number}[]};
 export type Question = {id: string; title: string; requirement: string; hint: string; optional: boolean; starterSql: string; originalText?: string | null};
 export type SourceTable = {title: string; columns: string[]; rows: string[][]};
 export type SchemaColumn = {name: string; type: string; primaryKey: boolean; nullable: boolean; defaultValue: string | null; extra: string};
@@ -28,7 +29,7 @@ export type RunResult = {
   tables: {columns: string[]; rows: (string | null)[][]}[];
   message: string | null;
 };
-export type Work = {revision: number; drafts: Record<string, string>; executions: Record<string, {sql: string; result: RunResult}>};
+export type Work = {revision: number; drafts: Record<string, string>; executions: Record<string, {sql: string; result: RunResult; grade?: Item | null}>};
 export type Student = {name: string; number: string};
 export type LabDetails = {
   course: SchoolCourse & {labs: {id: string; title: string}[]};
@@ -41,6 +42,7 @@ export type LabDetails = {
     fixtureSql?: string | null;
   };
   work: Work;
+  grading?: boolean;
   student: Student;
   database: string | null;
 };

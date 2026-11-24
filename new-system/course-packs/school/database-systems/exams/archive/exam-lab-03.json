@@ -1,0 +1,566 @@
+{
+  "id": "exam-lab-03",
+  "title": "实验三专项卷 · 单表查询、排序与分组汇总",
+  "group": "specialty",
+  "labId": "lab-03-single-query",
+  "questions": [
+    {
+      "id": "exam-lab-03-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "列出出现过的各个院系且每个只出现一次。选哪条？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "去重"
+      ],
+      "options": {
+        "A": "SELECT Sdept FROM student ORDER BY Sdept",
+        "B": "SELECT COUNT(Sdept) FROM student",
+        "C": "SELECT Sdept FROM student LIMIT 1",
+        "D": "SELECT DISTINCT Sdept FROM student"
+      },
+      "answer": "D",
+      "explanation": "DISTINCT 删除投影后的重复行，排序不去重。"
+    },
+    {
+      "id": "exam-lab-03-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "列出已选课但未登记成绩的记录应写什么？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "NULL"
+      ],
+      "options": {
+        "A": "WHERE Grade <> NULL",
+        "B": "WHERE Grade = 0",
+        "C": "WHERE Grade IS NULL",
+        "D": "WHERE Grade = NULL"
+      },
+      "answer": "C",
+      "explanation": "只有 IS NULL 专门测试空值，0 是有效成绩。"
+    },
+    {
+      "id": "exam-lab-03-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "查成绩最高的五条选课记录时，应怎样保证并列顺序稳定？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "排序"
+      ],
+      "options": {
+        "A": "ORDER BY Sno, Cno LIMIT 5",
+        "B": "ORDER BY Grade DESC, Sno, Cno LIMIT 5",
+        "C": "ORDER BY Grade DESC LIMIT 5",
+        "D": "LIMIT 5 后再按 Grade 排序"
+      },
+      "answer": "B",
+      "explanation": "成绩为首排序键，联合主键解决全部并列，再取前五。"
+    },
+    {
+      "id": "exam-lab-03-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "统计每门课已经登记成绩的人数应使用哪个表达式？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "options": {
+        "A": "COUNT(Grade)",
+        "B": "COUNT(*)",
+        "C": "SUM(Grade)",
+        "D": "MAX(Grade)"
+      },
+      "answer": "A",
+      "explanation": "COUNT(列) 忽略空值，COUNT(*) 统计所有选课记录。"
+    },
+    {
+      "id": "exam-lab-03-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "筛选至少 4 条选课记录的课程，条件写在哪里？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "分组"
+      ],
+      "options": {
+        "A": "WHERE COUNT(*) >= 4 GROUP BY Cno",
+        "B": "GROUP BY Cno WHERE COUNT(*) >= 4",
+        "C": "ORDER BY COUNT(*) >= 4",
+        "D": "GROUP BY Cno HAVING COUNT(*) >= 4"
+      },
+      "answer": "D",
+      "explanation": "HAVING 用于聚合后的分组过滤。"
+    },
+    {
+      "id": "exam-lab-03-q06",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "Grade BETWEEN 60 AND 80 会选出何种边界？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "条件"
+      ],
+      "options": {
+        "A": "只含 80",
+        "B": "不含 60 或 80",
+        "C": "含 60 和 80",
+        "D": "只含 60"
+      },
+      "answer": "C",
+      "explanation": "BETWEEN 是闭区间。"
+    },
+    {
+      "id": "exam-lab-03-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "Sname LIKE '张_' 表示什么？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "LIKE"
+      ],
+      "options": {
+        "A": "姓名字面值是张下划线",
+        "B": "姓张且名字总长度两个字符",
+        "C": "姓张且名字至少两个字符",
+        "D": "任意含张的姓名"
+      },
+      "answer": "B",
+      "explanation": "_ 只匹配一个字符，% 匹配任意长度。"
+    },
+    {
+      "id": "exam-lab-03-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "单列统计中 COUNT(*) - COUNT(Grade) 的结果？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "options": {
+        "A": "未登记成绩的行数",
+        "B": "不及格人数",
+        "C": "零分人数",
+        "D": "已登记非零成绩数"
+      },
+      "answer": "A",
+      "explanation": "两个计数差在于 Grade 是否为空。"
+    },
+    {
+      "id": "exam-lab-03-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "只有 NULL 的成绩集合执行 AVG(Grade)，结果是什么？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "NULL"
+      ],
+      "options": {
+        "A": "0",
+        "B": "1",
+        "C": "抛出除零异常",
+        "D": "NULL"
+      },
+      "answer": "D",
+      "explanation": "AVG 跳过 NULL，无有效输入时返回 NULL。"
+    },
+    {
+      "id": "exam-lab-03-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "把查询结果中的 Total_perior 显示为 Hours 应写什么？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "别名"
+      ],
+      "options": {
+        "A": "ALTER course AS Hours",
+        "B": "SELECT AS Total_perior Hours FROM course",
+        "C": "SELECT Total_perior AS Hours FROM course",
+        "D": "SELECT Hours FROM course"
+      },
+      "answer": "C",
+      "explanation": "AS 设置结果列标题，原列名继续用于取值。"
+    },
+    {
+      "id": "exam-lab-03-q11",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "WHERE Classno IN ('051','061') 等价于什么？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "条件"
+      ],
+      "options": {
+        "A": "Classno NOT IN ('051','061')",
+        "B": "Classno='051' OR Classno='061'",
+        "C": "Classno='051' AND Classno='061'",
+        "D": "Classno BETWEEN '051' AND '061'"
+      },
+      "answer": "B",
+      "explanation": "IN 可表示多个精确值的 OR。"
+    },
+    {
+      "id": "exam-lab-03-q12",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "在指定日期按完整年数计算年龄，首选什么？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "日期"
+      ],
+      "options": {
+        "A": "TIMESTAMPDIFF(YEAR,Birth,'2026-11-23')",
+        "B": "YEAR('2026-11-23')-YEAR(Birth)",
+        "C": "DATEDIFF('2026-11-23',Birth)",
+        "D": "DAY(Birth)"
+      },
+      "answer": "A",
+      "explanation": "TIMESTAMPDIFF 按指定单位计算完整年份，年份直接相减没考虑生日是否已过。"
+    },
+    {
+      "id": "exam-lab-03-q13",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "GROUP BY Cno WITH ROLLUP 会额外产生什么？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "分组"
+      ],
+      "options": {
+        "A": "每门课重复两行",
+        "B": "只保留课程总分最高的行",
+        "C": "每个成绩产生一条明细",
+        "D": "所有课程的汇总行"
+      },
+      "answer": "D",
+      "explanation": "ROLLUP 在普通分组外计算更高层汇总。"
+    },
+    {
+      "id": "exam-lab-03-q14",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "查询 Grade>=90 或 Grade IS NULL 选中哪些？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "条件"
+      ],
+      "options": {
+        "A": "未登记且九十分以上",
+        "B": "八十九分以上且均已登记",
+        "C": "九十分及以上，或未登记成绩",
+        "D": "九十分及以上，或零分"
+      },
+      "answer": "C",
+      "explanation": "OR 任意一边为真即保留，NULL 条件由 IS NULL 检验。"
+    },
+    {
+      "id": "exam-lab-03-q15",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "LIMIT 3 OFFSET 2 表示什么？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "排序"
+      ],
+      "options": {
+        "A": "最多返回第 2 至第 3 行",
+        "B": "跳过前两行后取至多三行",
+        "C": "跳过前三行后取两行",
+        "D": "先取三行再删除两行"
+      },
+      "answer": "B",
+      "explanation": "OFFSET 是偏移数量，LIMIT 是返回上限。"
+    },
+    {
+      "id": "exam-lab-03-q16",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "没有 ORDER BY 的查询仍保证按主键升序。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "排序"
+      ],
+      "answer": "false",
+      "explanation": "MySQL 可选不同执行计划，只有 ORDER BY 指定结果顺序。"
+    },
+    {
+      "id": "exam-lab-03-q17",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "WHERE Grade <> 60 会保留 Grade 为 NULL 的行。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "NULL"
+      ],
+      "answer": "false",
+      "explanation": "NULL 与 60 比较得 UNKNOWN，WHERE 只保留 TRUE。"
+    },
+    {
+      "id": "exam-lab-03-q18",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "COUNT(DISTINCT Sdept) 可统计不同的非空院系数。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "answer": "true",
+      "explanation": "DISTINCT 去重，COUNT 跳过 NULL。"
+    },
+    {
+      "id": "exam-lab-03-q19",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "SELECT 为列定义的别名通常可直接用于本查询的 WHERE。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "别名"
+      ],
+      "answer": "false",
+      "explanation": "WHERE 先过滤源行，别名可供 ORDER BY 等阶段使用。"
+    },
+    {
+      "id": "exam-lab-03-q20",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "在不使用通配符的情况下，LIKE '张' 不会自动匹配 '张虹'。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "LIKE"
+      ],
+      "answer": "true",
+      "explanation": "LIKE 需要 % 或 _ 才能扩展匹配长度。"
+    },
+    {
+      "id": "exam-lab-03-q21",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "WHERE 可以先限制参与 GROUP BY 的明细行。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "分组"
+      ],
+      "answer": "true",
+      "explanation": "先过滤源行，再分组聚合。"
+    },
+    {
+      "id": "exam-lab-03-q22",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "在 MySQL 中 AND 的默认优先级高于 OR。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "条件"
+      ],
+      "answer": "true",
+      "explanation": "两者混用时加括号表达优先需求。"
+    },
+    {
+      "id": "exam-lab-03-q23",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "DESC 只修饰其紧跟的排序表达式。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "排序"
+      ],
+      "answer": "true",
+      "explanation": "ORDER BY Grade DESC,Sno 中 Sno 仍默认升序。"
+    },
+    {
+      "id": "exam-lab-03-q24",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "SUM(Grade) 可以靠把 NULL 自动计作零从而让纯空组返回 0。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "answer": "false",
+      "explanation": "SUM 跳过 NULL，若没有非空输入返回 NULL。"
+    },
+    {
+      "id": "exam-lab-03-q25",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "Sno 是字符编码，比较时写成带引号的字面值有助于避免隐式数值转换。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "条件"
+      ],
+      "answer": "true",
+      "explanation": "字符对字符比较保留编码语义，也有利于正常利用索引。"
+    },
+    {
+      "id": "exam-lab-03-q26",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全缺考记录的过滤。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "NULL"
+      ],
+      "template": "SELECT Sno,Cno FROM sc WHERE Grade {{1}};",
+      "blanks": [
+        [
+          "IS NULL"
+        ]
+      ],
+      "explanation": "NULL 需要专门谓词。"
+    },
+    {
+      "id": "exam-lab-03-q27",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "按课号统计，筛选已登记至少两人的课程。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "分组"
+      ],
+      "template": "SELECT Cno,COUNT(Grade) FROM sc {{1}} Cno {{2}} COUNT(Grade)>=2;",
+      "blanks": [
+        [
+          "GROUP BY"
+        ],
+        [
+          "HAVING"
+        ]
+      ],
+      "explanation": "按 Cno 聚合后再以计数过滤。"
+    },
+    {
+      "id": "exam-lab-03-q28",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "先按学分降序，再按课号升序，只取三门。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "排序"
+      ],
+      "template": "SELECT Cno,Credit FROM course {{1}} Credit {{2}}, Cno {{3}} {{4}};",
+      "blanks": [
+        [
+          "ORDER BY"
+        ],
+        [
+          "DESC"
+        ],
+        [
+          "ASC"
+        ],
+        [
+          "LIMIT 3"
+        ]
+      ],
+      "explanation": "先指定顺序及并列规则，再截取前三行。"
+    },
+    {
+      "id": "exam-lab-03-q29",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全不同班级数的计算。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "template": "SELECT COUNT({{1}}) FROM student;",
+      "blanks": [
+        [
+          "DISTINCT Classno",
+          "DISTINCT student.Classno"
+        ]
+      ],
+      "explanation": "在 COUNT 内去重统计类别。"
+    },
+    {
+      "id": "exam-lab-03-q30",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全成绩合格条件，含 60 分与 100 分。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "条件"
+      ],
+      "template": "SELECT Sno FROM sc WHERE Grade {{1}};",
+      "blanks": [
+        [
+          "BETWEEN 60 AND 100",
+          ">=60 AND Grade<=100",
+          "<=100 AND Grade>=60"
+        ]
+      ],
+      "explanation": "两种闭区间写法均排除 NULL。"
+    },
+    {
+      "id": "exam-lab-03-q31",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-03-single-query",
+      "prompt": "从 sc 返回所有有成绩且成绩至少 80 的 Sno、Cno、Grade，按 Grade 降序，再按 Sno、Cno 升序。",
+      "referenceSql": "SELECT Sno,Cno,Grade FROM sc WHERE Grade>=80 ORDER BY Grade DESC,Sno,Cno;",
+      "tags": [
+        "排序"
+      ],
+      "explanation": "WHERE 选出 80 边界及以上，排序键解决并列。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "result_set",
+          "label": "种子数据结果",
+          "points": 8,
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "label": "变更数据后仍符合题意",
+          "points": 4,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO sc VALUES ('20110008','003',80);INSERT INTO sc VALUES ('20110008','006',null);"
+        }
+      ]
+    },
+    {
+      "id": "exam-lab-03-q32",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-03-single-query",
+      "prompt": "按课号统计 sc 中的选课数与登记成绩数，输出 Cno、Chosen、Graded，只保留选课至少 3 次的课程，按 Cno 升序。",
+      "referenceSql": "SELECT Cno,COUNT(*) AS Chosen,COUNT(Grade) AS Graded FROM sc GROUP BY Cno HAVING COUNT(*)>=3 ORDER BY Cno;",
+      "tags": [
+        "分组"
+      ],
+      "explanation": "COUNT(*) 计入缺考，COUNT(Grade) 只计非空。HAVING 判断每个课程组。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "result_set",
+          "label": "种子数据结果",
+          "points": 8,
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "label": "变更数据后仍符合题意",
+          "points": 4,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO sc VALUES ('20110008','006',null);INSERT INTO sc VALUES ('20110004','006',77);"
+        }
+      ]
+    }
+  ]
+}

@@ -22,6 +22,8 @@ class SchoolCourseCatalog {
     record Question(String id, String title, String requirement, String hint, boolean optional, String starterSql,
                     String originalText) {}
 
+    record LabCheck(String id, String referenceSql, String setupSql, List<ExamCatalog.Check> checks) {}
+
     private final Path directory;
     private final JsonMapper json;
 
@@ -65,12 +67,43 @@ class SchoolCourseCatalog {
         return lab;
     }
 
+    private Path labCheckPath(Course course, Lab lab) {
+        return directory.resolve(course.id()).resolve("labs/checks").resolve(slug(lab.id()) + ".json");
+    }
+
+    boolean hasLabChecks(Course course, Lab lab) {
+        return Files.isRegularFile(labCheckPath(course, lab));
+    }
+
+    Map<String, ExamCatalog.Question> labChecks(Course course, Lab lab) {
+        var path = labCheckPath(course, lab);
+        if (!Files.isRegularFile(path)) return Map.of();
+        var definitions = new LinkedHashMap<String, LabCheck>();
+        for (var check : json.readValue(path.toFile(), LabCheck[].class)) {
+            if (definitions.putIfAbsent(check.id(), check) != null || check.referenceSql().isBlank()
+                || !check.checks().stream().map(ExamCatalog.Check::points).toList().equals(List.of(2, 5, 3))
+                || !check.checks().getFirst().kind().equals("execution")
+                || check.checks().getLast().variantSql() == null || check.checks().getLast().variantSql().isBlank())
+                throw new IllegalStateException("Invalid lab check: " + check.id());
+        }
+        if (!definitions.keySet().equals(new HashSet<>(lab.questions().stream().map(Question::id).toList())))
+            throw new IllegalStateException("Incomplete lab checks: " + lab.id());
+        var questions = new LinkedHashMap<String, ExamCatalog.Question>();
+        for (var question : lab.questions()) {
+            var definition = definitions.get(question.id());
+            questions.put(question.id(), new ExamCatalog.Question(lab.id() + "-" + question.id(), "sql",
+                10, question.requirement(), lab.id(), List.of(question.title()), "", null, null, null,
+                null, definition.referenceSql(), definition.setupSql(), definition.checks()));
+        }
+        return Collections.unmodifiableMap(questions);
+    }
+
     String seed(Course course) {
         try { return Files.readString(directory.resolve(course.id()).resolve("seed.sql")); }
         catch (IOException e) { throw new IllegalStateException("Cannot read school seed: " + course.id(), e); }
     }
 
-    private static String slug(String id) {
+    static String slug(String id) {
         if (id == null || !id.matches("[a-z0-9][a-z0-9-]{0,63}")) throw missing();
         return id;
     }

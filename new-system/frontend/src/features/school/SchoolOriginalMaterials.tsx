@@ -1,18 +1,16 @@
 import {useEffect, useState} from 'react';
-import {Check, Copy, Database, Download, FileText, X} from 'lucide-react';
+import {Check, Copy, Download, FileText} from 'lucide-react';
 import type {LabDetails, Question} from './school-api';
 import {isConnectionTask, matchSourceTables} from './source-tables.mjs';
 
 export function SchoolOriginalMaterials({
   lab,
   question,
-  onClose,
-  isPanel = false,
+  collapsed = false,
 }: {
   lab: LabDetails['lab'];
   question: Question;
-  onClose?: () => void;
-  isPanel?: boolean;
+  collapsed?: boolean;
 }) {
   const [download, setDownload] = useState<string>();
   const [copiedTable, setCopiedTable] = useState<string | null>(null);
@@ -143,33 +141,8 @@ export function SchoolOriginalMaterials({
     </div>
   );
 
-  if (isPanel) {
-    return (
-      <aside className="school-pane school-inspector-panel" aria-label="实验数据与参考材料">
-        <div className="school-inspector-head">
-          <div className="school-inspector-title">
-            <Database size={16} aria-hidden="true" />
-            <h2>实验数据与参考</h2>
-          </div>
-          {onClose && (
-            <button
-              type="button"
-              className="icon-button school-inspector-close"
-              aria-label="收起实验数据面板"
-              onClick={onClose}
-              title="收起数据面板"
-            >
-              <X size={16} aria-hidden="true" />
-            </button>
-          )}
-        </div>
-        {content}
-      </aside>
-    );
-  }
-
   return (
-    <details className="school-source" open>
+    <details className="school-source" open={!collapsed}>
       <summary>原题与实验数据 ({tables.length > 0 ? `${tables.length} 张表` : '原文'})</summary>
       {content}
     </details>

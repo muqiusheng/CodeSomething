@@ -1,0 +1,567 @@
+{
+  "id": "exam-lab-05",
+  "title": "实验五专项卷 · 视图的定义、元数据与可更新性",
+  "group": "specialty",
+  "labId": "lab-05-views",
+  "questions": [
+    {
+      "id": "exam-lab-05-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "只公布课程号和名称而隐藏学分，采用什么最直接？",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "options": {
+        "A": "DROP COLUMN Credit FROM course",
+        "B": "CREATE VIEW v_course AS SELECT Cno,Cname FROM course",
+        "C": "CREATE VIEW v_course AS SELECT * FROM course",
+        "D": "CREATE VIEW v_course AS SELECT DISTINCT Credit FROM course"
+      },
+      "answer": "B",
+      "explanation": "投影视图只包含公布的列，基表学分仍保留。"
+    },
+    {
+      "id": "exam-lab-05-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "只公布计算机系学生，视图的 SELECT 需要什么？",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "options": {
+        "A": "WHERE Sdept='计算机系'",
+        "B": "GROUP BY Sdept",
+        "C": "ORDER BY Sdept",
+        "D": "HAVING COUNT(*)>1"
+      },
+      "answer": "A",
+      "explanation": "水平视图通过 WHERE 选择符合条件的行。"
+    },
+    {
+      "id": "exam-lab-05-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "查 VIEWS 中标记视图能否更新的字段是什么？",
+      "labId": "lab-05-views",
+      "tags": [
+        "元数据"
+      ],
+      "options": {
+        "A": "TABLE_TYPE",
+        "B": "CHECK_TIME",
+        "C": "COLUMN_KEY",
+        "D": "IS_UPDATABLE"
+      },
+      "answer": "D",
+      "explanation": "IS_UPDATABLE 报告视图的可更新性，允许更新不保证所有插入都能成功。"
+    },
+    {
+      "id": "exam-lab-05-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "已有同名视图时更新定义，首选什么？",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "options": {
+        "A": "TRUNCATE VIEW",
+        "B": "UPDATE VIEW SET SELECT",
+        "C": "CREATE OR REPLACE VIEW",
+        "D": "CREATE OR IGNORE VIEW"
+      },
+      "answer": "C",
+      "explanation": "OR REPLACE 可使用新查询替换当前视图定义。"
+    },
+    {
+      "id": "exam-lab-05-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "哪类视图通常不能直接更新？",
+      "labId": "lab-05-views",
+      "tags": [
+        "可更新性"
+      ],
+      "options": {
+        "A": "包含 sc 原始列的简单视图",
+        "B": "按 Cno 分组的 AVG(Grade) 汇总视图",
+        "C": "带单表 WHERE 的列投影视图",
+        "D": "只改列标题的单表视图"
+      },
+      "answer": "B",
+      "explanation": "聚合行无法与底层某一行一一对应。"
+    },
+    {
+      "id": "exam-lab-05-q06",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "禁止经计算机系视图把学生改到其他院系，需要什么？",
+      "labId": "lab-05-views",
+      "tags": [
+        "检查选项"
+      ],
+      "options": {
+        "A": "WITH CHECK OPTION",
+        "B": "WITH READ ONLY",
+        "C": "WITH ROLLUP",
+        "D": "ON UPDATE CASCADE"
+      },
+      "answer": "A",
+      "explanation": "CHECK OPTION 要求通过视图写入的结果仍满足它的过滤谓词。"
+    },
+    {
+      "id": "exam-lab-05-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "查看 v_course 的 SQL 定义应执行什么？",
+      "labId": "lab-05-views",
+      "tags": [
+        "元数据"
+      ],
+      "options": {
+        "A": "SHOW COLUMNS FROM course",
+        "B": "SHOW DATABASES",
+        "C": "SELECT VERSION()",
+        "D": "SHOW CREATE VIEW v_course"
+      },
+      "answer": "D",
+      "explanation": "SHOW CREATE VIEW 显示视图定义及安全等属性。"
+    },
+    {
+      "id": "exam-lab-05-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "删除 v_course 并保留 course 的正确命令是？",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "options": {
+        "A": "DELETE FROM course",
+        "B": "TRUNCATE TABLE v_course",
+        "C": "DROP VIEW v_course",
+        "D": "DROP TABLE course"
+      },
+      "answer": "C",
+      "explanation": "DROP VIEW 只删除视图对象，底层表数据保留。"
+    },
+    {
+      "id": "exam-lab-05-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "简单视图只选 Sno 和 Sname，为什么直接插入通常失败？",
+      "labId": "lab-05-views",
+      "tags": [
+        "可更新性"
+      ],
+      "options": {
+        "A": "基表姓名一定重复",
+        "B": "基表其它必填列没有默认值",
+        "C": "每个视图都禁止插入",
+        "D": "视图不能包含主键"
+      },
+      "answer": "B",
+      "explanation": "通过视图插入也要满足基表各列要求。"
+    },
+    {
+      "id": "exam-lab-05-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "基表更新后查询普通视图会看到什么？",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "options": {
+        "A": "根据可见事务数据重新求值的结果",
+        "B": "始终看到视图创建时的副本",
+        "C": "必须 DROP 后重建才能看到",
+        "D": "每次先手工复制基表结果"
+      },
+      "answer": "A",
+      "explanation": "普通视图保存查询定义，不持久化独立快照。"
+    },
+    {
+      "id": "exam-lab-05-q11",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "多层视图中 CASCADED CHECK OPTION 检验什么？",
+      "labId": "lab-05-views",
+      "tags": [
+        "检查选项"
+      ],
+      "options": {
+        "A": "只检验当前 WHERE",
+        "B": "比较所有表的外键名称",
+        "C": "只检验最终 SELECT 的列数",
+        "D": "当前视图及依赖视图相关过滤条件"
+      },
+      "answer": "D",
+      "explanation": "CASCADED 意在递归施加下层过滤条件。"
+    },
+    {
+      "id": "exam-lab-05-q12",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "SQL SECURITY INVOKER 按谁的权限检查底层访问？",
+      "labId": "lab-05-views",
+      "tags": [
+        "权限"
+      ],
+      "options": {
+        "A": "所有登录用户共享 root",
+        "B": "运行前最后修改此视图的人",
+        "C": "调用者",
+        "D": "当前视图创建者永远有权"
+      },
+      "answer": "C",
+      "explanation": "INVOKER 指调用者，DEFINER 指对象定义者。"
+    },
+    {
+      "id": "exam-lab-05-q13",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "SELECT DISTINCT Cno FROM sc 定义的视图不能更新的理由？",
+      "labId": "lab-05-views",
+      "tags": [
+        "可更新性"
+      ],
+      "options": {
+        "A": "DISTINCT 会删除基表记录",
+        "B": "多个底层行可能合成一个结果行",
+        "C": "Cno 是字母字段",
+        "D": "每个视图必须含 AVG"
+      },
+      "answer": "B",
+      "explanation": "DISTINCT 去重后失去与单一底层行的映射。"
+    },
+    {
+      "id": "exam-lab-05-q14",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "通过视图查询结果需要稳定排序时该怎么做？",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "options": {
+        "A": "在外层 SELECT 中指定 ORDER BY",
+        "B": "依赖视图创建时打印顺序",
+        "C": "默认按视图列名排列",
+        "D": "只有新建索引才能指定顺序"
+      },
+      "answer": "A",
+      "explanation": "外层使用明确排序键才有可依赖的返回顺序。"
+    },
+    {
+      "id": "exam-lab-05-q15",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "对两个表连接创建视图，若两个输出列同名，怎样解决？",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "options": {
+        "A": "只给表写别名即可",
+        "B": "先对两个列执行 DISTINCT",
+        "C": "改用 UNION ALL 会自动加表名前缀",
+        "D": "为冲突列设置不同别名"
+      },
+      "answer": "D",
+      "explanation": "视图列名应唯一，表别名不改变投影结果的名称。"
+    },
+    {
+      "id": "exam-lab-05-q16",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "普通视图可以在查询中与其它表连接。",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "answer": "true",
+      "explanation": "视图能作为查询的关系来源。"
+    },
+    {
+      "id": "exam-lab-05-q17",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "产生聚合字段的课程统计视图能用 UPDATE 修改计算出的均分。",
+      "labId": "lab-05-views",
+      "tags": [
+        "可更新性"
+      ],
+      "answer": "false",
+      "explanation": "均分是多行聚合结果，无对应的可改基表列。"
+    },
+    {
+      "id": "exam-lab-05-q18",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "视图 CHECK OPTION 同样适用于直接对基表执行的 UPDATE。",
+      "labId": "lab-05-views",
+      "tags": [
+        "检查选项"
+      ],
+      "answer": "false",
+      "explanation": "它检查经视图写入的语句，基表更新只受基表约束。"
+    },
+    {
+      "id": "exam-lab-05-q19",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "删除视图不会自动删除依赖的基表。",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "answer": "true",
+      "explanation": "视图与基表是独立对象。"
+    },
+    {
+      "id": "exam-lab-05-q20",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "SHOW CREATE VIEW 可查看定义中的 CHECK OPTION。",
+      "labId": "lab-05-views",
+      "tags": [
+        "元数据"
+      ],
+      "answer": "true",
+      "explanation": "完整建视图语句会显示该选项。"
+    },
+    {
+      "id": "exam-lab-05-q21",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "视图存在等价于已经给它的每一列建立了索引。",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "answer": "false",
+      "explanation": "普通视图没有独立索引，执行可能使用基表的索引。"
+    },
+    {
+      "id": "exam-lab-05-q22",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "一个视图可以允许 UPDATE，却因基表缺少必填值而拒绝 INSERT。",
+      "labId": "lab-05-views",
+      "tags": [
+        "可更新性"
+      ],
+      "answer": "true",
+      "explanation": "更新性和可插入性需分别考虑。"
+    },
+    {
+      "id": "exam-lab-05-q23",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "不加 CHECK OPTION 时，允许经可更新视图把行改出谓词范围，更新后该行从视图消失。",
+      "labId": "lab-05-views",
+      "tags": [
+        "检查选项"
+      ],
+      "answer": "true",
+      "explanation": "没有视图写入过滤检查，改完后读视图会重新按谓词筛选。"
+    },
+    {
+      "id": "exam-lab-05-q24",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "视图定义可以省略 SQL SECURITY，默认使用 DEFINER。",
+      "labId": "lab-05-views",
+      "tags": [
+        "权限"
+      ],
+      "answer": "true",
+      "explanation": "MySQL 默认是 SQL SECURITY DEFINER，调用者仍需拥有适当的视图访问权限。"
+    },
+    {
+      "id": "exam-lab-05-q25",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "CREATE TABLE v AS SELECT ... 与 CREATE VIEW v AS SELECT ... 对基表后续更新的表现相同。",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "answer": "false",
+      "explanation": "前者创建物理快照数据，后者根据定义读取基表。"
+    },
+    {
+      "id": "exam-lab-05-q26",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全创建课程投影视图的关键字。",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "template": "CREATE {{1}} v_course {{2}} SELECT Cno,Cname FROM course;",
+      "blanks": [
+        [
+          "VIEW"
+        ],
+        [
+          "AS"
+        ]
+      ],
+      "explanation": "CREATE VIEW 名称 AS 查询。"
+    },
+    {
+      "id": "exam-lab-05-q27",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "要求走视图的写入仍能被本视图查到。",
+      "labId": "lab-05-views",
+      "tags": [
+        "检查选项"
+      ],
+      "template": "CREATE VIEW v_cs AS SELECT * FROM student WHERE Sdept='计算机系' {{1}};",
+      "blanks": [
+        [
+          "WITH CHECK OPTION",
+          "WITH CASCADED CHECK OPTION",
+          "WITH LOCAL CHECK OPTION"
+        ]
+      ],
+      "explanation": "单层视图三种写法对当前谓词效果相同。"
+    },
+    {
+      "id": "exam-lab-05-q28",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全安全替换视图的语句。",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "template": "CREATE {{1}} VIEW v_course AS SELECT Cno,Cname FROM course;",
+      "blanks": [
+        [
+          "OR REPLACE"
+        ]
+      ],
+      "explanation": "OR REPLACE 支持覆盖既有同名视图。"
+    },
+    {
+      "id": "exam-lab-05-q29",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "从当前库筛选可更新视图。",
+      "labId": "lab-05-views",
+      "tags": [
+        "元数据"
+      ],
+      "template": "SELECT TABLE_NAME FROM information_schema.VIEWS WHERE TABLE_SCHEMA={{1}} AND IS_UPDATABLE={{2}};",
+      "blanks": [
+        [
+          "DATABASE()",
+          "SCHEMA()"
+        ],
+        [
+          "'YES'"
+        ]
+      ],
+      "explanation": "'YES' 是元数据值，库名用当前默认库。"
+    },
+    {
+      "id": "exam-lab-05-q30",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "若对象存在则删除视图。",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "template": "DROP VIEW {{1}} v_course;",
+      "blanks": [
+        [
+          "IF EXISTS"
+        ]
+      ],
+      "explanation": "IF EXISTS 可避免因视图已不存在而失败。"
+    },
+    {
+      "id": "exam-lab-05-q31",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-05-views",
+      "prompt": "创建视图 v_cs，公开计算机系学生的 Sno、Sname、Sdept。通过视图更新院系时，必须阻止改出计算机系。",
+      "referenceSql": "CREATE VIEW v_cs AS SELECT Sno,Sname,Sdept FROM student WHERE Sdept='计算机系' WITH CHECK OPTION;",
+      "tags": [
+        "视图",
+        "检查选项"
+      ],
+      "explanation": "单表筛选视图可更新，CHECK OPTION 约束写入结果。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "post_query",
+          "label": "视图数据和投影",
+          "points": 8,
+          "sql": "SELECT * FROM v_cs ORDER BY Sno;",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "negative_check",
+          "label": "允许改姓名，禁止改出院系",
+          "points": 4,
+          "sql": "SELECT Sno,Sname,Sdept FROM student WHERE Sno='20110001';",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "positiveSql": "UPDATE v_cs SET Sname='张虹复核' WHERE Sno='20110001';",
+          "negativeSql": "UPDATE v_cs SET Sdept='软件工程' WHERE Sno='20110001';",
+          "errorCode": 1369
+        }
+      ]
+    },
+    {
+      "id": "exam-lab-05-q32",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-05-views",
+      "prompt": "建视图 v_course_counts，输出每门课的 Cno、Chosen（选课数）、Graded（有成绩数），包含零选课。",
+      "referenceSql": "CREATE VIEW v_course_counts AS SELECT c.Cno,COUNT(x.Sno) AS Chosen,COUNT(x.Grade) AS Graded FROM course c LEFT JOIN sc x ON x.Cno=c.Cno GROUP BY c.Cno;",
+      "tags": [
+        "视图",
+        "分组"
+      ],
+      "explanation": "从 course 出发保留空课，COUNT 用真实子行字段避免统计补空行。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "post_query",
+          "label": "聚合视图结果",
+          "points": 8,
+          "sql": "SELECT * FROM v_course_counts ORDER BY Cno;",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "post_query",
+          "label": "新课程及缺考后按基表更新",
+          "points": 4,
+          "sql": "INSERT INTO course VALUES ('008','视图变体',32,2);INSERT INTO sc VALUES ('20110008','008',null); SELECT * FROM v_course_counts ORDER BY Cno;",
+          "orderMatters": true,
+          "checkColumnNames": true
+        }
+      ]
+    }
+  ]
+}

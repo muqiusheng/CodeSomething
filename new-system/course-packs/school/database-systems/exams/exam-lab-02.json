@@ -1,0 +1,547 @@
+{
+  "id": "exam-lab-02",
+  "title": "实验二专项卷 · DDL 建表、约束变更与数据维护",
+  "group": "specialty",
+  "labId": "lab-02-ddl-tables",
+  "questions": [
+    {
+      "id": "exam-lab-02-r3-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "course 中的 006 仍有 sc 引用，直接删除会发生什么？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键"
+      ],
+      "options": {
+        "A": "自动清除全部子记录",
+        "B": "把 sc.Cno 自动置空",
+        "C": "把 Grade 置零但保留子行",
+        "D": "外键拒绝删除"
+      },
+      "answer": "D",
+      "explanation": "种子库外键未指定级联，默认限制父行删除。"
+    },
+    {
+      "id": "exam-lab-02-r3-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "保持 student 当前默认，哪种方法能取得默认 Sex？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "默认值"
+      ],
+      "options": {
+        "A": "提供任意非法字符",
+        "B": "省略 Sno 但保留 Sex",
+        "C": "INSERT 列清单省略 Sex 并补齐其它必填列",
+        "D": "为 Sex 传 NULL"
+      },
+      "answer": "C",
+      "explanation": "默认值作用在其对应列，显式 NULL 仍受 NOT NULL 约束。"
+    },
+    {
+      "id": "exam-lab-02-r3-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "只删除某生某课的记录，必须限定哪些值才能精准定位？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "options": {
+        "A": "仅 Grade",
+        "B": "Sno 与 Cno",
+        "C": "仅 Sno",
+        "D": "仅 Cno"
+      },
+      "answer": "B",
+      "explanation": "sc 的身份由两列组合成主键。"
+    },
+    {
+      "id": "exam-lab-02-r3-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "若 sc.Grade 取值范围规定为 0 至 100，哪种机制能同时约束 INSERT 与 UPDATE？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "域完整性"
+      ],
+      "options": {
+        "A": "在 Grade 上定义范围 CHECK",
+        "B": "仅为 Grade 定义 DEFAULT",
+        "C": "给 Grade 定义普通索引",
+        "D": "查询时使用 WHERE Grade<=100"
+      },
+      "answer": "A",
+      "explanation": "CHECK 属于列或表的完整性约束，适用于写入和更新。"
+    },
+    {
+      "id": "exam-lab-02-r3-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "给 relation course 的课程名增加 UNIQUE(Cname)，其语义是什么？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "键约束"
+      ],
+      "options": {
+        "A": "按课名对记录排序",
+        "B": "所有非空课名在关系中不得重复",
+        "C": "用课程名自动替换现有主键",
+        "D": "把所有课程名自动设为非空"
+      },
+      "answer": "B",
+      "explanation": "UNIQUE 限制非空键值重复。主键、非空约束与排序分别具有独立语义。"
+    },
+    {
+      "kind": "choice",
+      "points": 2,
+      "prompt": "父表物资号从 m010 改成 m011 时，要求引用列跟随更新。外键需要哪一动作？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "复合主键"
+      ],
+      "explanation": "更新和删除分别由不同的外键动作控制。",
+      "options": {
+        "A": "ON UPDATE RESTRICT",
+        "B": "ON DELETE SET NULL",
+        "C": "ON UPDATE CASCADE",
+        "D": "ON DELETE CASCADE"
+      },
+      "answer": "C",
+      "id": "exam-lab-02-r3-q06"
+    },
+    {
+      "id": "exam-lab-02-r3-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "在关系数据库中，参照完整性约束应声明在哪个关系上？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "数据定义"
+      ],
+      "options": {
+        "A": "引用其他表键的关系",
+        "B": "只在被引用的关系",
+        "C": "由两个关系做并集而成的结果",
+        "D": "仅声明在查询结果上"
+      },
+      "answer": "A",
+      "explanation": "外键声明在含引用列的关系上，并指定被引用的关系与候选键。"
+    },
+    {
+      "id": "exam-lab-02-r3-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "向 course 只插入课号与课名，Total_perior 的实际值是什么？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "options": {
+        "A": "表结构中的最大学时",
+        "B": "NULL",
+        "C": "0",
+        "D": "1"
+      },
+      "answer": "B",
+      "explanation": "未提供可空列且无显式默认值时，取 NULL。"
+    },
+    {
+      "id": "exam-lab-02-r3-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "想把父课号变更同步到已选课记录，需要何种引用动作？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键"
+      ],
+      "options": {
+        "A": "ON UPDATE CASCADE",
+        "B": "ON DELETE CASCADE",
+        "C": "ON UPDATE RESTRICT",
+        "D": "ON DELETE SET NULL"
+      },
+      "answer": "A",
+      "explanation": "变更父键对应 UPDATE；CASCADE 将值传播至子行。"
+    },
+    {
+      "id": "exam-lab-02-r3-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "sc 的主键为 (Sno,Cno)。已有 (S01,C01) 时，以下哪一组新元组会违反主键唯一性？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "复合键"
+      ],
+      "options": {
+        "A": "(S01,C02)",
+        "B": "(S02,C01)",
+        "C": "(S02,C02)",
+        "D": "(S01,C01)"
+      },
+      "answer": "D",
+      "explanation": "只有两列同时相同才会重复复合主键。"
+    },
+    {
+      "id": "exam-lab-02-r3-q11",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "在 MySQL 8.4 中，普通 CREATE TABLE 可以与此前 DML 一起靠 ROLLBACK 撤销。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "事务"
+      ],
+      "answer": "false",
+      "explanation": "普通建表隐式提交，DDL 也不能按一般 DML 那样回滚。"
+    },
+    {
+      "id": "exam-lab-02-r3-q12",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "只写 CHECK (Credit BETWEEN 1 AND 6) 就能拒绝 NULL。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "CHECK"
+      ],
+      "answer": "false",
+      "explanation": "CHECK 接受 UNKNOWN，拒绝 FALSE；拒绝 NULL 应另加 NOT NULL。"
+    },
+    {
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "若 course.Credit 可空，CHECK(Credit BETWEEN 1 AND 6) 的判断结果为 UNKNOWN 时，该约束允许写入。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "域完整性"
+      ],
+      "explanation": "CHECK 拒绝判定为 FALSE 的记录。禁止 NULL 需要另加 NOT NULL。",
+      "answer": "true",
+      "id": "exam-lab-02-r3-q13"
+    },
+    {
+      "id": "exam-lab-02-r3-q14",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "UPDATE 不带 WHERE 可能影响表中所有行。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "answer": "true",
+      "explanation": "缺少过滤条件时，所有行都进入候选更新集合。"
+    },
+    {
+      "id": "exam-lab-02-r3-q15",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "ON DELETE CASCADE 用于父行删除时自动处理引用子行。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键"
+      ],
+      "answer": "true",
+      "explanation": "父行被删除后，对应子记录也会删除。"
+    },
+    {
+      "id": "exam-lab-02-r3-q16",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全外键的删除级联动作。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键"
+      ],
+      "template": "FOREIGN KEY (Cno) REFERENCES course(Cno) {{1}}",
+      "blanks": [
+        [
+          "ON DELETE CASCADE"
+        ]
+      ],
+      "explanation": "父行删除后由 CASCADE 联动删除子行。"
+    },
+    {
+      "id": "exam-lab-02-r3-q17",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全语句，为 course 增加允许 NULL 的课程说明 Note。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "ALTER TABLE"
+      ],
+      "template": "ALTER TABLE course {{1}} Note VARCHAR(40);",
+      "blanks": [
+        [
+          "ADD",
+          "ADD COLUMN"
+        ]
+      ],
+      "explanation": "ADD COLUMN 增加列，省略 NOT NULL 时允许 NULL。"
+    },
+    {
+      "kind": "blank",
+      "points": 4,
+      "prompt": "给领料关系 Out_stock 声明按工程、物资两列组成的复合主键。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "复合键"
+      ],
+      "explanation": "每个工程和物资的组合标识一条领料记录。",
+      "template": "ALTER TABLE Out_stock ADD {{1}};",
+      "blanks": [
+        [
+          "PRIMARY KEY (prj_num, mat_num)"
+        ]
+      ],
+      "id": "exam-lab-02-r3-q18"
+    },
+    {
+      "id": "exam-lab-02-r3-q19",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "仅更新 006 的学时为 68。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "template": "UPDATE course {{1}} Total_perior=68 {{2}} Cno='006';",
+      "blanks": [
+        [
+          "SET"
+        ],
+        [
+          "WHERE"
+        ]
+      ],
+      "explanation": "SET 写更新表达式，WHERE 保留行级条件。"
+    },
+    {
+      "id": "exam-lab-02-r3-q20",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "声明当前学分范围，包含上下限。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "CHECK"
+      ],
+      "template": "CHECK (Credit {{1}})",
+      "blanks": [
+        [
+          "BETWEEN 1 AND 6",
+          ">= 1 AND Credit <= 6",
+          "<= 6 AND Credit >= 1"
+        ]
+      ],
+      "explanation": "两种边界写法都允许 1 到 6，NULL 需单独检查。"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "sc 尚未定义主键。添加复合主键，列顺序为 Sno、Cno。保留原数据。\n\n### 涉及数据表：sc（选课表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `Sno` | CHAR(8) | NOT NULL | 学号 |\n| `Cno` | CHAR(3) | NOT NULL | 课程号 |\n| `Grade` | TINYINT | NULL; DEFAULT NULL; CHECK (Grade between 0 and 100) | 成绩 |\n\n**数据预览（前 2 行）**\n| Sno | Cno | Grade |\n| :--- | :--- | :--- |\n| 20110001 | 001 | 89 |\n| 20110001 | 002 | 78 |",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "复合主键"
+      ],
+      "explanation": "一条选课记录由学号与课号共同确定。",
+      "referenceSql": "ALTER TABLE sc ADD PRIMARY KEY(Sno,Cno);",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "SQL 脚本完整执行",
+          "points": 2
+        },
+        {
+          "kind": "post_query",
+          "label": "基础数据与对象状态",
+          "points": 5,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT COLUMN_NAME,ORDINAL_POSITION FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='sc' AND CONSTRAINT_NAME='PRIMARY' ORDER BY ORDINAL_POSITION; SELECT * FROM sc ORDER BY Sno,Cno;"
+        },
+        {
+          "kind": "negative_check",
+          "label": "变式数据与约束边界",
+          "points": 3,
+          "variantSql": "INSERT INTO course VALUES('990','数据库设计',48,3);",
+          "positiveSql": "INSERT INTO sc VALUES('20110008','001',85);",
+          "negativeSql": "INSERT INTO sc VALUES('20110008','001',90);",
+          "errorCodes": [
+            1062
+          ],
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT COLUMN_NAME,ORDINAL_POSITION FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='sc' AND CONSTRAINT_NAME='PRIMARY' ORDER BY ORDINAL_POSITION; SELECT * FROM sc ORDER BY Sno,Cno;"
+        }
+      ],
+      "id": "exam-lab-02-r3-q21",
+      "setupSql": "ALTER TABLE sc DROP FOREIGN KEY fk_sc_student, DROP FOREIGN KEY fk_sc_course, DROP PRIMARY KEY;"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "Out_stock 的物资外键尚未配置。添加引用 Stock(mat_num) 的外键，使物资编号变更时级联更新领料记录，删除行为保持默认限制。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |\n\n### 涉及数据表：Out_stock（工程领料记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | FK → Salvaging.prj_num; PRIMARY KEY（第 1 列） | 工程编号 |\n| `mat_num` | CHAR(4) | PRIMARY KEY（第 2 列） | 物资编号 |\n| `amount` | INT | NOT NULL; CHECK (amount >= 0) | 数量 |\n| `get_date` | DATETIME | NOT NULL; DEFAULT CURRENT_TIMESTAMP | 领料时间 |\n| `department` | VARCHAR(20) | NOT NULL | 领料部门 |\n\n**数据预览（前 2 行）**\n| prj_num | mat_num | amount | get_date | department |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | m001 | 4 | 2011-03-01 00:00:00 | 工程 1 部 |\n| 20110001 | m002 | 3 | 2011-03-02 00:00:00 | 工程 1 部 |",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键",
+        "级联更新"
+      ],
+      "explanation": "外键定义在领料关系上，通过 ON UPDATE CASCADE 保持引用一致。",
+      "referenceSql": "ALTER TABLE Out_stock ADD FOREIGN KEY(mat_num) REFERENCES Stock(mat_num) ON UPDATE CASCADE;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "SQL 脚本完整执行",
+          "points": 2
+        },
+        {
+          "kind": "post_query",
+          "label": "基础数据与对象状态",
+          "points": 5,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT UPDATE_RULE,DELETE_RULE FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='out_stock' AND LOWER(REFERENCED_TABLE_NAME)='stock'; SELECT prj_num,mat_num,amount,get_date,department FROM Out_stock ORDER BY prj_num,mat_num;"
+        },
+        {
+          "kind": "negative_check",
+          "label": "变式数据与约束边界",
+          "points": 3,
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES('m090','绝缘胶带','XD-1','供电局 1# 仓库',60,18.50);",
+          "positiveSql": "UPDATE Stock SET mat_num='m088' WHERE mat_num='m006';",
+          "negativeSql": "DELETE FROM Stock WHERE mat_num='m088';",
+          "errorCodes": [
+            1451
+          ],
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT UPDATE_RULE,DELETE_RULE FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='out_stock' AND LOWER(REFERENCED_TABLE_NAME)='stock'; SELECT prj_num,mat_num,amount,get_date,department FROM Out_stock ORDER BY prj_num,mat_num;"
+        }
+      ],
+      "id": "exam-lab-02-r3-q22",
+      "setupSql": "ALTER TABLE Out_stock DROP FOREIGN KEY Out_stock_ibfk_2;"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "现有 course 学分检查已移除。恢复 Credit 在 1 到 6 之间的 CHECK，两端均允许。保留可空属性及其他列约束。\n\n### 涉及数据表：course（课程表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `Cno` | CHAR(3) | PRIMARY KEY | 课程号 |\n| `Cname` | VARCHAR(30) | NOT NULL | 课程名 |\n| `Total_perior` | SMALLINT | NULL; DEFAULT NULL; CHECK (Total_perior > 0) | 总学时 |\n| `Credit` | TINYINT | NULL; DEFAULT NULL | 学分 |\n\n**数据预览（前 2 行）**\n| Cno | Cname | Total_perior | Credit |\n| :--- | :--- | :--- | :--- |\n| 001 | 高数 | 96 | 6 |\n| 002 | C语言程序设计 | 80 | 5 |",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "域完整性",
+        "CHECK"
+      ],
+      "explanation": "CHECK 检验取值区间，并保留 NULL 的未知语义。",
+      "referenceSql": "ALTER TABLE course ADD CHECK(Credit BETWEEN 1 AND 6);",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "SQL 脚本完整执行",
+          "points": 2
+        },
+        {
+          "kind": "post_query",
+          "label": "基础数据与对象状态",
+          "points": 5,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT LOWER(COLUMN_NAME) AS col,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='course' AND LOWER(COLUMN_NAME) IN ('credit') ORDER BY ORDINAL_POSITION; SELECT * FROM course ORDER BY Cno;"
+        },
+        {
+          "kind": "negative_check",
+          "label": "变式数据与约束边界",
+          "points": 3,
+          "variantSql": "INSERT INTO course VALUES('990','数据库设计',48,3);",
+          "positiveSql": "INSERT INTO course VALUES('989','边界学分',32,6);",
+          "negativeSql": "INSERT INTO course VALUES('988','超界学分',32,7);",
+          "errorCodes": [
+            3819
+          ],
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT LOWER(COLUMN_NAME) AS col,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='course' AND LOWER(COLUMN_NAME) IN ('credit') ORDER BY ORDINAL_POSITION; SELECT * FROM course ORDER BY Cno;"
+        }
+      ],
+      "id": "exam-lab-02-r3-q23",
+      "setupSql": "ALTER TABLE course DROP CHECK course_chk_2;"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "对 student 删除 Postcode 列及其邮编检查，再使 Home_addr 默认为“未登记”。保留其他字段、约束及原有地址。\n\n### 涉及数据表：student（学生表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `Sno` | CHAR(8) | PRIMARY KEY | 学号 |\n| `Sname` | VARCHAR(20) | NOT NULL | 姓名 |\n| `Sex` | CHAR(2) | NOT NULL; DEFAULT '男' | 性别 |\n| `Birth` | DATE | NOT NULL; CHECK (Entrance_date > Birth) | 出生日期 |\n| `Classno` | CHAR(3) | NOT NULL | 班级编号 |\n| `Entrance_date` | DATE | NOT NULL; CHECK (Entrance_date > Birth) | 入学日期 |\n| `Home_addr` | VARCHAR(40) | NULL; DEFAULT NULL | 家庭地址 |\n| `Sdept` | VARCHAR(20) | NOT NULL | 所在系 |\n| `Postcode` | CHAR(6) | NULL; DEFAULT NULL; CHECK ((Postcode is null) or Postcode REGEXP '^[0-9]{6}$') | 邮政编码 |\n\n**数据预览（前 2 行）**\n| Sno | Sname | Sex | Birth | Classno | Entrance_date | Home_addr | Sdept | Postcode |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| 20110001 | 张虹 | 男 | 1992-09-01 | 051 | 2011-09-01 | 南京 | 计算机系 | 200413 |\n| 20110002 | 林红 | 女 | 1991-11-12 | 051 | 2011-09-01 | 北京 | 计算机系 | 100010 |",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "ALTER TABLE",
+        "DEFAULT"
+      ],
+      "explanation": "删除字段前移除引用它的表级约束。设置默认值不会重写现有值。",
+      "referenceSql": "ALTER TABLE student DROP CHECK chk_student_postcode, DROP COLUMN Postcode, ALTER COLUMN Home_addr SET DEFAULT '未登记';",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "SQL 脚本完整执行",
+          "points": 2
+        },
+        {
+          "kind": "post_query",
+          "label": "基础数据与对象状态",
+          "points": 5,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT LOWER(COLUMN_NAME) AS col,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='student' AND LOWER(COLUMN_NAME) IN ('postcode','home_addr') ORDER BY ORDINAL_POSITION; SELECT Sno,Home_addr FROM student ORDER BY Sno;"
+        },
+        {
+          "kind": "post_query",
+          "label": "变式数据校验",
+          "points": 3,
+          "variantSql": "INSERT INTO student(Sno,Sname,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','周新','1993-03-08','051','2011-09-01','计算机系');",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT LOWER(COLUMN_NAME) AS col,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='student' AND LOWER(COLUMN_NAME) IN ('postcode','home_addr') ORDER BY ORDINAL_POSITION; SELECT Sno,Home_addr FROM student ORDER BY Sno;"
+        }
+      ],
+      "id": "exam-lab-02-r3-q24"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "Stock 的单价检查当前为非负，现改为单价严格大于 0。保留单价可空属性及全部库存记录。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "CHECK",
+        "修改约束"
+      ],
+      "explanation": "先删除旧单价检查，再定义严格正值。CHECK 仍允许未知值。",
+      "referenceSql": "ALTER TABLE Stock DROP CHECK Stock_chk_2, ADD CHECK(unit>0);",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "SQL 脚本完整执行",
+          "points": 2
+        },
+        {
+          "kind": "post_query",
+          "label": "基础数据与对象状态",
+          "points": 5,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT COUNT(*) AS price_checks FROM information_schema.CHECK_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND LOWER(CHECK_CLAUSE) LIKE '%unit%'; SELECT mat_num,mat_name,speci,warehouse,amount,unit FROM Stock ORDER BY mat_num;"
+        },
+        {
+          "kind": "negative_check",
+          "label": "变式数据与约束边界",
+          "points": 3,
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES('m090','绝缘胶带','XD-1','供电局 1# 仓库',60,18.50);",
+          "positiveSql": "UPDATE Stock SET unit=0.01 WHERE mat_num='m001';",
+          "negativeSql": "UPDATE Stock SET unit=0 WHERE mat_num='m002';",
+          "errorCodes": [
+            3819
+          ],
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT COUNT(*) AS price_checks FROM information_schema.CHECK_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND LOWER(CHECK_CLAUSE) LIKE '%unit%'; SELECT mat_num,mat_name,speci,warehouse,amount,unit FROM Stock ORDER BY mat_num;"
+        }
+      ],
+      "id": "exam-lab-02-r3-q25"
+    }
+  ],
+  "revision": 3
+}

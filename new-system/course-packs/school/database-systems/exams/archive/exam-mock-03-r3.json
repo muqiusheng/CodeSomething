@@ -1,0 +1,522 @@
+{
+  "id": "exam-mock-03",
+  "title": "综合模拟卷三 · 多表关联与视图",
+  "group": "mock",
+  "revision": 3,
+  "questions": [
+    {
+      "id": "exam-mock-03-r3-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "CALL p_round(@score) 前 @score 为 72。过程必须读取 72、加 3，再把 75 写回 @score。参数方向应如何设计？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "options": {
+        "A": "IN",
+        "B": "用 DECLARE 代替参数",
+        "C": "OUT",
+        "D": "INOUT"
+      },
+      "answer": "D",
+      "explanation": "INOUT 接收调用时的值并在返回时写回。IN 不回传，OUT 不使用调用者传入的初值。"
+    },
+    {
+      "id": "exam-mock-03-r3-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "要删除 student 上命名为 chk_student_postcode 的校验，并保留 Postcode 列及其数据，哪条语句符合要求？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DDL"
+      ],
+      "options": {
+        "A": "ALTER TABLE student DROP COLUMN Postcode",
+        "B": "DROP TABLE chk_student_postcode",
+        "C": "UPDATE student SET Postcode=NULL",
+        "D": "ALTER TABLE student DROP CHECK chk_student_postcode"
+      },
+      "answer": "D",
+      "explanation": "DROP CHECK 删除指定 CHECK 对象。删除列或更新数据都会改变要保留的内容。"
+    },
+    {
+      "id": "exam-mock-03-r3-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "新增选课触发器发现 Grade 超过业务上限时，要阻止写入并让调用方读到自定义文字。哪条语句可放在 IF 分支内？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "SIGNAL"
+      ],
+      "options": {
+        "A": "SELECT '成绩待复核'",
+        "B": "SET @msg='成绩待复核'",
+        "C": "SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='成绩待复核'",
+        "D": "RESIGNAL SET MESSAGE_TEXT='成绩待复核'"
+      },
+      "answer": "C",
+      "explanation": "SIGNAL 可以主动抛出用户定义异常并指定文本。RESIGNAL 用于条件处理器中重抛当前条件。"
+    },
+    {
+      "id": "exam-mock-03-r3-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "某审核查询用 CASE WHEN Grade<60 THEN 1 ELSE 0 END 为失败记录计数。输入为 40、59、60、NULL，标记值之和是多少？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "条件"
+      ],
+      "options": {
+        "A": "3",
+        "B": "1",
+        "C": "2",
+        "D": "NULL"
+      },
+      "answer": "C",
+      "explanation": "40 和 59 满足条件。60 不小于 60，NULL 的比较结果未知并进入 ELSE。"
+    },
+    {
+      "id": "exam-mock-03-r3-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "一条审计规则要求 NULL→86、86→NULL 算改变，NULL→NULL 和 86→86 都不算。哪个触发条件满足？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "NULL"
+      ],
+      "options": {
+        "A": "NEW.Grade <> OLD.Grade",
+        "B": "NOT (NEW.Grade <=> OLD.Grade)",
+        "C": "NEW.Grade IS NOT NULL AND NEW.Grade<>OLD.Grade",
+        "D": "NEW.Grade IS NULL OR OLD.Grade IS NULL"
+      },
+      "answer": "B",
+      "explanation": "空值安全比较在两值相等或都为空时返回真。取反即可精确判断是否发生变化。"
+    },
+    {
+      "kind": "choice",
+      "points": 2,
+      "prompt": "某工程开工于 3 月 1 日 23:00，结束于 3 月 2 日 01:00。MySQL 的 DATEDIFF(end_date,start_date) 应是多少？",
+      "labId": "lab-05-views",
+      "tags": [
+        "多表连接"
+      ],
+      "explanation": "DATEDIFF 比较日期部分，忽略一天内的时刻。",
+      "options": {
+        "A": "2",
+        "B": "-1",
+        "C": "1",
+        "D": "0"
+      },
+      "answer": "C",
+      "id": "exam-mock-03-r3-q06"
+    },
+    {
+      "id": "exam-mock-03-r3-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "过程 p_check 定义 OUT p_count INT、OUT p_valid INT。CALL p_check(@all,@valid) 已成功，随后哪项操作能安全读取本次输出？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "options": {
+        "A": "在新连接 SELECT @all,@valid",
+        "B": "从 information_schema.ROUTINES 查询两个输出值",
+        "C": "在其他连接 SELECT p_count,p_valid",
+        "D": "在同一连接 SELECT @all,@valid"
+      },
+      "answer": "D",
+      "explanation": "用户变量的作用域是会话，过程内部形参名离开过程后不可直接引用。"
+    },
+    {
+      "id": "exam-mock-03-r3-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "学生 20110001 的 001 号选课误录为未登记，但同生其他课程的未登记记录应保留。哪条语句仅删除指定学号、课号且 Grade 为 NULL 的记录？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "options": {
+        "A": "DELETE FROM sc WHERE Sno='20110001' AND Grade IS NULL",
+        "B": "DELETE FROM sc WHERE Cno='001' AND Grade IS NULL",
+        "C": "DELETE FROM sc WHERE Sno='20110001' AND Cno='001' AND Grade IS NULL",
+        "D": "DELETE FROM sc WHERE Sno='20110001' AND Cno='001' AND Grade=NULL"
+      },
+      "answer": "C",
+      "explanation": "三个条件都必须成立，IS NULL 正确识别未登记成绩。"
+    },
+    {
+      "id": "exam-mock-03-r3-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "同一 InnoDB 表的单条多行 INSERT 中，第一条符合触发器规则，第二条因 SIGNAL 失败。语句失败后哪项正确？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "事务"
+      ],
+      "options": {
+        "A": "第一行已持久保存，第二行未写入",
+        "B": "这条语句涉及的两行都未留下",
+        "C": "两行已写入，只返回错误提示",
+        "D": "第一行保留到下一次 SELECT 才回滚"
+      },
+      "answer": "B",
+      "explanation": "对事务型表，单条语句失败时撤销该语句的全部数据改动。"
+    },
+    {
+      "id": "exam-mock-03-r3-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "下面哪种状况下，COUNT(*)=3、COUNT(Grade)=2、MIN(Grade)=0 可以同时成立？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "options": {
+        "A": "三条记录的成绩为 0、85、NULL",
+        "B": "三条记录的成绩为 NULL、85、90",
+        "C": "三条记录的成绩为 0、0、0",
+        "D": "三条记录的成绩为 NULL、NULL、NULL"
+      },
+      "answer": "A",
+      "explanation": "三项聚合分别统计全部记录、非空记录和最小非空值。0 是有效分数。"
+    },
+    {
+      "id": "exam-mock-03-r3-q11",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "将 (Sno,Cno) 声明为主键后，不能靠给 Sno 传 NULL 绕过它的唯一约束。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "主键"
+      ],
+      "answer": "true",
+      "explanation": "主键中的每个列都要求非空。它与可为空的普通 UNIQUE 约束不同。"
+    },
+    {
+      "id": "exam-mock-03-r3-q12",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "即使 BEFORE INSERT 触发器给 NEW.Grade 赋值为 101，种子表本身的 Grade 范围约束仍会阻止这条记录落表。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "约束"
+      ],
+      "answer": "true",
+      "explanation": "触发器可以改写即将写入的值，但最终非空值仍须满足 CHECK 约束的 0 到 100。"
+    },
+    {
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "仓库条件和单价条件都命中同一物资，两个分支投影相同列时，UNION 的结果只保留一行。",
+      "labId": "lab-05-views",
+      "tags": [
+        "多表连接"
+      ],
+      "explanation": "UNION 使用投影后的整行来去重。",
+      "answer": "true",
+      "id": "exam-mock-03-r3-q13"
+    },
+    {
+      "id": "exam-mock-03-r3-q14",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "若过程把 IN 参数 p_credit 加一，传入的用户变量 @credit 会在 CALL 返回时自动加一。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "answer": "false",
+      "explanation": "IN 参数的值传入后可在过程内使用或改写，但改写不会写回实际参数。"
+    },
+    {
+      "id": "exam-mock-03-r3-q15",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "执行 SELECT Cno,COUNT(*) FROM sc WHERE 1=0 GROUP BY Cno 会得到一行 NULL 课号、人数 0 的结果。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "分组"
+      ],
+      "answer": "false",
+      "explanation": "显式 GROUP BY 且无输入时没有分组，因此是零行。省略 GROUP BY 的全表聚合才产生一个计数值 0。"
+    },
+    {
+      "id": "exam-mock-03-r3-q16",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "验证两轮批量课程变更。补全保存点语句，使第二次变更撤回，而第一次保留并提交。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "事务"
+      ],
+      "template": "START TRANSACTION;\nUPDATE course SET Credit=2 WHERE Cno='001';\n{{1}} after_first;\nUPDATE course SET Credit=3 WHERE Cno='002';\n{{2}} after_first;\nCOMMIT;",
+      "blanks": [
+        [
+          "SAVEPOINT"
+        ],
+        [
+          "ROLLBACK TO SAVEPOINT",
+          "ROLLBACK TO"
+        ]
+      ],
+      "explanation": "SAVEPOINT 记录事务位置，ROLLBACK TO 撤销该位置之后的写入。"
+    },
+    {
+      "id": "exam-mock-03-r3-q17",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "在存储过程块中补全整型变量声明，默认值为 0。随后读取有成绩的记录数并写入该变量。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "局部变量"
+      ],
+      "template": "BEGIN\n  {{1}} n INT DEFAULT 0;\n  SELECT COUNT(Grade) {{2}} n FROM sc;\nEND",
+      "blanks": [
+        [
+          "DECLARE"
+        ],
+        [
+          "INTO"
+        ]
+      ],
+      "explanation": "局部变量在块开头用 DECLARE 声明，单值查询通过 INTO 写入该变量。"
+    },
+    {
+      "kind": "blank",
+      "points": 4,
+      "prompt": "从两个物资结果做去重合并，补全集合运算。",
+      "labId": "lab-05-views",
+      "tags": [
+        "多表连接"
+      ],
+      "explanation": "默认 UNION 去除完全重复的结果行。",
+      "template": "SELECT mat_num FROM Stock WHERE warehouse='供电局 1# 仓库' {{1}} SELECT mat_num FROM Stock WHERE unit<=50;",
+      "blanks": [
+        [
+          "UNION"
+        ]
+      ],
+      "id": "exam-mock-03-r3-q18"
+    },
+    {
+      "id": "exam-mock-03-r3-q19",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全更新审计的两个条件，先判断旧值为空，再判断新值非空。仅在这两个条件都满足时写入审计表。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "template": "IF {{1}} AND {{2}} THEN\n  INSERT INTO audit_insert(Sno,Cno,Grade) VALUES (NEW.Sno,NEW.Cno,NEW.Grade);\nEND IF;",
+      "blanks": [
+        [
+          "OLD.Grade IS NULL"
+        ],
+        [
+          "NEW.Grade IS NOT NULL"
+        ]
+      ],
+      "explanation": "OLD 指更新前，NEW 指更新后。前值为空、后值非空，两项条件要同时满足。"
+    },
+    {
+      "id": "exam-mock-03-r3-q20",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全 ALTER TABLE，仅删除 sc 的课程外键 fk_sc_course，保留列和现有选课记录。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键"
+      ],
+      "template": "ALTER TABLE sc {{1}} fk_sc_course;",
+      "blanks": [
+        [
+          "DROP FOREIGN KEY"
+        ]
+      ],
+      "explanation": "DROP FOREIGN KEY 删除指定参照约束。删除外键不会删除课程号列或清空表。"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "计算实际领过料的工程物资总成本，输出 prj_num、total_cost，按成本降序、项目号升序取前 3 项。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "多表连接",
+        "TOP-N"
+      ],
+      "explanation": "将 Out_stock 的领取数量乘上 Stock 单价，按工程聚合后先排序再 LIMIT。",
+      "referenceSql": "SELECT o.prj_num,SUM(o.amount*s.unit) AS total_cost FROM Out_stock o JOIN Stock s ON s.mat_num=o.mat_num GROUP BY o.prj_num ORDER BY total_cost DESC,o.prj_num LIMIT 3;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Out_stock VALUES ('20110005','m006',20,'2011-03-02','工程 1 部');INSERT INTO Out_stock VALUES ('20110001','m005',8,'2011-03-02','工程 1 部');"
+        }
+      ],
+      "id": "exam-mock-03-r3-q21"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "找出从未领取 m001 的抢修工程，包含从未领过任何物资的工程。输出 prj_num、prj_name，按工程号升序。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "NOT EXISTS"
+      ],
+      "explanation": "课件例 3.56–3.57。只否定与当前工程关联且物资为 m001 的领料记录。",
+      "referenceSql": "SELECT s.prj_num,s.prj_name FROM Salvaging s WHERE NOT EXISTS (SELECT 1 FROM Out_stock o WHERE o.prj_num=s.prj_num AND o.mat_num='m001') ORDER BY s.prj_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Salvaging VALUES ('20110006','东海电缆抢修','2011-03-02','2011-03-09',b'0');INSERT INTO Out_stock VALUES ('20110005','m001',7,'2011-03-02','工程 1 部');INSERT INTO Out_stock VALUES ('20110006','m002',7,'2011-03-02','工程 1 部');"
+        }
+      ],
+      "id": "exam-mock-03-r3-q22"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "建立 s1_salvaging 视图，输出 prj_name、start_date、end_date、days。days 是结束日期减开始日期的日历天数。未结束的项目保留，天数为 NULL。",
+      "labId": "lab-05-views",
+      "tags": [
+        "计算列视图",
+        "DATEDIFF"
+      ],
+      "explanation": "课件例 3.79。MySQL 使用 DATEDIFF(end_date,start_date)，比较日期部分。",
+      "referenceSql": "CREATE VIEW s1_salvaging AS SELECT prj_name,start_date,end_date,DATEDIFF(end_date,start_date) AS days FROM Salvaging;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT prj_name,start_date,end_date,days FROM s1_salvaging ORDER BY prj_name;SELECT CHECK_OPTION, IS_UPDATABLE FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='s1_salvaging';"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT prj_name,start_date,end_date,days FROM s1_salvaging ORDER BY prj_name;SELECT CHECK_OPTION, IS_UPDATABLE FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='s1_salvaging';",
+          "variantSql": "INSERT INTO Salvaging VALUES ('20110006','东海电缆抢修','2011-05-01 23:00:00','2011-05-02 01:00:00',b'0');"
+        }
+      ],
+      "id": "exam-mock-03-r3-q23"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "通过已预置的 s1_stock 视图把 m001 的库存量改为 100。只有当 m001 在该视图中可见时才更新，并保留其它物资的库存量。",
+      "labId": "lab-05-views",
+      "tags": [
+        "可更新视图",
+        "基表联动"
+      ],
+      "explanation": "课件例 3.86。可更新视图把修改映射至基表，视图谓词仍然限定要修改的行。",
+      "referenceSql": "UPDATE s1_stock SET amount=100 WHERE mat_num='m001';",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT mat_num,mat_name,speci,warehouse,amount,unit FROM Stock ORDER BY mat_num;SELECT mat_num,mat_name,speci,amount,unit FROM s1_stock ORDER BY mat_num;"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT mat_num,mat_name,speci,warehouse,amount,unit FROM Stock ORDER BY mat_num;SELECT mat_num,mat_name,speci,amount,unit FROM s1_stock ORDER BY mat_num;",
+          "variantSql": "UPDATE Stock SET warehouse='供电局 2# 仓库' WHERE mat_num='m001';"
+        }
+      ],
+      "setupSql": "CREATE VIEW s1_stock AS SELECT mat_num,mat_name,speci,amount,unit FROM Stock WHERE warehouse='供电局 1# 仓库';",
+      "id": "exam-mock-03-r3-q24"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "用 UNION 合并供电局 1# 仓库物资与单价不高于 50 的物资，输出 mat_num、mat_name、unit。重复行只保留一次，按单价降序、物资编号升序。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "UNION",
+        "结果排序"
+      ],
+      "explanation": "课件例 3.61。UNION 去除两侧交集中的重复行，末尾 ORDER BY 作用于并集。",
+      "referenceSql": "SELECT mat_num,mat_name,unit FROM Stock WHERE warehouse='供电局 1# 仓库' UNION SELECT mat_num,mat_name,unit FROM Stock WHERE unit<=50 ORDER BY unit DESC,mat_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 2# 仓库',65,50);INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m009','应急电缆','YJV-35','供电局 1# 仓库',65,85);"
+        }
+      ],
+      "id": "exam-mock-03-r3-q25"
+    }
+  ]
+}

@@ -1,0 +1,540 @@
+{
+  "id": "exam-mock-04",
+  "title": "综合模拟卷四 · 考前全真压轴",
+  "group": "mock",
+  "revision": 4,
+  "questions": [
+    {
+      "id": "exam-mock-04-r4-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "在课号外键设置 ON DELETE RESTRICT 的情况下，课程清理程序希望先删除父行，再删除相关选课，且始终保持检查开启。哪一项准确？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "外键"
+      ],
+      "options": {
+        "A": "应先修改成绩为 NULL，再删除父行",
+        "B": "只需把父行删除包在事务内就会推迟外键检查",
+        "C": "应先删除相关子行再删除父行，可放在同一事务内",
+        "D": "只要父行主键不同于 Sno 就能删除"
+      },
+      "answer": "C",
+      "explanation": "MySQL 的 RESTRICT 当前语句就会检查父行引用关系。子行先清理可满足删除父行的约束。"
+    },
+    {
+      "id": "exam-mock-04-r4-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "若 sc 只记录每位学生每门课的一次选课及成绩，由模式规定的函数依赖是？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "关系模式"
+      ],
+      "options": {
+        "A": "Sno → Grade",
+        "B": "Cno → Sno",
+        "C": "(Sno,Cno) → Grade",
+        "D": "Grade → Cno"
+      },
+      "answer": "C",
+      "explanation": "复合主键确定一条选课记录及其成绩。单个学号或课号均可能关联多条记录。"
+    },
+    {
+      "id": "exam-mock-04-r4-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "在存储过程的游标控制中，标准顺序是哪一项？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "游标"
+      ],
+      "options": {
+        "A": "声明、打开、提取、关闭",
+        "B": "打开、关闭、提取、声明",
+        "C": "提取、声明、打开、关闭",
+        "D": "声明、提取、打开、关闭"
+      },
+      "answer": "A",
+      "explanation": "游标必须先打开才能提取行，通过关闭释放本次游标使用。"
+    },
+    {
+      "id": "exam-mock-04-r4-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "成绩记录为 58、60、90、NULL。查询 WHERE Grade BETWEEN 60 AND 90 AND NOT (Grade=60) 会输出什么？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "NULL"
+      ],
+      "options": {
+        "A": "输出 60 和 90",
+        "B": "输出 90 和 NULL",
+        "C": "输出 58 和 90",
+        "D": "只输出 90"
+      },
+      "answer": "D",
+      "explanation": "BETWEEN 包含两端，但后一个条件排除了 60。NULL 不能使整个谓词为真。"
+    },
+    {
+      "id": "exam-mock-04-r4-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "查“从未选过 Cno 为 006 的学生”时，用 student s LEFT JOIN sc x，再通过 WHERE x.Sno IS NULL 筛选。正确的 ON 是哪项？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "外连接"
+      ],
+      "options": {
+        "A": "s.Sno=x.Sno",
+        "B": "s.Sno=x.Sno AND x.Cno='006'",
+        "C": "s.Sno=x.Sno AND x.Cno<>'006'",
+        "D": "s.Sno=x.Sno AND x.Grade IS NULL"
+      },
+      "answer": "B",
+      "explanation": "先将匹配限定为 006。一个学生选过别的课也能在找不到 006 时保留为补空行。"
+    },
+    {
+      "kind": "choice",
+      "points": 2,
+      "prompt": "所有工程都纳入全称查询，新增一条尚无领料的工程后，“每个工程都领取过”的物资结果会怎样？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "双重 NOT EXISTS"
+      ],
+      "explanation": "对每种物资，新工程都是一个未领取的反例。",
+      "options": {
+        "A": "返回所有物资",
+        "B": "没有符合的物资",
+        "C": "只剩价格最高的物资",
+        "D": "保持原有结果"
+      },
+      "answer": "B",
+      "id": "exam-mock-04-r4-q06"
+    },
+    {
+      "id": "exam-mock-04-r4-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "视图 v_marks 按 Cno 分组并投影 AVG(Grade)。为什么不能直接 UPDATE 它的平均成绩列？",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图更新"
+      ],
+      "options": {
+        "A": "视图没有命名",
+        "B": "分组聚合结果不能映射到唯一可更新的基表记录",
+        "C": "所有视图都允许 UPDATE",
+        "D": "仅因结果没有排序"
+      },
+      "answer": "B",
+      "explanation": "聚合行综合多条基表记录，修改计算值无法唯一确定对基表的更改。"
+    },
+    {
+      "id": "exam-mock-04-r4-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "某课程实际选课成绩为 40、60、NULL。报告要显示“已登记成绩中的达标率”，应计算哪一个结果？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "options": {
+        "A": "1/3",
+        "B": "2/3",
+        "C": "1/2",
+        "D": "1/1"
+      },
+      "answer": "C",
+      "explanation": "通过的成绩只有 60 一条。分母必须是非空成绩条数，不能将 NULL 当作不及格参与分母。"
+    },
+    {
+      "id": "exam-mock-04-r4-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "两份成绩导出都包含 ('20110001','006',85)，另无相同记录。对 Sno,Cno,Grade 三列执行 UNION 与 UNION ALL，分别保留该记录几次？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "集合"
+      ],
+      "options": {
+        "A": "两者均一次",
+        "B": "两者均两次",
+        "C": "UNION 两次，UNION ALL 一次",
+        "D": "UNION 一次，UNION ALL 两次"
+      },
+      "answer": "D",
+      "explanation": "UNION 按整个投影行去重。UNION ALL 将两边记录直接拼接。"
+    },
+    {
+      "id": "exam-mock-04-r4-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "开启事务后用 UPDATE 修改 course，然后成功执行 ALTER TABLE course ADD COLUMN note VARCHAR(20)，最后执行 ROLLBACK。在常规 InnoDB 表上会怎样？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "事务"
+      ],
+      "options": {
+        "A": "先前 UPDATE 和新增列都被撤销",
+        "B": "先前 UPDATE 已提交，新增列也保留",
+        "C": "先前 UPDATE 撤销，新增列保留",
+        "D": "先前 UPDATE 保留，新增列被撤销"
+      },
+      "answer": "B",
+      "explanation": "普通 ALTER TABLE 引发隐式提交。最后的 ROLLBACK 不能撤销已经提交的更新和 DDL。"
+    },
+    {
+      "id": "exam-mock-04-r4-q11",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "即使给 course.Credit 增加 DEFAULT 1，列保持可空且只有范围 CHECK，显式写入 NULL 仍有可能成功。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "CHECK"
+      ],
+      "answer": "true",
+      "explanation": "DEFAULT 在省略列或指定 DEFAULT 时使用。显式 NULL 不会转成默认值，CHECK 的 UNKNOWN 不会拒绝它。"
+    },
+    {
+      "id": "exam-mock-04-r4-q12",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "SELECT Grade+1 AS adjusted FROM sc WHERE adjusted>=60 在 sc 没有 adjusted 列时，可直接按查询中定义的别名完成过滤。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "别名"
+      ],
+      "answer": "false",
+      "explanation": "普通 WHERE 无法引用同一层 SELECT 的别名。可写成 Grade+1>=60，或在派生表外层使用别名。"
+    },
+    {
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "以谓词 get_date < 截止时刻选中旧领料时，get_date 等于截止时刻的记录满足该谓词。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "谓词边界"
+      ],
+      "explanation": "严格小于排除等于边界的记录。",
+      "answer": "false",
+      "id": "exam-mock-04-r4-q13"
+    },
+    {
+      "id": "exam-mock-04-r4-q14",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "对同一非空成绩组，若另外加入一条 Grade 为 NULL 的选课记录，AVG(Grade) 保持不变，COUNT(*) 则增加 1。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "answer": "true",
+      "explanation": "平均值跳过缺失成绩，COUNT(*) 仍纳入新增的整行。"
+    },
+    {
+      "id": "exam-mock-04-r4-q15",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "把“学生活动记录”子查询中的 x.Sno=s.Sno 误写成 x.Sno=x.Sno 后，外层学生仍会逐人检验自身活动记录。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "相关子查询"
+      ],
+      "answer": "false",
+      "explanation": "查询条件不再引用外层 s，且 sc.Sno 非空，因此子查询只检查整个选课表是否有记录。"
+    },
+    {
+      "id": "exam-mock-04-r4-q16",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全聚合，计算指定课程有成绩记录中的及格比例。无有效成绩时结果应为 NULL。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "template": "SELECT COUNT(CASE WHEN {{1}} THEN 1 END)/NULLIF({{2}},0) AS pass_rate\nFROM sc WHERE Cno='006';",
+      "blanks": [
+        [
+          "Grade>=60",
+          "60<=Grade"
+        ],
+        [
+          "COUNT(Grade)"
+        ]
+      ],
+      "explanation": "分子只计达标行，分母只计已登记成绩。NULLIF 把 0 分母改为 NULL。"
+    },
+    {
+      "id": "exam-mock-04-r4-q17",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全反连接以找出没有匹配报名的课程。要求符合当前模式下 sc 的非空键判定，不能用 Grade 判断。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "外连接"
+      ],
+      "template": "SELECT c.Cno,c.Cname FROM course c LEFT JOIN sc e ON {{1}}\nWHERE {{2}};",
+      "blanks": [
+        [
+          "c.Cno=e.Cno",
+          "e.Cno=c.Cno"
+        ],
+        [
+          "e.Sno IS NULL",
+          "e.Cno IS NULL"
+        ]
+      ],
+      "explanation": "先关联课程主键，后检查右侧非空键是否被外连接补成 NULL。"
+    },
+    {
+      "kind": "blank",
+      "points": 4,
+      "prompt": "查询规范的 YJV 规格，补全 MySQL 正则匹配运算符。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "双重 NOT EXISTS"
+      ],
+      "explanation": "锚点限制整个字符串，+ 要求至少一个数字。",
+      "template": "SELECT mat_num FROM Stock WHERE speci {{1}} '^YJV-[0-9]+$';",
+      "blanks": [
+        [
+          "REGEXP",
+          "RLIKE"
+        ]
+      ],
+      "id": "exam-mock-04-r4-q18"
+    },
+    {
+      "id": "exam-mock-04-r4-q19",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "现需一份可更新的成绩视图，任何通过视图写入的值都要同时保持 Cno 为 006 和 Grade 非空。补全过滤与约束。",
+      "labId": "lab-05-views",
+      "tags": [
+        "检查选项"
+      ],
+      "template": "CREATE VIEW v_006_registered AS SELECT Sno,Cno,Grade FROM sc\nWHERE Cno='006' AND {{1}} {{2}};",
+      "blanks": [
+        [
+          "Grade IS NOT NULL"
+        ],
+        [
+          "WITH CHECK OPTION",
+          "WITH CASCADED CHECK OPTION",
+          "WITH LOCAL CHECK OPTION"
+        ]
+      ],
+      "explanation": "过滤条件决定显示范围，单层视图的 CHECK OPTION 各写法均检查更新后是否仍满足该范围。"
+    },
+    {
+      "id": "exam-mock-04-r4-q20",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "过程要在调用方传入的计数基础上累加及格人数。填写参数方向，并补全用原 p_total 与当前统计 cnt 计算新值的右侧表达式。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "template": "CREATE PROCEDURE p_add_passed({{1}} p_total INT)\nBEGIN\n  DECLARE cnt INT;\n  SELECT COUNT(*) INTO cnt FROM sc WHERE Grade>=60;\n  SET p_total={{2}};\nEND;",
+      "blanks": [
+        [
+          "INOUT"
+        ],
+        [
+          "p_total+cnt",
+          "cnt+p_total"
+        ]
+      ],
+      "explanation": "过程需要读取初始计数并写回累加结果，因此使用 INOUT。赋值右侧要保留原 p_total，再加新统计值。"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "使用双重 NOT EXISTS 查找被每个抢修工程都领用过的物资，输出 mat_num、mat_name、speci，按物资编号升序。尚未领料的工程也纳入全称条件。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |\n\n### 涉及数据表：Salvaging（电力抢修工程表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | PRIMARY KEY | 工程编号 |\n| `prj_name` | VARCHAR(50) | NOT NULL | 工程名称 |\n| `start_date` | DATETIME | NOT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 开始日期 |\n| `end_date` | DATETIME | NULL; DEFAULT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 结束日期 |\n| `prj_status` | BIT(1) | NOT NULL; DEFAULT b'0' | 工程状态（0 为未结算，1 为已结算） |\n\n**数据预览（前 2 行）**\n| prj_num | prj_name | start_date | end_date | prj_status |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | 南桥站配电抢修 | 2011-03-01 00:00:00 | 2011-03-04 00:00:00 | 1 |\n| 20110002 | 海湾站电缆抢修 | 2011-03-02 00:00:00 | 2011-03-08 00:00:00 | 0 |\n\n### 涉及数据表：Out_stock（工程领料记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | FK → Salvaging.prj_num; PRIMARY KEY（第 1 列） | 工程编号 |\n| `mat_num` | CHAR(4) | FK → Stock.mat_num; PRIMARY KEY（第 2 列） | 物资编号 |\n| `amount` | INT | NOT NULL; CHECK (amount >= 0) | 数量 |\n| `get_date` | DATETIME | NOT NULL; DEFAULT CURRENT_TIMESTAMP | 领料时间 |\n| `department` | VARCHAR(20) | NOT NULL | 领料部门 |\n\n**数据预览（前 2 行）**\n| prj_num | mat_num | amount | get_date | department |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | m001 | 4 | 2011-03-01 00:00:00 | 工程 1 部 |\n| 20110001 | m002 | 3 | 2011-03-02 00:00:00 | 工程 1 部 |",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "双重 NOT EXISTS",
+        "关系除法"
+      ],
+      "explanation": "课件例 3.59–3.60。筛出不存在任何一个从未领用当前物资的工程的物资。",
+      "referenceSql": "SELECT s.mat_num,s.mat_name,s.speci FROM Stock s WHERE NOT EXISTS (SELECT 1 FROM Salvaging p WHERE NOT EXISTS (SELECT 1 FROM Out_stock o WHERE o.prj_num=p.prj_num AND o.mat_num=s.mat_num)) ORDER BY s.mat_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Out_stock VALUES ('20110005','m001',7,'2011-03-02','工程 1 部');INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',65,18);"
+        }
+      ],
+      "id": "exam-mock-04-r4-q21"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "列出项目名包含“抢修”且领取过 YJV 系列规格物资的工程。YJV 规格须为 YJV- 后接一个或多个数字。输出 prj_num、prj_name、start_date、end_date 和数值型 prj_status，每项目一行，按项目号升序。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |\n\n### 涉及数据表：Salvaging（电力抢修工程表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | PRIMARY KEY | 工程编号 |\n| `prj_name` | VARCHAR(50) | NOT NULL | 工程名称 |\n| `start_date` | DATETIME | NOT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 开始日期 |\n| `end_date` | DATETIME | NULL; DEFAULT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 结束日期 |\n| `prj_status` | BIT(1) | NOT NULL; DEFAULT b'0' | 工程状态（0 为未结算，1 为已结算） |\n\n**数据预览（前 2 行）**\n| prj_num | prj_name | start_date | end_date | prj_status |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | 南桥站配电抢修 | 2011-03-01 00:00:00 | 2011-03-04 00:00:00 | 1 |\n| 20110002 | 海湾站电缆抢修 | 2011-03-02 00:00:00 | 2011-03-08 00:00:00 | 0 |\n\n### 涉及数据表：Out_stock（工程领料记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | FK → Salvaging.prj_num; PRIMARY KEY（第 1 列） | 工程编号 |\n| `mat_num` | CHAR(4) | FK → Stock.mat_num; PRIMARY KEY（第 2 列） | 物资编号 |\n| `amount` | INT | NOT NULL; CHECK (amount >= 0) | 数量 |\n| `get_date` | DATETIME | NOT NULL; DEFAULT CURRENT_TIMESTAMP | 领料时间 |\n| `department` | VARCHAR(20) | NOT NULL | 领料部门 |\n\n**数据预览（前 2 行）**\n| prj_num | mat_num | amount | get_date | department |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | m001 | 4 | 2011-03-01 00:00:00 | 工程 1 部 |\n| 20110001 | m002 | 3 | 2011-03-02 00:00:00 | 工程 1 部 |",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "多表查询",
+        "REGEXP",
+        "去重"
+      ],
+      "explanation": "课件例 3.28、3.43、3.50 的综合。限定正则的两端，使用 EXISTS 避免多条领料造成重复工程。",
+      "referenceSql": "SELECT p.prj_num,p.prj_name,p.start_date,p.end_date,p.prj_status+0 AS prj_status FROM Salvaging p WHERE p.prj_name LIKE '%抢修%' AND EXISTS (SELECT 1 FROM Out_stock o JOIN Stock s ON s.mat_num=o.mat_num WHERE o.prj_num=p.prj_num AND s.speci REGEXP '^YJV-[0-9]+$') ORDER BY p.prj_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Salvaging VALUES ('20110006','东海电缆抢修','2011-03-02','2011-03-09',b'0');INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',65,18);INSERT INTO Out_stock VALUES ('20110006','m008',7,'2011-03-02','工程 1 部');INSERT INTO Out_stock VALUES ('20110006','m004',7,'2011-03-02','工程 1 部');INSERT INTO Stock(mat_num,mat_name,speci) VALUES ('m009','异型接头','YJV-35X');INSERT INTO Out_stock VALUES ('20110005','m009',7,'2011-03-02','工程 1 部');"
+        }
+      ],
+      "id": "exam-mock-04-r4-q22"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "初始 Out_stock 暂未配置主外键和预期的领取量检查。恢复 (prj_num, mat_num) 复合主键，分别引用 Salvaging 与 Stock 的主键，两条外键均配置 ON DELETE CASCADE。领取量仍应允许 0 并禁止负值。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |\n\n### 涉及数据表：Salvaging（电力抢修工程表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | PRIMARY KEY | 工程编号 |\n| `prj_name` | VARCHAR(50) | NOT NULL | 工程名称 |\n| `start_date` | DATETIME | NOT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 开始日期 |\n| `end_date` | DATETIME | NULL; DEFAULT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 结束日期 |\n| `prj_status` | BIT(1) | NOT NULL; DEFAULT b'0' | 工程状态（0 为未结算，1 为已结算） |\n\n**数据预览（前 2 行）**\n| prj_num | prj_name | start_date | end_date | prj_status |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | 南桥站配电抢修 | 2011-03-01 00:00:00 | 2011-03-04 00:00:00 | 1 |\n| 20110002 | 海湾站电缆抢修 | 2011-03-02 00:00:00 | 2011-03-08 00:00:00 | 0 |\n\n### 涉及数据表：Out_stock（工程领料记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | NOT NULL | 工程编号 |\n| `mat_num` | CHAR(4) | NOT NULL | 物资编号 |\n| `amount` | INT | NOT NULL | 数量 |\n| `get_date` | DATETIME | NOT NULL; DEFAULT CURRENT_TIMESTAMP | 领料时间 |\n| `department` | VARCHAR(20) | NOT NULL | 领料部门 |\n\n**数据预览（前 2 行）**\n| prj_num | mat_num | amount | get_date | department |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | m001 | 4 | 2011-03-01 00:00:00 | 工程 1 部 |\n| 20110001 | m002 | 3 | 2011-03-02 00:00:00 | 工程 1 部 |",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "实体完整性",
+        "参照完整性"
+      ],
+      "explanation": "复合主键保证项目与物资组合唯一。级联删除保持引用一致，CHECK 限制领取量。",
+      "referenceSql": "ALTER TABLE Out_stock ADD PRIMARY KEY(prj_num,mat_num), ADD FOREIGN KEY(prj_num) REFERENCES Salvaging(prj_num) ON DELETE CASCADE, ADD FOREIGN KEY(mat_num) REFERENCES Stock(mat_num) ON DELETE CASCADE, ADD CHECK(amount>=0);",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "SQL 脚本完整执行",
+          "points": 2
+        },
+        {
+          "kind": "post_query",
+          "label": "基础数据与对象状态",
+          "points": 5,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT COLUMN_NAME,ORDINAL_POSITION FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='out_stock' AND CONSTRAINT_NAME='PRIMARY' ORDER BY ORDINAL_POSITION; SELECT LOWER(REFERENCED_TABLE_NAME),DELETE_RULE FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='out_stock' ORDER BY 1; SELECT prj_num,mat_num,amount,get_date,department FROM Out_stock ORDER BY prj_num,mat_num;"
+        },
+        {
+          "kind": "negative_check",
+          "label": "变式数据与约束边界",
+          "points": 3,
+          "variantSql": "INSERT INTO Salvaging VALUES('20119990','备用线路抢修','2011-03-07',NULL,b'0');INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES('m090','绝缘胶带','XD-1','供电局 1# 仓库',60,18.50);",
+          "positiveSql": "INSERT INTO Out_stock VALUES('20119990','m090',0,'2011-03-08','工程 2 部'); DELETE FROM Salvaging WHERE prj_num='20119990';",
+          "negativeSql": "INSERT INTO Out_stock VALUES('20110005','m090',-1,'2011-03-08','工程 2 部');",
+          "errorCodes": [
+            3819
+          ],
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT COLUMN_NAME,ORDINAL_POSITION FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='out_stock' AND CONSTRAINT_NAME='PRIMARY' ORDER BY ORDINAL_POSITION; SELECT LOWER(REFERENCED_TABLE_NAME),DELETE_RULE FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='out_stock' ORDER BY 1; SELECT prj_num,mat_num,amount,get_date,department FROM Out_stock ORDER BY prj_num,mat_num;"
+        }
+      ],
+      "id": "exam-mock-04-r4-q23",
+      "setupSql": "ALTER TABLE Out_stock DROP FOREIGN KEY Out_stock_ibfk_1, DROP FOREIGN KEY Out_stock_ibfk_2, DROP PRIMARY KEY, DROP CHECK Out_stock_chk_1;"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "基于已有 s1_stock 创建 s3_stock，输出 mat_num、mat_name、speci、amount，保留库存至少 50 的活动物资。再从 s3_stock 查询物资名称包含“电缆”的记录，输出同样四列并按物资号升序。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |\n\n### 涉及数据表：s1_stock（预置视图）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | NOT NULL | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `amount` | INT | NULL; DEFAULT NULL | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL | 单价（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | amount | unit |\n| :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 80 | 45.50 |\n| m002 | 绝缘护套 | BVV-35 | 40 | 27.00 |",
+      "labId": "lab-05-views",
+      "tags": [
+        "嵌套视图",
+        "边界筛选"
+      ],
+      "explanation": "课件例 3.78。仓库条件由基础视图继承，第二层应用库存边界，查询再筛名称。",
+      "referenceSql": "CREATE VIEW s3_stock AS SELECT mat_num,mat_name,speci,amount FROM s1_stock WHERE amount>=50; SELECT mat_num,mat_name,speci,amount FROM s3_stock WHERE mat_name LIKE '%电缆%' ORDER BY mat_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT mat_num,mat_name,speci,amount FROM s3_stock ORDER BY mat_num;SELECT CHECK_OPTION, IS_UPDATABLE FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='s3_stock';"
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',50,18);INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m009','应急电缆','YJV-35','供电局 2# 仓库',70,18);"
+        }
+      ],
+      "setupSql": "CREATE VIEW s1_stock AS SELECT mat_num,mat_name,speci,amount,unit FROM Stock WHERE warehouse='供电局 1# 仓库';",
+      "id": "exam-mock-04-r4-q24"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "以 2011-03-08 为结算日，在一个事务内处理结算日前已完工且有领料的工程：把这些工程的 prj_status 设为 1，并从 Out_stock 删除这些工程在 2011-03-04 前的领料。两处日期均严格小于，保留其它工程和领料。\n\n### 涉及数据表：Salvaging（电力抢修工程表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | PRIMARY KEY | 工程编号 |\n| `prj_name` | VARCHAR(50) | NOT NULL | 工程名称 |\n| `start_date` | DATETIME | NOT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 开始日期 |\n| `end_date` | DATETIME | NULL; DEFAULT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 结束日期 |\n| `prj_status` | BIT(1) | NOT NULL; DEFAULT b'0' | 工程状态（0 为未结算，1 为已结算） |\n\n**数据预览（前 2 行）**\n| prj_num | prj_name | start_date | end_date | prj_status |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | 南桥站配电抢修 | 2011-03-01 00:00:00 | 2011-03-04 00:00:00 | 1 |\n| 20110002 | 海湾站电缆抢修 | 2011-03-02 00:00:00 | 2011-03-08 00:00:00 | 0 |\n\n### 涉及数据表：Out_stock（工程领料记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | FK → Salvaging.prj_num; PRIMARY KEY（第 1 列） | 工程编号 |\n| `mat_num` | CHAR(4) | FK → Stock.mat_num; PRIMARY KEY（第 2 列） | 物资编号 |\n| `amount` | INT | NOT NULL; CHECK (amount >= 0) | 数量 |\n| `get_date` | DATETIME | NOT NULL; DEFAULT CURRENT_TIMESTAMP | 领料时间 |\n| `department` | VARCHAR(20) | NOT NULL | 领料部门 |\n\n**数据预览（前 2 行）**\n| prj_num | mat_num | amount | get_date | department |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | m001 | 4 | 2011-03-01 00:00:00 | 工程 1 部 |\n| 20110001 | m002 | 3 | 2011-03-02 00:00:00 | 工程 1 部 |",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "事务",
+        "子查询更新与删除"
+      ],
+      "explanation": "先按结束日期和领料存在性更新工程，再按领料日期删除明细。两步放入同一个事务。",
+      "referenceSql": "START TRANSACTION;\nUPDATE Salvaging s SET prj_status=b'1' WHERE end_date<'2011-03-08' AND EXISTS(SELECT 1 FROM Out_stock o WHERE o.prj_num=s.prj_num);\nDELETE o FROM Out_stock o JOIN Salvaging s ON s.prj_num=o.prj_num WHERE s.end_date<'2011-03-08' AND o.get_date<'2011-03-04';\nCOMMIT;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "SQL 脚本完整执行",
+          "points": 2
+        },
+        {
+          "kind": "post_query",
+          "label": "基础数据与对象状态",
+          "points": 5,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT prj_num,prj_name,start_date,end_date,prj_status+0 AS prj_status FROM Salvaging ORDER BY prj_num;SELECT prj_num,mat_num,amount,get_date,department FROM Out_stock ORDER BY prj_num,mat_num;"
+        },
+        {
+          "kind": "post_query",
+          "label": "变式数据校验",
+          "points": 3,
+          "variantSql": "INSERT INTO Salvaging VALUES('20119990','备用线路抢修','2011-03-07',NULL,b'0'); UPDATE Salvaging SET start_date='2011-03-07', end_date='2011-03-07' WHERE prj_num='20110005'; INSERT INTO Out_stock VALUES('20119990','m002',3,'2011-03-01','工程 2 部');",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT prj_num,prj_name,start_date,end_date,prj_status+0 AS prj_status FROM Salvaging ORDER BY prj_num;SELECT prj_num,mat_num,amount,get_date,department FROM Out_stock ORDER BY prj_num,mat_num;"
+        }
+      ],
+      "id": "exam-mock-04-r4-q25"
+    }
+  ]
+}

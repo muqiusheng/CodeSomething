@@ -1,12 +1,12 @@
 {
   "id": "lab-05-views",
   "objective": "掌握视图创建、定义查看、修改、删除与视图写入限制。",
-  "requirements": "在既有三表上复用实验四的查询。测试可更新性时记录基表前后状态，并为新增学生提供基表必填列。",
+  "requirements": "基于选课库创建与维护视图。判分查询视图内容与元数据，并对指定的写入边界进行检查。",
   "questions": [
     {
       "id": "q01",
       "title": "创建水平视图",
-      "requirement": "创建 stuview1，返回所有男生，使用 WITH CHECK OPTION。",
+      "requirement": "创建 stuview1，输出男学生的全部列，并加 WITH CHECK OPTION。",
       "hint": "筛选条件需要参与视图写入校验。",
       "optional": false,
       "starterSql": "",
@@ -15,7 +15,7 @@
     {
       "id": "q02",
       "title": "创建课程投影视图",
-      "requirement": "创建 stuview2，查询学分大于 3 的课程号、课程名和总学时。",
+      "requirement": "创建 stuview2，返回学分大于 3 的 Cno、Cname、Total_perior。",
       "hint": "返回指定列，检查过滤条件。",
       "optional": false,
       "starterSql": "",
@@ -24,7 +24,7 @@
     {
       "id": "q03",
       "title": "创建选课视图",
-      "requirement": "创建 stuview3，检索 051 班女生的学号、课号、成绩。",
+      "requirement": "创建 stuview3，返回 051 班女生的 Sno、Cno、Grade。",
       "hint": "在连接后按班级与性别筛选。",
       "optional": false,
       "starterSql": "",
@@ -33,7 +33,7 @@
     {
       "id": "q04",
       "title": "创建汇总视图",
-      "requirement": "创建 stuview4，查询选课学生学号、姓名和总成绩。",
+      "requirement": "创建 stuview4，返回有选课记录的 Sno、Sname、成绩总和 total_grade，忽略缺考。",
       "hint": "按学生聚合，确保列名明确。",
       "optional": false,
       "starterSql": "",
@@ -42,7 +42,7 @@
     {
       "id": "q05",
       "title": "创建排名视图",
-      "requirement": "创建 stuview5，筛选无不及格记录且班内加权平均前 3 的学生。",
+      "requirement": "创建 stuview5，忽略缺考，排除有不及格记录或无有效成绩的学生。按班级以学分加权平均成绩做 DENSE_RANK 排名，取前 3；列名为 Sno、Sname、Classno、avg_grade（两位小数）、pos。",
       "hint": "将实验四的加权排名改为每班前三。",
       "optional": false,
       "starterSql": "",
@@ -51,8 +51,8 @@
     {
       "id": "q06",
       "title": "查看定义与元数据",
-      "requirement": "用 SHOW TABLES、SHOW TABLE STATUS、SHOW CREATE VIEW 和 information_schema.VIEWS 查看相关对象。",
-      "hint": "按实验注明的视图名称过滤。",
+      "requirement": "查询 information_schema.VIEWS，返回当前库中各视图的 TABLE_NAME、IS_UPDATABLE、CHECK_OPTION，按名称升序。",
+      "hint": "用 TABLE_SCHEMA=DATABASE() 限定本题沙箱。",
       "optional": false,
       "starterSql": "",
       "originalText": "2．查询视图的创建信息及视图中的数据\n（1）查看视图stuview1的创建信息。\n方法1：通过SHOW TABLES 查看所有的表和视图。\n方法2：通过 SHOW TABLE STATUS查看视图，语句格式如下：\nSHOW TABLE STATUS [LIKE <视图名匹配表达式>]\n（2）查看视图的定义脚本。\n方法1：通过命令SHOW CREATE VIEW <视图名>。\n方法2：视图信息存储在information_schema数据库中的表views，通过select语句查询视图stuview3的定义脚本。"
@@ -60,7 +60,7 @@
     {
       "id": "q07",
       "title": "修改和删除视图",
-      "requirement": "将 stuview2 改为总学时大于 60 的课程，返回课程号、课程名、学分；删除 stuview4。",
+      "requirement": "将已预置的 stuview2 改为总学时严格高于 60 的课程，输出 Cno、Cname、Credit；删除已预置的 stuview4。",
       "hint": "完成后验证视图列表与基表。",
       "optional": false,
       "starterSql": "",
@@ -69,8 +69,8 @@
     {
       "id": "q08",
       "title": "通过视图查询和写入",
-      "requirement": "查询 051 班指定学生，分别尝试插入满足和不满足条件的记录，验证 CHECK OPTION；再通过视图更新家庭地址并演示删除。",
-      "hint": "用独立用例记录成功与失败。若执行负例，单独运行可保留报错。",
+      "requirement": "通过预置 v_class_051 更新 20110001 的家庭地址为“南京市”，并插入 20119991（何明、男、1993-06-20 生、051 班、2011-09-01 入学、南京、计算机系、邮编 210000）。保留其他数据。",
+      "hint": "该视图含 CHECK OPTION，插入时提供全部要求字段并保持班号 051。",
       "optional": false,
       "starterSql": "",
       "originalText": "5．管理视图中的数据\n（1）从视图stuview1查询出班级为“051”、姓名为“张虹”的资料。\n（2）向视图stuview1中插入一行数据。学号：20110005，姓名：许华，班级：054，性别：男，家庭住址：南京，入学时间：2011/09/01，出生年月：1983/01/09。\n原Student表中的内容有何变化？\n思考：如向视图stuview1中插入一行数据。学号：20110006，姓名：赵静，班级：054，性别：女，家庭住址：南京，入学时间：2011/09/01，出生年月：1983/11/09。会出现什么样的结果？原Student表中的内容有何变化？\n（3）修改视图stuview1中的数据。\n将stuview1中054班、姓名为“许华”同学的家庭地址改为“扬州市”。\n原Student表中的内容有何变化？\n（4）删除视图stuview1中班级为054、姓名为“许华”的同学的记录。\n原Student表中的内容有何变化？"
@@ -78,42 +78,47 @@
     {
       "id": "q09",
       "title": "按班级发布学生人数视图",
-      "requirement": "创建专用练习视图 v_practice_class_size，只暴露班号和人数。查询该视图得到人数最多的班级，并查看定义。",
+      "requirement": "创建 v_practice_class_size，输出 Classno 与班级人数 n。",
       "hint": "用 GROUP BY 形成每班一行。预置数据里 051 有 4 人。",
       "optional": true,
-      "starterSql": ""
+      "starterSql": "",
+      "originalText": "创建专用练习视图 v_practice_class_size，只暴露班号和人数。查询该视图得到人数最多的班级，并查看定义。"
     },
     {
       "id": "q10",
       "title": "验证视图会读取基表新数据",
-      "requirement": "创建筛选 051 班学生的专用视图 v_practice_class_051。在事务里把一位其他班学生转入 051，查询视图，再回滚并重新查询。",
-      "hint": "在开始事务前创建视图。事务内多显示一人，回滚后恢复原人数。",
+      "requirement": "创建 v_practice_class_051，返回 051 班全部学生字段。系统会把其它班学生转入 051，再查询视图验证其读取基表最新状态。",
+      "hint": "只提交视图定义，系统随后会更新基表检验视图。",
       "optional": true,
-      "starterSql": ""
+      "starterSql": "",
+      "originalText": "创建筛选 051 班学生的专用视图 v_practice_class_051。在事务里把一位其他班学生转入 051，查询视图，再回滚并重新查询。"
     },
     {
       "id": "q11",
       "title": "分层复用课程选修统计视图",
-      "requirement": "创建一个按课号统计选课、到考人数的专用视图，再用第二个视图筛选有人选课但有缺考的课程。",
+      "requirement": "创建 v_course_counts（Cno、chosen、graded，分别为课号、选课人数、到考人数，包含无人选修课程）；基于它创建 v_course_absences，三列相同，只保留存在缺考记录的课程。",
       "hint": "第二层查询上面一层的统计列。预置数据下应找到课程 002。",
       "optional": true,
-      "starterSql": ""
+      "starterSql": "",
+      "originalText": "创建一个按课号统计选课、到考人数的专用视图，再用第二个视图筛选有人选课但有缺考的课程。"
     },
     {
       "id": "q12",
       "title": "对比普通视图和聚合视图的可更新性",
-      "requirement": "各创建一个专用练习视图，一个直接投影 Course 列，另一个汇总选课人数。查询元数据，对照两个视图的 IS_UPDATABLE。",
-      "hint": "查询 information_schema.VIEWS 并限定当前库和两个视图名。观察聚合为什么无法映射回某一行。",
+      "requirement": "创建普通投影视图 v_course_projection（Cno、Cname）和聚合视图 v_course_enrollment（Cno、chosen，统计已有的选课门次）。",
+      "hint": "聚合结果对应多条基表记录，因此聚合视图不可直接写入。",
       "optional": true,
-      "starterSql": ""
+      "starterSql": "",
+      "originalText": "各创建一个专用练习视图，一个直接投影 Course 列，另一个汇总选课人数。查询元数据，对照两个视图的 IS_UPDATABLE。"
     },
     {
       "id": "q13",
       "title": "核对视图列与基表列的关系",
-      "requirement": "创建只含学号、姓名并给列起别名的专用视图。检查视图列名，然后尝试查询一个被省略的基表字段，记录运行反馈。",
-      "hint": "先用 SHOW COLUMNS 留下成功证据，再单独运行失败查询。查询视图只能直接使用其公开的列。",
+      "requirement": "创建 v_student_names，仅投影 Sno、Sname，分别命名为 student_id、student_name。",
+      "hint": "在 SELECT 列表中用 AS 显式声明视图列名。",
       "optional": true,
-      "starterSql": ""
+      "starterSql": "",
+      "originalText": "创建只含学号、姓名并给列起别名的专用视图。检查视图列名，然后尝试查询一个被省略的基表字段，记录运行反馈。"
     }
   ],
   "originalObjective": "(1）理解视图的概念。\n(2）掌握创建视图、测试、加密视图的方法。\n(3）掌握更改视图的方法。\n(4）掌握用视图管理数据的方法。",

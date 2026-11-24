@@ -1,0 +1,572 @@
+{
+  "id": "exam-mock-03",
+  "title": "综合模拟卷（三）· 例程、触发器与完整性攻坚卷",
+  "group": "mock",
+  "revision": 2,
+  "questions": [
+    {
+      "id": "exam-mock-03-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "新增选课触发器发现 Grade 超过业务上限时，要阻止写入并让调用方读到自定义文字。哪条语句可放在 IF 分支内？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "SIGNAL"
+      ],
+      "options": {
+        "A": "SELECT '成绩待复核'",
+        "B": "SET @msg='成绩待复核'",
+        "C": "SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='成绩待复核'",
+        "D": "RESIGNAL SET MESSAGE_TEXT='成绩待复核'"
+      },
+      "answer": "C",
+      "explanation": "SIGNAL 可以主动抛出用户定义异常并指定文本。RESIGNAL 用于条件处理器中重抛当前条件。"
+    },
+    {
+      "id": "exam-mock-03-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "CALL p_round(@score) 前 @score 为 72。过程必须读取 72、加 3，再把 75 写回 @score。参数方向应如何设计？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "options": {
+        "A": "IN",
+        "B": "用 DECLARE 代替参数",
+        "C": "OUT",
+        "D": "INOUT"
+      },
+      "answer": "D",
+      "explanation": "INOUT 接收调用时的值并在返回时写回。IN 不回传，OUT 不使用调用者传入的初值。"
+    },
+    {
+      "id": "exam-mock-03-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "要删除 student 上命名为 chk_student_postcode 的校验，并保留 Postcode 列及其数据，哪条语句符合要求？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DDL"
+      ],
+      "options": {
+        "A": "ALTER TABLE student DROP COLUMN Postcode",
+        "B": "DROP TABLE chk_student_postcode",
+        "C": "UPDATE student SET Postcode=NULL",
+        "D": "ALTER TABLE student DROP CHECK chk_student_postcode"
+      },
+      "answer": "D",
+      "explanation": "DROP CHECK 删除指定 CHECK 对象。删除列或更新数据都会改变要保留的内容。"
+    },
+    {
+      "id": "exam-mock-03-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "一条审计规则要求 NULL→86、86→NULL 算改变，NULL→NULL 和 86→86 都不算。哪个触发条件满足？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "NULL"
+      ],
+      "options": {
+        "A": "NEW.Grade <> OLD.Grade",
+        "B": "NOT (NEW.Grade <=> OLD.Grade)",
+        "C": "NEW.Grade IS NOT NULL AND NEW.Grade<>OLD.Grade",
+        "D": "NEW.Grade IS NULL OR OLD.Grade IS NULL"
+      },
+      "answer": "B",
+      "explanation": "空值安全比较在两值相等或都为空时返回真。取反即可精确判断是否发生变化。"
+    },
+    {
+      "id": "exam-mock-03-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "某审核查询用 CASE WHEN Grade<60 THEN 1 ELSE 0 END 为失败记录计数。输入为 40、59、60、NULL，标记值之和是多少？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "条件"
+      ],
+      "options": {
+        "A": "3",
+        "B": "1",
+        "C": "2",
+        "D": "NULL"
+      },
+      "answer": "C",
+      "explanation": "40 和 59 满足条件。60 不小于 60，NULL 的比较结果未知并进入 ELSE。"
+    },
+    {
+      "id": "exam-mock-03-q06",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "过程 p_check 定义 OUT p_count INT、OUT p_valid INT。CALL p_check(@all,@valid) 已成功，随后哪项操作能安全读取本次输出？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "options": {
+        "A": "在新连接 SELECT @all,@valid",
+        "B": "从 information_schema.ROUTINES 查询两个输出值",
+        "C": "在其他连接 SELECT p_count,p_valid",
+        "D": "在同一连接 SELECT @all,@valid"
+      },
+      "answer": "D",
+      "explanation": "用户变量的作用域是会话，过程内部形参名离开过程后不可直接引用。"
+    },
+    {
+      "id": "exam-mock-03-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "学生 20110001 的 001 号选课误录为未登记，但同生其他课程的未登记记录应保留。哪条语句仅删除指定学号、课号且 Grade 为 NULL 的记录？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "options": {
+        "A": "DELETE FROM sc WHERE Sno='20110001' AND Grade IS NULL",
+        "B": "DELETE FROM sc WHERE Cno='001' AND Grade IS NULL",
+        "C": "DELETE FROM sc WHERE Sno='20110001' AND Cno='001' AND Grade IS NULL",
+        "D": "DELETE FROM sc WHERE Sno='20110001' AND Cno='001' AND Grade=NULL"
+      },
+      "answer": "C",
+      "explanation": "三个条件都必须成立，IS NULL 正确识别未登记成绩。"
+    },
+    {
+      "id": "exam-mock-03-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "同一 InnoDB 表的单条多行 INSERT 中，第一条符合触发器规则，第二条因 SIGNAL 失败。语句失败后哪项正确？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "事务"
+      ],
+      "options": {
+        "A": "第一行已持久保存，第二行未写入",
+        "B": "这条语句涉及的两行都未留下",
+        "C": "两行已写入，只返回错误提示",
+        "D": "第一行保留到下一次 SELECT 才回滚"
+      },
+      "answer": "B",
+      "explanation": "对事务型表，单条语句失败时撤销该语句的全部数据改动。"
+    },
+    {
+      "id": "exam-mock-03-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "下面哪种状况下，COUNT(*)=3、COUNT(Grade)=2、MIN(Grade)=0 可以同时成立？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "options": {
+        "A": "三条记录的成绩为 0、85、NULL",
+        "B": "三条记录的成绩为 NULL、85、90",
+        "C": "三条记录的成绩为 0、0、0",
+        "D": "三条记录的成绩为 NULL、NULL、NULL"
+      },
+      "answer": "A",
+      "explanation": "三项聚合分别统计全部记录、非空记录和最小非空值。0 是有效分数。"
+    },
+    {
+      "id": "exam-mock-03-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "仅用查询找出没有学生选择的课程。用 course c LEFT JOIN sc e ON e.Cno=c.Cno 后，哪个过滤条件可靠？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "外连接"
+      ],
+      "options": {
+        "A": "WHERE e.Sno IS NULL",
+        "B": "WHERE e.Grade IS NULL",
+        "C": "WHERE c.Cno IS NULL",
+        "D": "WHERE e.Sno = NULL"
+      },
+      "answer": "A",
+      "explanation": "右表 Sno 在真实选课中一定非空，因此只在未匹配的补空行上满足条件。真实选课的成绩也可为空。"
+    },
+    {
+      "id": "exam-mock-03-q11",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "为保留学生所在院系、课程学分和选课成绩，哪个连接能避免把一条选课误配到同名学生或同名课程？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "连接"
+      ],
+      "options": {
+        "A": "student s JOIN sc e ON s.Sno=e.Sno JOIN course c ON c.Cno=e.Cno",
+        "B": "student s CROSS JOIN course c LEFT JOIN sc e ON e.Cno=c.Cno",
+        "C": "student s JOIN sc e ON s.Sno=e.Cno JOIN course c ON c.Cno=e.Sno",
+        "D": "student s JOIN sc e ON s.Sno=e.Sno CROSS JOIN course c"
+      },
+      "answer": "A",
+      "explanation": "两边均以各自的主键与对应外键连接，一条选课只关联一个学生和一门课程。"
+    },
+    {
+      "id": "exam-mock-03-q12",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "course 的 CHECK (Credit BETWEEN 1 AND 6) 无额外 NOT NULL 约束。下列 Credit 值哪一项会因这个 CHECK 被拒绝？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "CHECK"
+      ],
+      "options": {
+        "A": "7",
+        "B": "1",
+        "C": "NULL",
+        "D": "6"
+      },
+      "answer": "A",
+      "explanation": "BETWEEN 含端点。CHECK 拒绝 FALSE，允许 TRUE 或 UNKNOWN，NULL 使比较结果未知。"
+    },
+    {
+      "id": "exam-mock-03-q13",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "建公开视图时想按学号和姓名发布，但又要使用不同的外部列名。哪个定义正确？",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "options": {
+        "A": "CREATE VIEW v_people(Label,Label) AS SELECT Sno,Sname FROM student",
+        "B": "CREATE VIEW v_people(StudentNo,DisplayName) AS SELECT Sno FROM student",
+        "C": "CREATE VIEW v_people AS SELECT StudentNo,DisplayName FROM student",
+        "D": "CREATE VIEW v_people(StudentNo,DisplayName) AS SELECT Sno,Sname FROM student"
+      },
+      "answer": "D",
+      "explanation": "显式列清单与 SELECT 的列数需一致，名称须唯一，另取外部名字无需更改 student 列名。"
+    },
+    {
+      "id": "exam-mock-03-q14",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "另一测试表的 Cno 外键确实设置 ON DELETE CASCADE，表上还有 AFTER DELETE 审计触发器。从 course 删除父行发生级联时，预期是什么？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "外键"
+      ],
+      "options": {
+        "A": "关联子行被移除，子表逐条写入普通删除审计",
+        "B": "关联子行被移除，子表触发器不会因该级联执行",
+        "C": "关联子行将 Cno 改为 NULL，保留子行",
+        "D": "父行操作被拒绝，因为存在子表触发器"
+      },
+      "answer": "B",
+      "explanation": "MySQL 级联外键操作不激活触发器。子行被删除与显式执行子表 DELETE 的触发行为不同。"
+    },
+    {
+      "id": "exam-mock-03-q15",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "一个筛选条件为 Grade <> 60 OR Grade IS NULL。若 sc 有 59、60、61、NULL 四条成绩，它会返回哪三条？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "NULL"
+      ],
+      "options": {
+        "A": "59、60、61",
+        "B": "59、61、NULL",
+        "C": "60、61、NULL",
+        "D": "59、60、NULL"
+      },
+      "answer": "B",
+      "explanation": "不等比较保留 59 和 61，IS NULL 独立保留空成绩，60 两项条件都不成立。"
+    },
+    {
+      "id": "exam-mock-03-q16",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "即使 BEFORE INSERT 触发器给 NEW.Grade 赋值为 101，种子表本身的 Grade 范围约束仍会阻止这条记录落表。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "约束"
+      ],
+      "answer": "true",
+      "explanation": "触发器可以改写即将写入的值，但最终非空值仍须满足 CHECK 约束的 0 到 100。"
+    },
+    {
+      "id": "exam-mock-03-q17",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "若过程把 IN 参数 p_credit 加一，传入的用户变量 @credit 会在 CALL 返回时自动加一。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "answer": "false",
+      "explanation": "IN 参数的值传入后可在过程内使用或改写，但改写不会写回实际参数。"
+    },
+    {
+      "id": "exam-mock-03-q18",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "执行 SELECT Cno,COUNT(*) FROM sc WHERE 1=0 GROUP BY Cno 会得到一行 NULL 课号、人数 0 的结果。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "分组"
+      ],
+      "answer": "false",
+      "explanation": "显式 GROUP BY 且无输入时没有分组，因此是零行。省略 GROUP BY 的全表聚合才产生一个计数值 0。"
+    },
+    {
+      "id": "exam-mock-03-q19",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "在同一事务先更新第一门课程，再创建保存点 s，再更新第二门课，随后 ROLLBACK TO s。此时第一门的修改仍可由 COMMIT 持久化。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "事务"
+      ],
+      "answer": "true",
+      "explanation": "回滚到保存点只撤销之后的操作，事务仍保持活动。"
+    },
+    {
+      "id": "exam-mock-03-q20",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "InnoDB 的某条 UPDATE 触发 SIGNAL 时，MySQL 会因此自动撤销调用方事务里所有此前成功的语句。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "事务"
+      ],
+      "answer": "false",
+      "explanation": "普通触发器异常撤销当前失败的语句，调用方仍可决定整个事务的处理。不能把语句级回滚理解成事务级回滚。"
+    },
+    {
+      "id": "exam-mock-03-q21",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "已经存在的过程可用 ALTER PROCEDURE p_calc COMMENT '新版说明' 修改说明，但这条语句不会替换计算逻辑。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "过程"
+      ],
+      "answer": "true",
+      "explanation": "ALTER PROCEDURE 允许修改指定属性和注释，替换过程体需要重新创建定义。"
+    },
+    {
+      "id": "exam-mock-03-q22",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "把一条 sc 的 Cno 更新为本学生已选的另一门课，即使目标课号已经存在于 course，也可能因主键冲突失败。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "主键"
+      ],
+      "answer": "true",
+      "explanation": "目标课号存在仅满足外键。更新后的 (Sno,Cno) 与已有记录碰撞会违反复合主键。"
+    },
+    {
+      "id": "exam-mock-03-q23",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "要在 AFTER DELETE 触发器审计被删除的成绩，读取 NEW.Grade 就能获得删除前的值。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "answer": "false",
+      "explanation": "DELETE 事件只能访问 OLD 行映像。删除没有对应的 NEW 行映像。"
+    },
+    {
+      "id": "exam-mock-03-q24",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "将 (Sno,Cno) 声明为主键后，不能靠给 Sno 传 NULL 绕过它的唯一约束。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "主键"
+      ],
+      "answer": "true",
+      "explanation": "主键中的每个列都要求非空。它与可为空的普通 UNIQUE 约束不同。"
+    },
+    {
+      "id": "exam-mock-03-q25",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "在 course LEFT JOIN sc 结果中用 WHERE sc.Grade IS NULL 查缺考时，会同时混入完全没有人选的课程。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "外连接"
+      ],
+      "answer": "true",
+      "explanation": "未匹配课程也产生右侧补空行。要仅查真实缺考，应再要求右侧键非空。"
+    },
+    {
+      "id": "exam-mock-03-q26",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "验证两轮批量课程变更。补全保存点语句，使第二次变更撤回，而第一次保留并提交。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "事务"
+      ],
+      "template": "START TRANSACTION;\nUPDATE course SET Credit=2 WHERE Cno='001';\n{{1}} after_first;\nUPDATE course SET Credit=3 WHERE Cno='002';\n{{2}} after_first;\nCOMMIT;",
+      "blanks": [
+        [
+          "SAVEPOINT"
+        ],
+        [
+          "ROLLBACK TO SAVEPOINT",
+          "ROLLBACK TO"
+        ]
+      ],
+      "explanation": "SAVEPOINT 记录事务位置，ROLLBACK TO 撤销该位置之后的写入。"
+    },
+    {
+      "id": "exam-mock-03-q27",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "在存储过程块中补全整型变量声明，默认值为 0。随后读取有成绩的记录数并写入该变量。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "局部变量"
+      ],
+      "template": "BEGIN\n  {{1}} n INT DEFAULT 0;\n  SELECT COUNT(Grade) {{2}} n FROM sc;\nEND",
+      "blanks": [
+        [
+          "DECLARE"
+        ],
+        [
+          "INTO"
+        ]
+      ],
+      "explanation": "局部变量在块开头用 DECLARE 声明，单值查询通过 INTO 写入该变量。"
+    },
+    {
+      "id": "exam-mock-03-q28",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全更新审计的两个条件，先判断旧值为空，再判断新值非空。仅在这两个条件都满足时写入审计表。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "template": "IF {{1}} AND {{2}} THEN\n  INSERT INTO audit_insert(Sno,Cno,Grade) VALUES (NEW.Sno,NEW.Cno,NEW.Grade);\nEND IF;",
+      "blanks": [
+        [
+          "OLD.Grade IS NULL"
+        ],
+        [
+          "NEW.Grade IS NOT NULL"
+        ]
+      ],
+      "explanation": "OLD 指更新前，NEW 指更新后。前值为空、后值非空，两项条件要同时满足。"
+    },
+    {
+      "id": "exam-mock-03-q29",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全 ALTER TABLE，仅删除 sc 的课程外键 fk_sc_course，保留列和现有选课记录。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键"
+      ],
+      "template": "ALTER TABLE sc {{1}} fk_sc_course;",
+      "blanks": [
+        [
+          "DROP FOREIGN KEY"
+        ]
+      ],
+      "explanation": "DROP FOREIGN KEY 删除指定参照约束。删除外键不会删除课程号列或清空表。"
+    },
+    {
+      "id": "exam-mock-03-q30",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "专用会话初始开启自动提交。补全演练脚本，使测试更新及所触发的 InnoDB 审计写入被撤销，最后恢复原会话设置。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "事务"
+      ],
+      "template": "SET autocommit={{1}};\nUPDATE sc SET Grade=95 WHERE Sno='20110001' AND Cno='001';\n{{2}};\nSET autocommit=1;",
+      "blanks": [
+        [
+          "0",
+          "OFF"
+        ],
+        [
+          "ROLLBACK",
+          "ROLLBACK WORK",
+          "ROLLBACK AND NO CHAIN"
+        ]
+      ],
+      "explanation": "关闭自动提交后，更新和审计留在显式提交前的同一事务中。先回滚再恢复自动提交，避免提交尚未撤销的改动。"
+    },
+    {
+      "id": "exam-mock-03-q31",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-02-ddl-tables",
+      "prompt": "将 sc 中现有 fk_sc_course 改为课号更新与课程删除都级联，保留学生外键。",
+      "referenceSql": "ALTER TABLE sc DROP FOREIGN KEY fk_sc_course; ALTER TABLE sc ADD CONSTRAINT fk_sc_course FOREIGN KEY(Cno) REFERENCES course(Cno) ON UPDATE CASCADE ON DELETE CASCADE;",
+      "tags": [
+        "外键",
+        "DDL"
+      ],
+      "explanation": "先移除原规则，再添加对同一父键的两个级联动作。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "post_query",
+          "label": "更新父键同步到子表",
+          "points": 8,
+          "sql": "UPDATE course SET Cno='009' WHERE Cno='006'; SELECT Sno,Cno,Grade FROM sc WHERE Cno IN ('006','009') ORDER BY Sno,Cno;",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "post_query",
+          "label": "删除课程清除对应选课，学生仍存在",
+          "points": 4,
+          "sql": "DELETE FROM course WHERE Cno='001'; SELECT COUNT(*) AS Chosen FROM sc WHERE Cno='001'; SELECT COUNT(*) AS Students FROM student;",
+          "orderMatters": true,
+          "checkColumnNames": true
+        }
+      ]
+    },
+    {
+      "id": "exam-mock-03-q32",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-07-triggers",
+      "prompt": "已建 audit_insert(Sno,Cno,Grade)。创建 AFTER INSERT 触发器记录新选课，但 NULL 成绩不写日志；同时创建过程 p_audit_count(OUT p_n INT)，返回审计行数。",
+      "referenceSql": "DELIMITER $$\nCREATE TRIGGER tr_audit_insert AFTER INSERT ON sc FOR EACH ROW\nBEGIN\n IF NEW.Grade IS NOT NULL THEN INSERT INTO audit_insert VALUES(NEW.Sno,NEW.Cno,NEW.Grade); END IF;\nEND$$\nDELIMITER ;\nDELIMITER $$\nCREATE PROCEDURE p_audit_count(OUT p_n INT)\nBEGIN\n SELECT COUNT(*) INTO p_n FROM audit_insert;\nEND$$\nDELIMITER ;",
+      "tags": [
+        "触发时机",
+        "过程"
+      ],
+      "explanation": "触发器负责按行记录有成绩写入，过程把日志聚合回传。",
+      "setupSql": "CREATE TABLE audit_insert (Sno CHAR(8),Cno CHAR(3),Grade TINYINT) ENGINE=InnoDB;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "post_query",
+          "label": "记录数字成绩且跳过缺考",
+          "points": 8,
+          "sql": "INSERT INTO sc VALUES ('20110008','001',0);INSERT INTO sc VALUES ('20110008','002',null);SELECT * FROM audit_insert ORDER BY Sno,Cno;",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "post_query",
+          "label": "过程返回正确的审计计数",
+          "points": 4,
+          "sql": "INSERT INTO sc VALUES ('20110008','003',100);CALL p_audit_count(@n); SELECT @n AS AuditCount;",
+          "orderMatters": true,
+          "checkColumnNames": true
+        }
+      ]
+    }
+  ]
+}

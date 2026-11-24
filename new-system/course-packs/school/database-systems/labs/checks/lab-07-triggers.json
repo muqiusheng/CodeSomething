@@ -1,0 +1,362 @@
+[
+  {
+    "id": "q01",
+    "referenceSql": "DELIMITER $$\nCREATE TRIGGER sc_insert BEFORE INSERT ON sc FOR EACH ROW\nBEGIN\nIF NOT EXISTS(SELECT 1 FROM student WHERE Sno=NEW.Sno) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='学号不存在'; ELSEIF NOT EXISTS(SELECT 1 FROM course WHERE Cno=NEW.Cno) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='课号不存在'; END IF;\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT LOWER(TRIGGER_NAME),ACTION_TIMING,EVENT_MANIPULATION FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=DATABASE() AND LOWER(TRIGGER_NAME)='sc_insert'; SELECT * FROM sc ORDER BY Sno,Cno;"
+      },
+      {
+        "kind": "negative_check",
+        "label": "变式数据与约束边界",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "positiveSql": "INSERT INTO sc VALUES('20110008','001',70);",
+        "negativeSql": "INSERT INTO sc VALUES('20110008','999',70);",
+        "errorCodes": [
+          1644
+        ],
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT LOWER(TRIGGER_NAME),ACTION_TIMING,EVENT_MANIPULATION FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=DATABASE() AND LOWER(TRIGGER_NAME)='sc_insert'; SELECT * FROM sc ORDER BY Sno,Cno;"
+      }
+    ]
+  },
+  {
+    "id": "q02",
+    "referenceSql": "CREATE TRIGGER Course_del AFTER DELETE ON course FOR EACH ROW DELETE FROM sc WHERE Cno=OLD.Cno;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "DELETE FROM course WHERE Cno='002'; SELECT * FROM course ORDER BY Cno;SELECT * FROM sc ORDER BY Sno,Cno;"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "DELETE FROM course WHERE Cno='002'; SELECT * FROM course ORDER BY Cno;SELECT * FROM sc ORDER BY Sno,Cno;"
+      }
+    ],
+    "setupSql": "ALTER TABLE sc DROP FOREIGN KEY fk_sc_course;"
+  },
+  {
+    "id": "q03",
+    "referenceSql": "ALTER TABLE course ADD avg_grade DECIMAL(5,2); CREATE TRIGGER grade_modify AFTER UPDATE ON sc FOR EACH ROW UPDATE course SET avg_grade=(SELECT AVG(Grade) FROM sc WHERE Cno=NEW.Cno) WHERE Cno=NEW.Cno;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "UPDATE sc SET Grade=92 WHERE Sno='20110001' AND Cno='001'; UPDATE sc SET Grade=NULL WHERE Sno='20110002' AND Cno='002'; SELECT Cno,avg_grade FROM course ORDER BY Cno;"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80); UPDATE sc SET Grade=80 WHERE Sno='20119990' AND Cno='002';",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "UPDATE sc SET Grade=92 WHERE Sno='20110001' AND Cno='001'; UPDATE sc SET Grade=NULL WHERE Sno='20110002' AND Cno='002'; SELECT Cno,avg_grade FROM course ORDER BY Cno;"
+      }
+    ]
+  },
+  {
+    "id": "q04",
+    "referenceSql": "ALTER TABLE student ADD getcredit INT NOT NULL DEFAULT 0;\nDELIMITER $$\nCREATE TRIGGER ins_credit AFTER INSERT ON sc FOR EACH ROW\nBEGIN\nIF NEW.Grade>=60 THEN UPDATE student SET getcredit=getcredit+COALESCE((SELECT Credit FROM course WHERE Cno=NEW.Cno),0) WHERE Sno=NEW.Sno; END IF;\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "INSERT INTO sc VALUES('20110008','001',65),('20110008','002',59),('20110008','003',60),('20110008','004',NULL); SELECT Sno,getcredit FROM student ORDER BY Sno;"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80); UPDATE course SET Credit=NULL WHERE Cno='003';",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "INSERT INTO sc VALUES('20110008','001',65),('20110008','002',59),('20110008','003',60),('20110008','004',NULL); SELECT Sno,getcredit FROM student ORDER BY Sno;"
+      }
+    ]
+  },
+  {
+    "id": "q05",
+    "referenceSql": "DROP TRIGGER sc_insert;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT LOWER(TRIGGER_NAME),ACTION_TIMING,EVENT_MANIPULATION FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=DATABASE() ORDER BY 1;"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "CREATE TRIGGER sc_observe AFTER UPDATE ON sc FOR EACH ROW SET @last_grade=NEW.Grade;",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT LOWER(TRIGGER_NAME),ACTION_TIMING,EVENT_MANIPULATION FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=DATABASE() ORDER BY 1;"
+      }
+    ],
+    "setupSql": "CREATE TRIGGER sc_insert BEFORE INSERT ON sc FOR EACH ROW SET @last_grade=NEW.Grade;"
+  },
+  {
+    "id": "q06",
+    "referenceSql": "ALTER TABLE student ALTER COLUMN Sdept SET DEFAULT '待分系', ADD UNIQUE(Sname); ALTER TABLE sc DROP FOREIGN KEY fk_sc_student, DROP FOREIGN KEY fk_sc_course, ADD FOREIGN KEY(Sno) REFERENCES student(Sno) ON UPDATE CASCADE ON DELETE CASCADE, ADD FOREIGN KEY(Cno) REFERENCES course(Cno) ON UPDATE CASCADE ON DELETE CASCADE;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT LOWER(COLUMN_NAME) AS col,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='student' AND LOWER(COLUMN_NAME) IN ('sdept') ORDER BY ORDINAL_POSITION;SELECT LOWER(REFERENCED_TABLE_NAME),UPDATE_RULE,DELETE_RULE FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='sc' ORDER BY 1; SELECT COLUMN_NAME,NON_UNIQUE FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='student' AND LOWER(COLUMN_NAME)='sname' ORDER BY 1;"
+      },
+      {
+        "kind": "negative_check",
+        "label": "变式数据与约束边界",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "positiveSql": "UPDATE student SET Sno='20118881' WHERE Sno='20110001';",
+        "negativeSql": "UPDATE student SET Sname='林红' WHERE Sno='20118881';",
+        "errorCodes": [
+          1062
+        ],
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT LOWER(COLUMN_NAME) AS col,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='student' AND LOWER(COLUMN_NAME) IN ('sdept') ORDER BY ORDINAL_POSITION;SELECT LOWER(REFERENCED_TABLE_NAME),UPDATE_RULE,DELETE_RULE FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='sc' ORDER BY 1; SELECT COLUMN_NAME,NON_UNIQUE FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='student' AND LOWER(COLUMN_NAME)='sname' ORDER BY 1;"
+      }
+    ]
+  },
+  {
+    "id": "q07",
+    "referenceSql": "ALTER TABLE student MODIFY Classno CHAR(3) NULL, ADD CHECK(Sno REGEXP '^2011[0-9]{4}$'); ALTER TABLE course ADD UNIQUE(Cname);",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT LOWER(COLUMN_NAME) AS col,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='student' AND LOWER(COLUMN_NAME) IN ('classno') ORDER BY ORDINAL_POSITION; SELECT COLUMN_NAME,NON_UNIQUE FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='course' AND LOWER(COLUMN_NAME)='cname' ORDER BY 1;"
+      },
+      {
+        "kind": "negative_check",
+        "label": "变式数据与约束边界",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "positiveSql": "UPDATE student SET Classno=NULL WHERE Sno='20110001';",
+        "negativeSql": "UPDATE student SET Sno='20209999' WHERE Sno='20110008';",
+        "errorCodes": [
+          3819
+        ],
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT LOWER(COLUMN_NAME) AS col,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='student' AND LOWER(COLUMN_NAME) IN ('classno') ORDER BY ORDINAL_POSITION; SELECT COLUMN_NAME,NON_UNIQUE FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='course' AND LOWER(COLUMN_NAME)='cname' ORDER BY 1;"
+      }
+    ]
+  },
+  {
+    "id": "q08",
+    "referenceSql": "CREATE TRIGGER audit_sc AFTER UPDATE ON sc FOR EACH ROW INSERT INTO grade_audit VALUES(NEW.Sno,NEW.Cno,OLD.Grade,NEW.Grade);",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "UPDATE sc SET Grade=76 WHERE Sno='20110001' AND Cno='001'; UPDATE sc SET Grade=84 WHERE Sno='20110005' AND Cno='002'; SELECT Sno,Cno,old_grade,new_grade FROM grade_audit ORDER BY Sno,Cno;"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "UPDATE sc SET Grade=76 WHERE Sno='20110001' AND Cno='001'; UPDATE sc SET Grade=84 WHERE Sno='20110005' AND Cno='002'; SELECT Sno,Cno,old_grade,new_grade FROM grade_audit ORDER BY Sno,Cno;"
+      }
+    ],
+    "setupSql": "CREATE TABLE grade_audit(Sno CHAR(8),Cno CHAR(3),old_grade TINYINT,new_grade TINYINT);"
+  },
+  {
+    "id": "q09",
+    "referenceSql": "DELIMITER $$\nCREATE TRIGGER audit_sc AFTER UPDATE ON sc FOR EACH ROW\nBEGIN\nIF NOT (OLD.Grade <=> NEW.Grade) THEN INSERT INTO grade_audit VALUES(NEW.Sno,NEW.Cno,OLD.Grade,NEW.Grade); END IF;\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "UPDATE sc SET Grade=Grade WHERE Sno='20110001' AND Cno='001'; UPDATE sc SET Grade=76 WHERE Sno='20110005' AND Cno='002'; UPDATE sc SET Grade=NULL WHERE Sno='20110001' AND Cno='002'; SELECT Sno,Cno,old_grade,new_grade FROM grade_audit ORDER BY Sno,Cno;"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80); UPDATE sc SET Grade=NULL WHERE Sno='20110001' AND Cno='002';",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "UPDATE sc SET Grade=Grade WHERE Sno='20110001' AND Cno='001'; UPDATE sc SET Grade=76 WHERE Sno='20110005' AND Cno='002'; UPDATE sc SET Grade=NULL WHERE Sno='20110001' AND Cno='002'; SELECT Sno,Cno,old_grade,new_grade FROM grade_audit ORDER BY Sno,Cno;"
+      }
+    ],
+    "setupSql": "CREATE TABLE grade_audit(Sno CHAR(8),Cno CHAR(3),old_grade TINYINT,new_grade TINYINT);"
+  },
+  {
+    "id": "q10",
+    "referenceSql": "ALTER TABLE sc ADD PRIMARY KEY(Sno,Cno);",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT COLUMN_NAME,ORDINAL_POSITION FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='sc' AND CONSTRAINT_NAME='PRIMARY' ORDER BY ORDINAL_POSITION;SELECT * FROM sc ORDER BY Sno,Cno;"
+      },
+      {
+        "kind": "negative_check",
+        "label": "变式数据与约束边界",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "positiveSql": "INSERT INTO sc VALUES('20110008','001',64),('20110008','002',75);",
+        "negativeSql": "INSERT INTO sc VALUES('20110008','001',90);",
+        "errorCodes": [
+          1062
+        ],
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT COLUMN_NAME,ORDINAL_POSITION FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='sc' AND CONSTRAINT_NAME='PRIMARY' ORDER BY ORDINAL_POSITION;SELECT * FROM sc ORDER BY Sno,Cno;"
+      }
+    ],
+    "setupSql": "ALTER TABLE sc DROP FOREIGN KEY fk_sc_student, DROP FOREIGN KEY fk_sc_course, DROP PRIMARY KEY;"
+  },
+  {
+    "id": "q11",
+    "referenceSql": "START TRANSACTION; UPDATE sc SET Grade=77 WHERE Sno='20110001' AND Cno='001'; SELECT * FROM sc WHERE Sno='20110001' AND Cno='001'; SELECT Sno,Cno,old_grade,new_grade FROM grade_audit ORDER BY Sno,Cno; ROLLBACK; SELECT * FROM sc WHERE Sno='20110001' AND Cno='001'; SELECT Sno,Cno,old_grade,new_grade FROM grade_audit ORDER BY Sno,Cno;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80); UPDATE sc SET Grade=80 WHERE Sno='20110001' AND Cno='001';",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ],
+    "setupSql": "CREATE TABLE grade_audit(Sno CHAR(8),Cno CHAR(3),old_grade TINYINT,new_grade TINYINT);CREATE TRIGGER audit_sc AFTER UPDATE ON sc FOR EACH ROW INSERT INTO grade_audit VALUES(NEW.Sno,NEW.Cno,OLD.Grade,NEW.Grade);"
+  },
+  {
+    "id": "q12",
+    "referenceSql": "ALTER TABLE sc DROP FOREIGN KEY fk_sc_course, ADD FOREIGN KEY(Cno) REFERENCES course(Cno) ON DELETE CASCADE;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "DELETE FROM course WHERE Cno='002'; SELECT LOWER(REFERENCED_TABLE_NAME),UPDATE_RULE,DELETE_RULE FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='sc' ORDER BY 1;SELECT * FROM course ORDER BY Cno;SELECT * FROM sc ORDER BY Sno,Cno;"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "DELETE FROM course WHERE Cno='002'; SELECT LOWER(REFERENCED_TABLE_NAME),UPDATE_RULE,DELETE_RULE FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='sc' ORDER BY 1;SELECT * FROM course ORDER BY Cno;SELECT * FROM sc ORDER BY Sno,Cno;"
+      }
+    ]
+  }
+]

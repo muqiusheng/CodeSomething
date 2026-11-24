@@ -1,0 +1,542 @@
+{
+  "id": "exam-lab-02",
+  "title": "实验二专项卷 · DDL 建表、约束变更与数据维护",
+  "group": "specialty",
+  "labId": "lab-02-ddl-tables",
+  "questions": [
+    {
+      "id": "exam-lab-02-r2-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "course 中的 006 仍有 sc 引用，直接删除会发生什么？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键"
+      ],
+      "options": {
+        "A": "自动清除全部子记录",
+        "B": "把 sc.Cno 自动置空",
+        "C": "把 Grade 置零但保留子行",
+        "D": "外键拒绝删除"
+      },
+      "answer": "D",
+      "explanation": "种子库外键未指定级联，默认限制父行删除。"
+    },
+    {
+      "id": "exam-lab-02-r2-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "保持 student 当前默认，哪种方法能取得默认 Sex？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "默认值"
+      ],
+      "options": {
+        "A": "提供任意非法字符",
+        "B": "省略 Sno 但保留 Sex",
+        "C": "INSERT 列清单省略 Sex 并补齐其它必填列",
+        "D": "为 Sex 传 NULL"
+      },
+      "answer": "C",
+      "explanation": "默认值作用在其对应列，显式 NULL 仍受 NOT NULL 约束。"
+    },
+    {
+      "id": "exam-lab-02-r2-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "只删除某生某课的记录，必须限定哪些值才能精准定位？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "options": {
+        "A": "仅 Grade",
+        "B": "Sno 与 Cno",
+        "C": "仅 Sno",
+        "D": "仅 Cno"
+      },
+      "answer": "B",
+      "explanation": "sc 的身份由两列组合成主键。"
+    },
+    {
+      "id": "exam-lab-02-r2-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "Grade=101 写入成功需要规避哪条规则？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "CHECK"
+      ],
+      "options": {
+        "A": "Grade BETWEEN 0 AND 100",
+        "B": "Cno 的外键",
+        "C": "Sno 的外键",
+        "D": "课表 Credit 上界"
+      },
+      "answer": "A",
+      "explanation": "成绩超过 100，直接违反成绩范围检查。"
+    },
+    {
+      "id": "exam-lab-02-r2-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "重命名数据库内测试表 course_copy 为 course_backup 应使用什么？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DDL"
+      ],
+      "options": {
+        "A": "UPDATE TABLE course_copy AS course_backup",
+        "B": "RENAME COLUMN course_copy TO course_backup",
+        "C": "ALTER DATABASE course_copy TO course_backup",
+        "D": "RENAME TABLE course_copy TO course_backup"
+      },
+      "answer": "D",
+      "explanation": "RENAME TABLE 将已存在表重命名。"
+    },
+    {
+      "kind": "choice",
+      "points": 2,
+      "prompt": "父表物资号从 m010 改成 m011 时，要求引用列跟随更新。外键需要哪一动作？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "复合主键"
+      ],
+      "explanation": "更新和删除分别由不同的外键动作控制。",
+      "options": {
+        "A": "ON UPDATE RESTRICT",
+        "B": "ON DELETE SET NULL",
+        "C": "ON UPDATE CASCADE",
+        "D": "ON DELETE CASCADE"
+      },
+      "answer": "C",
+      "id": "exam-lab-02-r2-q06"
+    },
+    {
+      "id": "exam-lab-02-r2-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "若需要同一 Cname 只能出现一次，什么约束直接表达需求？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "唯一性"
+      ],
+      "options": {
+        "A": "INDEX(Cname)",
+        "B": "DEFAULT '未命名'",
+        "C": "UNIQUE (Cname)",
+        "D": "CHECK (Cname IS NOT NULL)"
+      },
+      "answer": "C",
+      "explanation": "UNIQUE 负责去重，普通索引、非空和默认值没有唯一性效果。"
+    },
+    {
+      "id": "exam-lab-02-r2-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "向 course 只插入课号与课名，Total_perior 的实际值是什么？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "options": {
+        "A": "表结构中的最大学时",
+        "B": "NULL",
+        "C": "0",
+        "D": "1"
+      },
+      "answer": "B",
+      "explanation": "未提供可空列且无显式默认值时，取 NULL。"
+    },
+    {
+      "id": "exam-lab-02-r2-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "想把父课号变更同步到已选课记录，需要何种引用动作？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键"
+      ],
+      "options": {
+        "A": "ON UPDATE CASCADE",
+        "B": "ON DELETE CASCADE",
+        "C": "ON UPDATE RESTRICT",
+        "D": "ON DELETE SET NULL"
+      },
+      "answer": "A",
+      "explanation": "变更父键对应 UPDATE；CASCADE 将值传播至子行。"
+    },
+    {
+      "id": "exam-lab-02-r2-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "为 training_module 新增可空备注 Note 的正确语句？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DDL"
+      ],
+      "options": {
+        "A": "INSERT INTO training_module COLUMN Note VARCHAR(80)",
+        "B": "ALTER COLUMN Note ON training_module",
+        "C": "ALTER TABLE training_module ADD COLUMN Note VARCHAR(80)",
+        "D": "UPDATE training_module ADD Note VARCHAR(80)"
+      },
+      "answer": "C",
+      "explanation": "ALTER TABLE 改变表结构，ADD COLUMN 指定新列定义。"
+    },
+    {
+      "id": "exam-lab-02-r2-q11",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "在 MySQL 8.4 中，普通 CREATE TABLE 可以与此前 DML 一起靠 ROLLBACK 撤销。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "事务"
+      ],
+      "answer": "false",
+      "explanation": "普通建表隐式提交，DDL 也不能按一般 DML 那样回滚。"
+    },
+    {
+      "id": "exam-lab-02-r2-q12",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "只写 CHECK (Credit BETWEEN 1 AND 6) 就能拒绝 NULL。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "CHECK"
+      ],
+      "answer": "false",
+      "explanation": "CHECK 接受 UNKNOWN，拒绝 FALSE；拒绝 NULL 应另加 NOT NULL。"
+    },
+    {
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "当工具预约最短为 1 小时且 hours 可空时，CHECK(hours >= 1) 仍会允许显式 NULL。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "复合主键"
+      ],
+      "explanation": "CHECK 接受 UNKNOWN，需同时声明 NOT NULL 才拒绝 NULL。",
+      "answer": "true",
+      "id": "exam-lab-02-r2-q13"
+    },
+    {
+      "id": "exam-lab-02-r2-q14",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "UPDATE 不带 WHERE 可能影响表中所有行。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "answer": "true",
+      "explanation": "缺少过滤条件时，所有行都进入候选更新集合。"
+    },
+    {
+      "id": "exam-lab-02-r2-q15",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "ON DELETE CASCADE 用于父行删除时自动处理引用子行。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键"
+      ],
+      "answer": "true",
+      "explanation": "父行被删除后，对应子记录也会删除。"
+    },
+    {
+      "id": "exam-lab-02-r2-q16",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全外键的删除级联动作。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键"
+      ],
+      "template": "FOREIGN KEY (Cno) REFERENCES course(Cno) {{1}}",
+      "blanks": [
+        [
+          "ON DELETE CASCADE"
+        ]
+      ],
+      "explanation": "父行删除后由 CASCADE 联动删除子行。"
+    },
+    {
+      "id": "exam-lab-02-r2-q17",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "给 training_module 增加 Note 文本列。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DDL"
+      ],
+      "template": "ALTER TABLE training_module {{1}} Note VARCHAR(80);",
+      "blanks": [
+        [
+          "ADD COLUMN",
+          "ADD"
+        ]
+      ],
+      "explanation": "ALTER TABLE 的 ADD 可省略 COLUMN。"
+    },
+    {
+      "kind": "blank",
+      "points": 4,
+      "prompt": "让数据库拒绝同一班组在同一天录入两次，补全表级约束。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "复合主键"
+      ],
+      "explanation": "复合主键以两个字段共同判重。",
+      "template": "ALTER TABLE crew_calendar ADD {{1}} (crew_code,duty_date);",
+      "blanks": [
+        [
+          "PRIMARY KEY"
+        ]
+      ],
+      "id": "exam-lab-02-r2-q18"
+    },
+    {
+      "id": "exam-lab-02-r2-q19",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "仅更新 006 的学时为 68。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "template": "UPDATE training_module {{1}} Total_perior=68 {{2}} ModuleNo='006';",
+      "blanks": [
+        [
+          "SET"
+        ],
+        [
+          "WHERE"
+        ]
+      ],
+      "explanation": "SET 写更新表达式，WHERE 保留行级条件。"
+    },
+    {
+      "id": "exam-lab-02-r2-q20",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "声明当前学分范围，包含上下限。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "CHECK"
+      ],
+      "template": "CHECK (Credit {{1}})",
+      "blanks": [
+        [
+          "BETWEEN 1 AND 6",
+          ">= 1 AND Credit <= 6",
+          "<= 6 AND Credit >= 1"
+        ]
+      ],
+      "explanation": "两种边界写法都允许 1 到 6，NULL 需单独检查。"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "为预置表 crew_calendar 增加复合主键，依次使用 crew_code、duty_date。相同班组在不同日期可重复出现。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "复合主键",
+        "ALTER TABLE"
+      ],
+      "explanation": "用 ALTER TABLE ADD PRIMARY KEY 指定列及顺序，组合值须唯一。",
+      "referenceSql": "ALTER TABLE crew_calendar ADD PRIMARY KEY(crew_code,duty_date);",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "SELECT LOWER(COLUMN_NAME) AS column_name,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS\nWHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='crew_calendar' ORDER BY ORDINAL_POSITION;\nSELECT INDEX_NAME,SEQ_IN_INDEX,LOWER(COLUMN_NAME) AS column_name FROM information_schema.STATISTICS\nWHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='crew_calendar' AND INDEX_NAME='PRIMARY' ORDER BY SEQ_IN_INDEX;"
+        },
+        {
+          "kind": "negative_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "SELECT crew_code,duty_date FROM crew_calendar ORDER BY crew_code,duty_date;",
+          "variantSql": "INSERT INTO crew_calendar VALUES ('C01','2026-11-26');",
+          "positiveSql": "INSERT INTO crew_calendar VALUES ('C02','2026-11-25');",
+          "negativeSql": "INSERT INTO crew_calendar VALUES ('C01','2026-11-26');",
+          "errorCode": 1062
+        }
+      ],
+      "setupSql": "CREATE TABLE crew_calendar(crew_code CHAR(3) NOT NULL,duty_date DATE NOT NULL); INSERT INTO crew_calendar VALUES ('C01','2026-11-25');",
+      "id": "exam-lab-02-r2-q21"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "为预置的 supply_pick 添加外键，使 mat_num 引用 Stock.mat_num，并在物资编号更新时级联更新领用记录。删除行为用默认限制。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键",
+        "ON UPDATE CASCADE"
+      ],
+      "explanation": "物资编号的合法性由父表保证，更新级联由外键规则执行。",
+      "referenceSql": "ALTER TABLE supply_pick ADD FOREIGN KEY(mat_num) REFERENCES Stock(mat_num) ON UPDATE CASCADE;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "SELECT k.COLUMN_NAME,k.REFERENCED_TABLE_NAME,k.REFERENCED_COLUMN_NAME,UPDATE_RULE\nFROM information_schema.KEY_COLUMN_USAGE k JOIN information_schema.REFERENTIAL_CONSTRAINTS r USING(CONSTRAINT_SCHEMA,CONSTRAINT_NAME,TABLE_NAME)\nWHERE k.TABLE_SCHEMA=DATABASE() AND k.TABLE_NAME='supply_pick';"
+        },
+        {
+          "kind": "negative_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "SELECT id,mat_num FROM supply_pick ORDER BY id;",
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',65,18);INSERT INTO supply_pick VALUES(3,'m008');",
+          "positiveSql": "UPDATE Stock SET mat_num='m009' WHERE mat_num='m008';",
+          "negativeSql": "INSERT INTO supply_pick VALUES(4,'m999');",
+          "errorCode": 1452
+        }
+      ],
+      "setupSql": "CREATE TABLE supply_pick(id INT PRIMARY KEY,mat_num CHAR(4) NOT NULL); INSERT INTO supply_pick VALUES (1,'m005');",
+      "id": "exam-lab-02-r2-q22"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "给预置工具预约表 tool_booking 增加 CHECK，确保 hours 只能在 1–12 小时，包含两端。保留现有的非空约束。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "CHECK",
+        "完整性"
+      ],
+      "explanation": "使用 BETWEEN 表达闭区间，非空规则由原列定义负责。",
+      "referenceSql": "ALTER TABLE tool_booking ADD CHECK(hours BETWEEN 1 AND 12);",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "SELECT CONSTRAINT_TYPE FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='tool_booking' AND CONSTRAINT_TYPE='CHECK';"
+        },
+        {
+          "kind": "negative_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "SELECT id,hours FROM tool_booking ORDER BY id;",
+          "variantSql": "INSERT INTO tool_booking VALUES(2,12);",
+          "positiveSql": "INSERT INTO tool_booking VALUES(3,12);",
+          "negativeSql": "INSERT INTO tool_booking VALUES(4,13);",
+          "errorCode": 3819
+        }
+      ],
+      "setupSql": "CREATE TABLE tool_booking(id INT PRIMARY KEY,hours INT NOT NULL); INSERT INTO tool_booking VALUES(1,1);",
+      "id": "exam-lab-02-r2-q23"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "维护调拨单表 supply_ticket。增加可空 review_code CHAR(6)，删除旧列 obsolete_flag，保留主键 ticket_id 及原始记录。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "ALTER TABLE",
+        "列维护"
+      ],
+      "explanation": "同一 ALTER TABLE 可同时声明 ADD COLUMN 和 DROP COLUMN。",
+      "referenceSql": "ALTER TABLE supply_ticket ADD COLUMN review_code CHAR(6), DROP COLUMN obsolete_flag;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT LOWER(COLUMN_NAME) AS column_name,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS\nWHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='supply_ticket' ORDER BY ORDINAL_POSITION;\nSELECT INDEX_NAME,SEQ_IN_INDEX,LOWER(COLUMN_NAME) AS column_name FROM information_schema.STATISTICS\nWHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='supply_ticket' AND INDEX_NAME='PRIMARY' ORDER BY SEQ_IN_INDEX;"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT ticket_id,review_code FROM supply_ticket ORDER BY ticket_id;",
+          "variantSql": "INSERT INTO supply_ticket VALUES(2,1);"
+        }
+      ],
+      "setupSql": "CREATE TABLE supply_ticket(ticket_id INT PRIMARY KEY, obsolete_flag TINYINT); INSERT INTO supply_ticket VALUES(1,0);",
+      "id": "exam-lab-02-r2-q24"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "升级预置 shift_alert 的严重级别约束。删除 chk_severity_old，并让任何新级别只能是 1–5，兼容历史低级别记录。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DROP CHECK",
+        "ALTER TABLE"
+      ],
+      "explanation": "先移除命名的旧 CHECK，再添加允许新范围的约束。",
+      "referenceSql": "ALTER TABLE shift_alert DROP CHECK chk_severity_old, ADD CHECK(severity BETWEEN 1 AND 5);",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "SELECT CONSTRAINT_TYPE FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='shift_alert' AND CONSTRAINT_TYPE='CHECK';"
+        },
+        {
+          "kind": "negative_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "SELECT id,severity FROM shift_alert ORDER BY id;",
+          "variantSql": "INSERT INTO shift_alert VALUES(2,3);",
+          "positiveSql": "INSERT INTO shift_alert VALUES(5,5);",
+          "negativeSql": "INSERT INTO shift_alert VALUES(6,6);",
+          "errorCode": 3819
+        }
+      ],
+      "setupSql": "CREATE TABLE shift_alert(id INT PRIMARY KEY,severity INT NOT NULL,CONSTRAINT chk_severity_old CHECK(severity BETWEEN 1 AND 3)); INSERT INTO shift_alert VALUES(1,1);",
+      "id": "exam-lab-02-r2-q25"
+    }
+  ],
+  "revision": 2
+}

@@ -1,0 +1,526 @@
+{
+  "id": "exam-lab-01",
+  "title": "实验一专项卷 · MySQL 环境、关系模型与表结构设计",
+  "group": "specialty",
+  "labId": "lab-01-workbench",
+  "questions": [
+    {
+      "id": "exam-lab-01-r2-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "在查询标签页执行 SELECT DATABASE() 得到 NULL，首先能断定什么？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "Workbench"
+      ],
+      "options": {
+        "A": "当前没有事务",
+        "B": "当前会话未选中默认数据库",
+        "C": "服务器未启动",
+        "D": "没有任何数据库"
+      },
+      "answer": "B",
+      "explanation": "函数只返回会话的默认数据库，连接成功的会话也可以未执行 USE。"
+    },
+    {
+      "id": "exam-lab-01-r2-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "选课库中学生与课程的多对多关系如何落地？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "关系模型"
+      ],
+      "options": {
+        "A": "在 student 中放一个 Cno",
+        "B": "在 course 中放一个 Sno",
+        "C": "把学生姓名作为课程主键",
+        "D": "用 sc 记录 Sno 和 Cno 组合"
+      },
+      "answer": "D",
+      "explanation": "sc 每行记录一个关联，两侧均能对应多行。"
+    },
+    {
+      "id": "exam-lab-01-r2-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "课号 001、002 需保留前导零，适合哪个类型？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "字段类型"
+      ],
+      "options": {
+        "A": "FLOAT",
+        "B": "CHAR(3)",
+        "C": "SMALLINT",
+        "D": "DECIMAL(3,0)"
+      },
+      "answer": "B",
+      "explanation": "固定长度字符编码保留前导零，数值列不会保存原数字串格式。"
+    },
+    {
+      "id": "exam-lab-01-r2-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "sc.Cno 外键应引用哪列？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "外键"
+      ],
+      "options": {
+        "A": "course.Cno",
+        "B": "student.Sno",
+        "C": "course.Credit",
+        "D": "sc.Grade"
+      },
+      "answer": "A",
+      "explanation": "外键连接对应的课程身份，Cno 是 course 的主键。"
+    },
+    {
+      "id": "exam-lab-01-r2-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "在课程表存储中文及四字节 Unicode 字符应选什么？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "字符集"
+      ],
+      "options": {
+        "A": "ascii",
+        "B": "latin1",
+        "C": "utf8mb3",
+        "D": "utf8mb4"
+      },
+      "answer": "D",
+      "explanation": "utf8mb4 可表示完整 Unicode，utf8mb3 只支持最多三个字节。"
+    },
+    {
+      "kind": "choice",
+      "points": 2,
+      "prompt": "值班站点代码含 S007 和 S010，需要按这四个字符存储。下列哪项列定义符合需求？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "CREATE DATABASE"
+      ],
+      "explanation": "字符类型保留字母与前导零。",
+      "options": {
+        "A": "INT(4)",
+        "B": "BIT(4)",
+        "C": "DATE",
+        "D": "CHAR(4)"
+      },
+      "answer": "D",
+      "id": "exam-lab-01-r2-q06"
+    },
+    {
+      "id": "exam-lab-01-r2-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "为没有邮编的学生保留未知状态应使用什么？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "空值"
+      ],
+      "options": {
+        "A": "字符串 'NULL'",
+        "B": "字符串 '000000'",
+        "C": "NULL",
+        "D": "0"
+      },
+      "answer": "C",
+      "explanation": "NULL 表示缺失，假邮编与字符串都会成为实际存储值。"
+    },
+    {
+      "id": "exam-lab-01-r2-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "INSERT 显式列名且省略 Sex，使用种子库定义会得到什么？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "默认值"
+      ],
+      "options": {
+        "A": "固定报错",
+        "B": "男",
+        "C": "NULL",
+        "D": "空字符串"
+      },
+      "answer": "B",
+      "explanation": "Sex 的 DEFAULT 为男，省略列触发默认值。"
+    },
+    {
+      "id": "exam-lab-01-r2-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "关系中的属性通常映射为 SQL 的什么？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "关系模型"
+      ],
+      "options": {
+        "A": "行",
+        "B": "库",
+        "C": "事务",
+        "D": "列"
+      },
+      "answer": "D",
+      "explanation": "关系模式的属性定义各列，元组是行。"
+    },
+    {
+      "id": "exam-lab-01-r2-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "函数依赖在 student 当前设计中可由哪个属性唯一确定 Sname？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "关系模型"
+      ],
+      "options": {
+        "A": "Sdept",
+        "B": "Classno",
+        "C": "Sno",
+        "D": "Sex"
+      },
+      "answer": "C",
+      "explanation": "Sno 是主键，每个 Sno 至多映射到一个姓名。"
+    },
+    {
+      "id": "exam-lab-01-r2-q11",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "完全相同的 Sno 和 Cno 可以在 sc 录入两次。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "主键"
+      ],
+      "answer": "false",
+      "explanation": "复合主键拒绝重复组合，即使 Grade 不同。"
+    },
+    {
+      "id": "exam-lab-01-r2-q12",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "可以先插入 sc 子行，再补两个缺失父行，MySQL 会自动延迟到提交检查。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "外键"
+      ],
+      "answer": "false",
+      "explanation": "InnoDB 外键在语句执行时检查，先创建父行。"
+    },
+    {
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "另一个 MySQL 连接创建了一个库。若两边权限相同，两边的默认库会自动随之切换。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "CREATE DATABASE"
+      ],
+      "explanation": "新建库与会话选择默认库是两个操作。",
+      "answer": "false",
+      "id": "exam-lab-01-r2-q13"
+    },
+    {
+      "id": "exam-lab-01-r2-q14",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "student 的 Sname 可重名，不能用姓名替代主键。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "关系模型"
+      ],
+      "answer": "true",
+      "explanation": "姓名不是稳定唯一标识，Sno 负责实体完整性。"
+    },
+    {
+      "id": "exam-lab-01-r2-q15",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "USE 只改变当前会话默认库。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "Workbench"
+      ],
+      "answer": "true",
+      "explanation": "其他连接的默认库不受此会话切换影响。"
+    },
+    {
+      "id": "exam-lab-01-r2-q16",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "为巡检报表补全命令，查询已登记物资的名称和规格，不进行写入。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "SELECT"
+      ],
+      "template": "{{1}} mat_name,speci FROM Stock;",
+      "blanks": [
+        [
+          "SELECT"
+        ]
+      ],
+      "explanation": "SELECT 从现有表读取指定字段。"
+    },
+    {
+      "id": "exam-lab-01-r2-q17",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全查询，显示本会话默认数据库。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "Workbench"
+      ],
+      "template": "SELECT {{1}} AS current_db;",
+      "blanks": [
+        [
+          "DATABASE()",
+          "SCHEMA()"
+        ]
+      ],
+      "explanation": "DATABASE 与 SCHEMA 函数均返回当前默认库。"
+    },
+    {
+      "kind": "blank",
+      "points": 4,
+      "prompt": "给抢修备注表的级别设置缺省值 1。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "CREATE DATABASE"
+      ],
+      "explanation": "DEFAULT 在省略该列时生效。",
+      "template": "CREATE TABLE dispatch_note (note_id INT PRIMARY KEY,severity TINYINT {{1}});",
+      "blanks": [
+        [
+          "DEFAULT 1"
+        ]
+      ],
+      "id": "exam-lab-01-r2-q18"
+    },
+    {
+      "id": "exam-lab-01-r2-q19",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "为选课关系声明复合主键，列顺序与 seed 一致。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "主键"
+      ],
+      "template": "{{1}} ({{2}})",
+      "blanks": [
+        [
+          "PRIMARY KEY"
+        ],
+        [
+          "TraineeNo, ModuleNo"
+        ]
+      ],
+      "explanation": "键顺序是 TraineeNo 在前、ModuleNo 在后，组合唯一即可表示一次选课。"
+    },
+    {
+      "id": "exam-lab-01-r2-q20",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "巡检领用表只有 mat_num 一列需要引用现有库存目录，补全外键引用中的列名与目标。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "外键引用"
+      ],
+      "template": "CREATE TABLE inspect_issue (id INT PRIMARY KEY, mat_num CHAR(4), FOREIGN KEY ({{1}}) REFERENCES {{2}});",
+      "blanks": [
+        [
+          "mat_num"
+        ],
+        [
+          "Stock(mat_num)"
+        ]
+      ],
+      "explanation": "外键声明先指定子表列，再写被引用的父表及列。"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "为抢修值班员建立空数据库。为避免同学之间重名，库名必须为当前 DATABASE() 返回值拼接 _practice。用 PREPARE 和 EXECUTE 执行拼接后的 CREATE DATABASE，字符集 utf8mb4，排序规则 utf8mb4_0900_ai_ci。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "CREATE DATABASE",
+        "字符集"
+      ],
+      "explanation": "库名是标识符，不能当做参数值绑定。先拼接可信的当前库名，再交给 PREPARE。",
+      "referenceSql": "SET @ddl=CONCAT('CREATE DATABASE ',DATABASE(),'_practice CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci');\nPREPARE create_practice FROM @ddl;\nEXECUTE create_practice;\nDEALLOCATE PREPARE create_practice;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "SELECT DEFAULT_CHARACTER_SET_NAME,DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA\nWHERE SCHEMA_NAME=CONCAT(DATABASE(),'_practice');"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "SELECT DEFAULT_CHARACTER_SET_NAME,DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA\nWHERE SCHEMA_NAME=CONCAT(DATABASE(),'_practice'); SELECT COUNT(*) AS table_count FROM information_schema.TABLES WHERE TABLE_SCHEMA=CONCAT(DATABASE(),'_practice');",
+          "variantSql": "INSERT INTO Salvaging VALUES ('20110006','东海电缆抢修','2011-03-02','2011-03-09',b'0');"
+        }
+      ],
+      "id": "exam-lab-01-r2-q21"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "新建值班站点表 shift_station，设站点代码 station_code CHAR(4) 为主键，站点名称 station_name VARCHAR(40) NOT NULL，值班员 duty_person VARCHAR(30) 可空。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "CREATE TABLE",
+        "列定义"
+      ],
+      "explanation": "站点代码保持固定宽度，主键保证站点唯一。未知值班员可登记为 NULL。",
+      "referenceSql": "CREATE TABLE shift_station (station_code CHAR(4) PRIMARY KEY,station_name VARCHAR(40) NOT NULL,duty_person VARCHAR(30));",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "SELECT LOWER(COLUMN_NAME) AS column_name,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS\nWHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='shift_station' ORDER BY ORDINAL_POSITION;\nSELECT INDEX_NAME,SEQ_IN_INDEX,LOWER(COLUMN_NAME) AS column_name FROM information_schema.STATISTICS\nWHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='shift_station' AND INDEX_NAME='PRIMARY' ORDER BY SEQ_IN_INDEX;"
+        },
+        {
+          "kind": "negative_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "SELECT station_code,station_name,duty_person FROM shift_station ORDER BY station_code;",
+          "variantSql": "INSERT INTO Salvaging VALUES ('20110006','东海电缆抢修','2011-03-02','2011-03-09',b'0');",
+          "positiveSql": "INSERT INTO shift_station VALUES ('S001','夜间值班站',NULL);",
+          "negativeSql": "INSERT INTO shift_station VALUES ('S001','重复值班站','蒋同学');",
+          "errorCode": 1062
+        }
+      ],
+      "id": "exam-lab-01-r2-q22"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "向预置的 dispatch_note(note_id, subject, severity) 登记两条工单备注。编号 901 的标题是“发现备用电缆”，级别用默认值；编号 902 的标题是“回收绝缘手套”，级别填 3。保留已有记录。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "INSERT",
+        "显式列名"
+      ],
+      "explanation": "分开列清单以触发默认值，也可在多行插入中使用 DEFAULT。",
+      "referenceSql": "INSERT INTO dispatch_note(note_id,subject) VALUES (901,'发现备用电缆'); INSERT INTO dispatch_note(note_id,subject,severity) VALUES (902,'回收绝缘手套',3);",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT note_id,subject,severity FROM dispatch_note ORDER BY note_id;"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT note_id,subject,severity FROM dispatch_note ORDER BY note_id;",
+          "variantSql": "INSERT INTO dispatch_note VALUES (105,'已处理备注',2);"
+        }
+      ],
+      "setupSql": "CREATE TABLE dispatch_note(note_id INT PRIMARY KEY, subject VARCHAR(40) NOT NULL, severity TINYINT NOT NULL DEFAULT 1); INSERT INTO dispatch_note VALUES (104,'交接备注',1);",
+      "id": "exam-lab-01-r2-q23"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "从 Stock 读取库存清单，只返回物资编号 mat_num 和名称，将名称列命名为 display_name。按物资编号升序输出。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "SELECT",
+        "列别名"
+      ],
+      "explanation": "显式列出需要的列，列别名仅改变结果标题。",
+      "referenceSql": "SELECT mat_num,mat_name AS display_name FROM Stock ORDER BY mat_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',65,18);"
+        }
+      ],
+      "id": "exam-lab-01-r2-q24"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "查询 Salvaging 中未填写结束日期的工程，返回编号 prj_num 和名称 prj_name，按工程号升序。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "SELECT",
+        "WHERE"
+      ],
+      "explanation": "NULL 表示未知。IS NULL 能准确找出尚未填写结束日期的记录。",
+      "referenceSql": "SELECT prj_num,prj_name FROM Salvaging WHERE end_date IS NULL ORDER BY prj_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Salvaging VALUES ('20110006','东海电缆抢修','2011-03-02',NULL,b'0');"
+        }
+      ],
+      "id": "exam-lab-01-r2-q25"
+    }
+  ],
+  "revision": 2
+}

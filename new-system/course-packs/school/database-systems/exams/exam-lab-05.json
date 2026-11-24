@@ -1,0 +1,531 @@
+{
+  "id": "exam-lab-05",
+  "title": "实验五专项卷 · 视图的定义、元数据与可更新性",
+  "group": "specialty",
+  "labId": "lab-05-views",
+  "questions": [
+    {
+      "id": "exam-lab-05-r3-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "只公布课程号和名称而隐藏学分，采用什么最直接？",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "options": {
+        "A": "DROP COLUMN Credit FROM course",
+        "B": "CREATE VIEW v_course AS SELECT Cno,Cname FROM course",
+        "C": "CREATE VIEW v_course AS SELECT * FROM course",
+        "D": "CREATE VIEW v_course AS SELECT DISTINCT Credit FROM course"
+      },
+      "answer": "B",
+      "explanation": "投影视图只包含公布的列，基表学分仍保留。"
+    },
+    {
+      "id": "exam-lab-05-r3-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "只公布计算机系学生，视图的 SELECT 需要什么？",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "options": {
+        "A": "WHERE Sdept='计算机系'",
+        "B": "GROUP BY Sdept",
+        "C": "ORDER BY Sdept",
+        "D": "HAVING COUNT(*)>1"
+      },
+      "answer": "A",
+      "explanation": "水平视图通过 WHERE 选择符合条件的行。"
+    },
+    {
+      "id": "exam-lab-05-r3-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "已有同名视图时更新定义，首选什么？",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "options": {
+        "A": "TRUNCATE VIEW",
+        "B": "UPDATE VIEW SET SELECT",
+        "C": "CREATE OR REPLACE VIEW",
+        "D": "CREATE OR IGNORE VIEW"
+      },
+      "answer": "C",
+      "explanation": "OR REPLACE 可使用新查询替换当前视图定义。"
+    },
+    {
+      "id": "exam-lab-05-r3-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "简单视图只选 Sno 和 Sname，为什么直接插入通常失败？",
+      "labId": "lab-05-views",
+      "tags": [
+        "可更新性"
+      ],
+      "options": {
+        "A": "基表姓名一定重复",
+        "B": "基表其它必填列没有默认值",
+        "C": "每个视图都禁止插入",
+        "D": "视图不能包含主键"
+      },
+      "answer": "B",
+      "explanation": "通过视图插入也要满足基表各列要求。"
+    },
+    {
+      "id": "exam-lab-05-r3-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "多层视图中 CASCADED CHECK OPTION 检验什么？",
+      "labId": "lab-05-views",
+      "tags": [
+        "检查选项"
+      ],
+      "options": {
+        "A": "只检验当前 WHERE",
+        "B": "比较所有表的外键名称",
+        "C": "只检验最终 SELECT 的列数",
+        "D": "当前视图及依赖视图相关过滤条件"
+      },
+      "answer": "D",
+      "explanation": "CASCADED 意在递归施加下层过滤条件。"
+    },
+    {
+      "kind": "choice",
+      "points": 2,
+      "prompt": "哪项定义最适合在不允许看到库存单价的报表中复用物资编号与库存量？",
+      "labId": "lab-05-views",
+      "tags": [
+        "单表视图"
+      ],
+      "explanation": "显式投影限制使用者能从视图读到的列。",
+      "options": {
+        "A": "CREATE VIEW v_inventory AS SELECT * FROM Stock",
+        "B": "CREATE TABLE v_inventory LIKE Stock",
+        "C": "CREATE INDEX v_inventory ON Stock(amount)",
+        "D": "CREATE VIEW v_inventory AS SELECT mat_num,amount FROM Stock"
+      },
+      "answer": "D",
+      "id": "exam-lab-05-r3-q06"
+    },
+    {
+      "id": "exam-lab-05-r3-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "SQL SECURITY INVOKER 按谁的权限检查底层访问？",
+      "labId": "lab-05-views",
+      "tags": [
+        "权限"
+      ],
+      "options": {
+        "A": "所有登录用户共享 root",
+        "B": "运行前最后修改此视图的人",
+        "C": "调用者",
+        "D": "当前视图创建者永远有权"
+      },
+      "answer": "C",
+      "explanation": "INVOKER 指调用者，DEFINER 指对象定义者。"
+    },
+    {
+      "id": "exam-lab-05-r3-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "SELECT DISTINCT Cno FROM sc 定义的视图不能更新的理由？",
+      "labId": "lab-05-views",
+      "tags": [
+        "可更新性"
+      ],
+      "options": {
+        "A": "DISTINCT 会删除基表记录",
+        "B": "多个底层行可能合成一个结果行",
+        "C": "Cno 是字母字段",
+        "D": "每个视图必须含 AVG"
+      },
+      "answer": "B",
+      "explanation": "DISTINCT 去重后失去与单一底层行的映射。"
+    },
+    {
+      "id": "exam-lab-05-r3-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "通过视图查询结果需要稳定排序时该怎么做？",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "options": {
+        "A": "在外层 SELECT 中指定 ORDER BY",
+        "B": "依赖视图创建时打印顺序",
+        "C": "默认按视图列名排列",
+        "D": "只有新建索引才能指定顺序"
+      },
+      "answer": "A",
+      "explanation": "外层使用明确排序键才有可依赖的返回顺序。"
+    },
+    {
+      "id": "exam-lab-05-r3-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "对两个表连接创建视图，若两个输出列同名，怎样解决？",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "options": {
+        "A": "只给表写别名即可",
+        "B": "先对两个列执行 DISTINCT",
+        "C": "改用 UNION ALL 会自动加表名前缀",
+        "D": "为冲突列设置不同别名"
+      },
+      "answer": "D",
+      "explanation": "视图列名应唯一，表别名不改变投影结果的名称。"
+    },
+    {
+      "id": "exam-lab-05-r3-q11",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "普通视图可以在查询中与其它表连接。",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "answer": "true",
+      "explanation": "视图能作为查询的关系来源。"
+    },
+    {
+      "id": "exam-lab-05-r3-q12",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "产生聚合字段的课程统计视图能用 UPDATE 修改计算出的均分。",
+      "labId": "lab-05-views",
+      "tags": [
+        "可更新性"
+      ],
+      "answer": "false",
+      "explanation": "均分是多行聚合结果，无对应的可改基表列。"
+    },
+    {
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "对仓库计数视图执行 UPDATE 把 counts 改成 0，会自动删除该仓库的所有 Stock 记录。",
+      "labId": "lab-05-views",
+      "tags": [
+        "单表视图"
+      ],
+      "explanation": "聚合值无法直接映射成可更新的基表字段。",
+      "answer": "false",
+      "id": "exam-lab-05-r3-q13"
+    },
+    {
+      "id": "exam-lab-05-r3-q14",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "视图 CHECK OPTION 同样适用于直接对基表执行的 UPDATE。",
+      "labId": "lab-05-views",
+      "tags": [
+        "检查选项"
+      ],
+      "answer": "false",
+      "explanation": "它检查经视图写入的语句，基表更新只受基表约束。"
+    },
+    {
+      "id": "exam-lab-05-r3-q15",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "删除视图不会自动删除依赖的基表。",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "answer": "true",
+      "explanation": "视图与基表是独立对象。"
+    },
+    {
+      "id": "exam-lab-05-r3-q16",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全创建课程投影视图的关键字。",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "template": "CREATE {{1}} v_course {{2}} SELECT Cno,Cname FROM course;",
+      "blanks": [
+        [
+          "VIEW"
+        ],
+        [
+          "AS"
+        ]
+      ],
+      "explanation": "CREATE VIEW 名称 AS 查询。"
+    },
+    {
+      "id": "exam-lab-05-r3-q17",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全安全替换视图的语句。",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "template": "CREATE {{1}} VIEW v_course AS SELECT Cno,Cname FROM course;",
+      "blanks": [
+        [
+          "OR REPLACE"
+        ]
+      ],
+      "explanation": "OR REPLACE 支持覆盖既有同名视图。"
+    },
+    {
+      "kind": "blank",
+      "points": 4,
+      "prompt": "创建可写的库存筛选视图，补全限制更新后记录仍可见的子句。",
+      "labId": "lab-05-views",
+      "tags": [
+        "单表视图"
+      ],
+      "explanation": "写入后的记录必须仍满足筛选条件。",
+      "template": "CREATE VIEW v_low_stock AS SELECT mat_num,amount FROM Stock WHERE amount<20 {{1}};",
+      "blanks": [
+        [
+          "WITH CHECK OPTION"
+        ]
+      ],
+      "id": "exam-lab-05-r3-q18"
+    },
+    {
+      "id": "exam-lab-05-r3-q19",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "要求走视图的写入仍能被本视图查到。",
+      "labId": "lab-05-views",
+      "tags": [
+        "检查选项"
+      ],
+      "template": "CREATE VIEW v_cs AS SELECT * FROM trainee WHERE Sdept='计算机系' {{1}};",
+      "blanks": [
+        [
+          "WITH CHECK OPTION",
+          "WITH CASCADED CHECK OPTION",
+          "WITH LOCAL CHECK OPTION"
+        ]
+      ],
+      "explanation": "单层视图三种写法对当前谓词效果相同。"
+    },
+    {
+      "id": "exam-lab-05-r3-q20",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "从当前库筛选可更新视图。",
+      "labId": "lab-05-views",
+      "tags": [
+        "元数据"
+      ],
+      "template": "SELECT TABLE_NAME FROM information_schema.VIEWS WHERE TABLE_SCHEMA={{1}} AND IS_UPDATABLE={{2}};",
+      "blanks": [
+        [
+          "DATABASE()",
+          "SCHEMA()"
+        ],
+        [
+          "'YES'"
+        ]
+      ],
+      "explanation": "'YES' 是元数据值，库名用当前默认库。"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "面向出库人员创建 v_ready_stock，返回库存不少于 30 的 mat_num、mat_name、amount。通过视图更新时，库存仍须至少 30。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |",
+      "labId": "lab-05-views",
+      "tags": [
+        "单表视图",
+        "WITH CHECK OPTION"
+      ],
+      "explanation": "视图条件和 WITH CHECK OPTION 配合验证写入后的行是否可见。",
+      "referenceSql": "CREATE VIEW v_ready_stock AS SELECT mat_num,mat_name,amount FROM Stock WHERE amount>=30 WITH CHECK OPTION;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT mat_num,mat_name,amount FROM v_ready_stock ORDER BY mat_num;"
+        },
+        {
+          "kind": "negative_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT mat_num,mat_name,amount FROM v_ready_stock ORDER BY mat_num;",
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',30,18);",
+          "positiveSql": "UPDATE v_ready_stock SET amount=31 WHERE mat_num='m008';",
+          "negativeSql": "UPDATE v_ready_stock SET amount=29 WHERE mat_num='m008';",
+          "errorCode": 1369
+        }
+      ],
+      "id": "exam-lab-05-r3-q21"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "建立 v_issue_contacts，显示每条领料的 prj_num、prj_name、mat_num、department。名称来自 Salvaging，部门来自 Out_stock。\n\n### 涉及数据表：Salvaging（电力抢修工程表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | PRIMARY KEY | 工程编号 |\n| `prj_name` | VARCHAR(50) | NOT NULL | 工程名称 |\n| `start_date` | DATETIME | NOT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 开始日期 |\n| `end_date` | DATETIME | NULL; DEFAULT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 结束日期 |\n| `prj_status` | BIT(1) | NOT NULL; DEFAULT b'0' | 工程状态（0 为未结算，1 为已结算） |\n\n**数据预览（前 2 行）**\n| prj_num | prj_name | start_date | end_date | prj_status |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | 南桥站配电抢修 | 2011-03-01 00:00:00 | 2011-03-04 00:00:00 | 1 |\n| 20110002 | 海湾站电缆抢修 | 2011-03-02 00:00:00 | 2011-03-08 00:00:00 | 0 |\n\n### 涉及数据表：Out_stock（工程领料记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | FK → Salvaging.prj_num; PRIMARY KEY（第 1 列） | 工程编号 |\n| `mat_num` | CHAR(4) | FK → Stock.mat_num; PRIMARY KEY（第 2 列） | 物资编号 |\n| `amount` | INT | NOT NULL; CHECK (amount >= 0) | 数量 |\n| `get_date` | DATETIME | NOT NULL; DEFAULT CURRENT_TIMESTAMP | 领料时间 |\n| `department` | VARCHAR(20) | NOT NULL | 领料部门 |\n\n**数据预览（前 2 行）**\n| prj_num | mat_num | amount | get_date | department |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | m001 | 4 | 2011-03-01 00:00:00 | 工程 1 部 |\n| 20110001 | m002 | 3 | 2011-03-02 00:00:00 | 工程 1 部 |",
+      "labId": "lab-05-views",
+      "tags": [
+        "多表视图",
+        "主外键"
+      ],
+      "explanation": "沿项目外键连接两表，保留一条领料一行的粒度。",
+      "referenceSql": "CREATE VIEW v_issue_contacts AS SELECT o.prj_num,p.prj_name,o.mat_num,o.department FROM Out_stock o JOIN Salvaging p ON o.prj_num=p.prj_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT prj_num,prj_name,mat_num,department FROM v_issue_contacts ORDER BY prj_num,mat_num;"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT prj_num,prj_name,mat_num,department FROM v_issue_contacts ORDER BY prj_num,mat_num;",
+          "variantSql": "INSERT INTO Salvaging VALUES ('20110006','东海电缆抢修','2011-03-02','2011-03-09',b'0');INSERT INTO Out_stock VALUES ('20110006','m002',7,'2011-03-02','工程 1 部');"
+        }
+      ],
+      "id": "exam-lab-05-r3-q22"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "建立 v_dept_issue(department, quantity)，按部门统计领料总量。每个实际领过料的部门输出一行，包含领取量为 0 的登记。\n\n### 涉及数据表：Out_stock（工程领料记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | FK → Salvaging.prj_num; PRIMARY KEY（第 1 列） | 工程编号 |\n| `mat_num` | CHAR(4) | FK → Stock.mat_num; PRIMARY KEY（第 2 列） | 物资编号 |\n| `amount` | INT | NOT NULL; CHECK (amount >= 0) | 数量 |\n| `get_date` | DATETIME | NOT NULL; DEFAULT CURRENT_TIMESTAMP | 领料时间 |\n| `department` | VARCHAR(20) | NOT NULL | 领料部门 |\n\n**数据预览（前 2 行）**\n| prj_num | mat_num | amount | get_date | department |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | m001 | 4 | 2011-03-01 00:00:00 | 工程 1 部 |\n| 20110001 | m002 | 3 | 2011-03-02 00:00:00 | 工程 1 部 |",
+      "labId": "lab-05-views",
+      "tags": [
+        "分组视图",
+        "SUM"
+      ],
+      "explanation": "分组视图把部门聚合固化成可查询的两列。",
+      "referenceSql": "CREATE VIEW v_dept_issue AS SELECT department,SUM(amount) AS quantity FROM Out_stock GROUP BY department;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT department,quantity FROM v_dept_issue ORDER BY department;SELECT CHECK_OPTION, IS_UPDATABLE FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='v_dept_issue';"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT department,quantity FROM v_dept_issue ORDER BY department;SELECT CHECK_OPTION, IS_UPDATABLE FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='v_dept_issue';",
+          "variantSql": "INSERT INTO Out_stock VALUES ('20110005','m003',0,'2011-03-02','工程 4 部');"
+        }
+      ],
+      "id": "exam-lab-05-r3-q23"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "从预置的 v_named_stock 查询单价 30 到 80（含两端）的物资。输出 mat_num、warehouse、unit，按单价升序、物资号升序。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |\n\n### 涉及数据表：v_named_stock（预置视图）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | NOT NULL | 物资编号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL | 单价（元） |\n\n**数据预览（前 2 行）**\n| mat_num | warehouse | unit |\n| :--- | :--- | :--- |\n| m001 | 供电局 1# 仓库 | 45.50 |\n| m002 | 供电局 1# 仓库 | 27.00 |",
+      "labId": "lab-05-views",
+      "tags": [
+        "查询视图",
+        "两端边界"
+      ],
+      "explanation": "视图已限定已分仓的物资，外层 BETWEEN 补充单价范围。",
+      "referenceSql": "SELECT mat_num,warehouse,unit FROM v_named_stock WHERE unit BETWEEN 30 AND 80 ORDER BY unit,mat_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',65,30);INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m009','应急电缆','YJV-35','供电局 1# 仓库',65,80);"
+        }
+      ],
+      "setupSql": "CREATE VIEW v_named_stock AS SELECT mat_num,warehouse,unit FROM Stock WHERE warehouse IS NOT NULL;",
+      "id": "exam-lab-05-r3-q24"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "通过预置的 v_unit_review 将规格为 YJV-35 的可见物资单价下调 5 元。该视图展示库存达到 40 的物资，只修改符合条件的行。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |\n\n### 涉及数据表：v_unit_review（预置视图）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | NOT NULL | 物资编号 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL | 单价（元） |\n\n**数据预览（前 2 行）**\n| mat_num | speci | unit |\n| :--- | :--- | :--- |\n| m001 | YJV-35 | 45.50 |\n| m002 | BVV-35 | 27.00 |",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图 UPDATE",
+        "批量修改"
+      ],
+      "explanation": "基表中可能也存在相同规格、但因库存不足而没有出现在视图中的行。",
+      "referenceSql": "UPDATE v_unit_review SET unit=unit-5 WHERE speci='YJV-35';",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT mat_num,mat_name,speci,warehouse,amount,unit FROM Stock ORDER BY mat_num;"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT mat_num,mat_name,speci,warehouse,amount,unit FROM Stock ORDER BY mat_num;",
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',40,18);INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m009','应急电缆','YJV-35','供电局 1# 仓库',39,18);"
+        }
+      ],
+      "setupSql": "CREATE VIEW v_unit_review AS SELECT mat_num,speci,unit FROM Stock WHERE amount>=40;",
+      "id": "exam-lab-05-r3-q25"
+    }
+  ],
+  "revision": 3
+}

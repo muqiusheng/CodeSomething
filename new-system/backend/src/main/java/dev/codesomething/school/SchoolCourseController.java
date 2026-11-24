@@ -12,11 +12,12 @@ import org.springframework.web.bind.annotation.*;
 public class SchoolCourseController {
     record CourseGroup(String term, String title, List<CourseDetails> courses) {}
     record LabProgress(String id, String title, int questions, int executed, int totalQuestions) {}
-    record CourseDetails(SchoolCourseCatalog.Course course, List<LabProgress> labs) {}
+    record CourseDetails(SchoolCourseCatalog.Course course, List<LabProgress> labs, int examCount) {}
     record LabDetails(SchoolCourseCatalog.Course course, SchoolCourseCatalog.LabOutline outline,
-                      SchoolCourseCatalog.Lab lab, SchoolDraftStore.Draft work, SchoolStudent.Identity student, String database) {}
+                      SchoolCourseCatalog.Lab lab, SchoolDraftStore.Draft work, SchoolStudent.Identity student, String database, boolean grading) {}
     record SaveRequest(long revision, Map<String, String> drafts) {}
     record RunRequest(long revision, Map<String, String> drafts, String questionId, String selection, String database) {}
+    record GradeRequest(long revision, Map<String, String> drafts, String questionId, String selection, Integer offset) {}
     record RunResponse(SchoolDraftStore.Draft work, Map<String, SchoolLabRunner.RunResult> results) {}
     record ResetRequest(boolean empty) {}
 
@@ -25,14 +26,18 @@ public class SchoolCourseController {
     private final SchoolLabRunner runner;
     private final SchoolReportService reports;
     private final SchoolStudent student;
+    private final ExamCatalog exams;
+    private final ExamSqlRunner grader;
 
     SchoolCourseController(SchoolCourseCatalog catalog, SchoolDraftStore drafts, SchoolLabRunner runner,
-                           SchoolReportService reports, SchoolStudent student) {
+                           SchoolReportService reports, SchoolStudent student, ExamCatalog exams, ExamSqlRunner grader) {
         this.catalog = catalog;
         this.drafts = drafts;
         this.runner = runner;
         this.reports = reports;
         this.student = student;
+        this.exams = exams;
+        this.grader = grader;
     }
 
     @GetMapping
@@ -52,21 +57,29 @@ public class SchoolCourseController {
         var progress = course.labs().stream().map(outline -> {
             var lab = catalog.lab(course, outline.id());
             var work = drafts.read(course.id(), outline.id());
+            boolean grading = catalog.hasLabChecks(course, lab);
             var required = lab.questions().stream().filter(question -> !question.optional()).toList();
             int count = (int) required.stream().filter(question -> {
                 var execution = work.executions().get(question.id());
-                return execution != null && execution.result().status().equals("ok");
+                return execution != null && execution.completed(grading);
             }).count();
             return new LabProgress(outline.id(), outline.title(), required.size(), count, lab.questions().size());
         }).toList();
-        return new CourseDetails(course, progress);
+        return new CourseDetails(course, progress, exams.papers(course.id()).size());
     }
 
     @GetMapping("/{courseId}/labs/{labId}")
     LabDetails lab(@PathVariable String courseId, @PathVariable String labId) {
         var course = catalog.course(courseId);
-        return new LabDetails(course, catalog.outline(course, labId), catalog.lab(course, labId),
-            drafts.read(courseId, labId), student.identity(), runner.database(course));
+        var lab = catalog.lab(course, labId);
+        return new LabDetails(course, catalog.outline(course, labId), lab,
+            drafts.read(courseId, labId), student.identity(), runner.database(course), catalog.hasLabChecks(course, lab));
+    }
+
+    @PostMapping("/{courseId}/environment/activity")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void activity(@PathVariable String courseId) {
+        runner.touch(catalog.course(courseId));
     }
 
     @PostMapping("/{courseId}/labs/{labId}/save")
@@ -101,11 +114,68 @@ public class SchoolCourseController {
             }
             var outcomes = runner.run(course, chosen, body.database());
             var executions = new LinkedHashMap<>(current.executions());
-            outcomes.forEach((id, result) -> executions.put(id, new SchoolDraftStore.Execution(chosen.get(id), result)));
+            outcomes.forEach((id, result) -> {
+                var previous = executions.get(id);
+                if (previous == null || previous.grade() == null || !Objects.equals(previous.sql(), chosen.get(id)))
+                    executions.put(id, new SchoolDraftStore.Execution(chosen.get(id), result));
+            });
             return new RunResponse(drafts.save(courseId, labId, body.revision(), scripts, executions), outcomes);
         } catch (MysqlEnvironment.Failure e) {
             throw environmentFailure(e);
         }
+    }
+
+    @PostMapping("/{courseId}/labs/{labId}/grade")
+    synchronized RunResponse grade(@PathVariable String courseId, @PathVariable String labId, @RequestBody GradeRequest body) {
+        var course = catalog.course(courseId);
+        var lab = catalog.lab(course, labId);
+        var scripts = validate(lab, body.drafts());
+        var current = drafts.read(courseId, labId);
+        if (current.revision() != body.revision()) throw SchoolDraftStore.conflict();
+
+        var definitions = catalog.labChecks(course, lab);
+        if (definitions.isEmpty()) throw ApiException.invalid("labId", "这个实验未配置自动判分。");
+        String id = body.questionId();
+        var question = definitions.get(id);
+        String script = scripts.get(id);
+        if (question == null || script == null) throw ApiException.invalid("questionId", "请先输入当前题的 SQL。");
+        if (body.selection() != null) {
+            if (body.selection().isBlank() || !script.contains(body.selection()))
+                throw ApiException.invalid("selection", "请选择当前题的 SQL 片段后重试。");
+            int offset = body.offset() == null ? 0 : body.offset();
+            if (offset < 0 || offset > 8192) throw ApiException.invalid("offset", "选区行号无效。");
+            var debug = grader.debug(courseId, question, body.selection(), "selection", offset);
+            var tables = debug.steps().stream().flatMap(step -> step.tables().stream()).toList();
+            return new RunResponse(current, Map.of(id, new SchoolLabRunner.RunResult(debug.status(), debug.elapsedMs(), null,
+                tables, debug.error() == null ? null : debug.error().raw())));
+        }
+
+        long started = System.nanoTime();
+        var result = grader.grade(courseId, question, script);
+        String status = switch (result.status()) {
+            case "graded" -> result.score() == question.points() ? "correct" : result.score() == 0 ? "wrong" : "partial";
+            default -> result.status();
+        };
+        var grade = new ExamStore.Item(ExamCatalog.visible(question, List.of()), List.of(script), result.score(), status,
+            question.explanation(), List.of(), List.of(), null, result.checks(), result.error());
+        long elapsed = java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
+        var tables = result.checks().stream().filter(check -> check.points() == 5).findFirst()
+            .map(ExamSqlRunner.CheckResult::actual).orElse(List.of());
+        var output = new SchoolLabRunner.RunResult(status.equals("correct") ? "ok" : status, elapsed, null, tables,
+            result.error() == null ? null : result.error().raw());
+        var executions = new LinkedHashMap<>(current.executions());
+        var previous = executions.get(id);
+        if (!status.equals("unavailable") || previous == null || previous.grade() == null || !Objects.equals(previous.sql(), script))
+            executions.put(id, new SchoolDraftStore.Execution(script, output, grade));
+        return new RunResponse(drafts.save(courseId, labId, body.revision(), scripts, executions), Map.of(id, output));
+    }
+
+    @GetMapping("/{courseId}/labs/{labId}/questions/{questionId}/tables")
+    ExamSqlRunner.Debug questionTables(@PathVariable String courseId, @PathVariable String labId, @PathVariable String questionId) {
+        var course = catalog.course(courseId);
+        var question = catalog.labChecks(course, catalog.lab(course, labId)).get(questionId);
+        if (question == null) throw ApiException.invalid("questionId", "找不到本题的初始数据。");
+        return grader.debug(courseId, question, "", "tables", 0);
     }
 
     @GetMapping("/{courseId}/schema")

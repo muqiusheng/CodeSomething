@@ -1,0 +1,273 @@
+[
+  {
+    "id": "q01",
+    "referenceSql": "SELECT DEFAULT_CHARACTER_SET_NAME,DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=DATABASE();",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "ALTER DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q02",
+    "referenceSql": "SHOW COLUMNS FROM student; SHOW COLUMNS FROM course; SHOW COLUMNS FROM sc;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "ALTER TABLE course ADD COLUMN Note VARCHAR(20);",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q03",
+    "referenceSql": "ALTER TABLE student ADD Stature DECIMAL(4,2) CHECK (Stature<3); ALTER TABLE student DROP COLUMN Stature; ALTER TABLE sc ALTER COLUMN Grade SET DEFAULT 0;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT LOWER(COLUMN_NAME) AS col,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='student' AND LOWER(COLUMN_NAME) IN ('stature','sdept','postcode') ORDER BY ORDINAL_POSITION;SELECT LOWER(COLUMN_NAME) AS col,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='sc' AND LOWER(COLUMN_NAME) IN ('grade') ORDER BY ORDINAL_POSITION;SELECT * FROM sc ORDER BY Sno,Cno;"
+      },
+      {
+        "kind": "negative_check",
+        "label": "变式数据与约束边界",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "positiveSql": "INSERT INTO sc(Sno,Cno) VALUES('20110008','001');",
+        "negativeSql": "INSERT INTO sc(Sno,Cno,Grade) VALUES('20110008','002',101);",
+        "errorCodes": [
+          3819
+        ],
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT LOWER(COLUMN_NAME) AS col,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='student' AND LOWER(COLUMN_NAME) IN ('stature','sdept','postcode') ORDER BY ORDINAL_POSITION;SELECT LOWER(COLUMN_NAME) AS col,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='sc' AND LOWER(COLUMN_NAME) IN ('grade') ORDER BY ORDINAL_POSITION;SELECT * FROM sc ORDER BY Sno,Cno;"
+      }
+    ]
+  },
+  {
+    "id": "q04",
+    "referenceSql": "INSERT INTO student VALUES('20119991','何明','男','1993-06-20','051','2011-09-01','南京','计算机系','210000'); INSERT INTO sc VALUES('20119991','001',86);",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT * FROM student ORDER BY Sno;SELECT * FROM sc ORDER BY Sno,Cno;"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT * FROM student ORDER BY Sno;SELECT * FROM sc ORDER BY Sno,Cno;"
+      }
+    ]
+  },
+  {
+    "id": "q05",
+    "referenceSql": "UPDATE student SET Birth='1993-10-01' WHERE Sno='20110103'; UPDATE course SET Total_perior=64,Credit=4 WHERE Cno='002'; DELETE FROM sc WHERE Sno='20110002' AND Cno='002';",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT * FROM student ORDER BY Sno;SELECT * FROM course ORDER BY Cno;SELECT * FROM sc ORDER BY Sno,Cno;"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT * FROM student ORDER BY Sno;SELECT * FROM course ORDER BY Cno;SELECT * FROM sc ORDER BY Sno,Cno;"
+      }
+    ]
+  },
+  {
+    "id": "q06",
+    "referenceSql": "SELECT DEFAULT_COLLATION_NAME,DEFAULT_CHARACTER_SET_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=DATABASE();",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "ALTER DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q07",
+    "referenceSql": "SELECT x.Sno,s.Sname,x.Cno,c.Cname,x.Grade FROM sc x JOIN student s USING(Sno) JOIN course c USING(Cno) WHERE x.Sno='20110001' ORDER BY x.Cno;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": true
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO sc VALUES('20110001','007',74);",
+        "checkColumnNames": false,
+        "orderMatters": true
+      }
+    ]
+  },
+  {
+    "id": "q08",
+    "referenceSql": "SELECT COLUMN_NAME,ORDINAL_POSITION FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='sc' AND CONSTRAINT_NAME='PRIMARY' ORDER BY ORDINAL_POSITION;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": true
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "ALTER TABLE sc DROP FOREIGN KEY fk_sc_student, DROP FOREIGN KEY fk_sc_course, DROP PRIMARY KEY, ADD PRIMARY KEY(Cno,Sno);",
+        "checkColumnNames": false,
+        "orderMatters": true
+      }
+    ]
+  },
+  {
+    "id": "q09",
+    "referenceSql": "INSERT INTO course VALUES('980','测试课程',32,2); UPDATE course SET Total_perior=48 WHERE Cno='980'; SELECT * FROM course WHERE Cno='980'; DELETE FROM course WHERE Cno='980';",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础查询结果",
+        "points": 5,
+        "checkColumnNames": false
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SELECT * FROM course ORDER BY Cno;"
+      }
+    ]
+  },
+  {
+    "id": "q10",
+    "referenceSql": "SHOW CREATE TABLE student; SHOW CREATE TABLE course; SHOW CREATE TABLE sc;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "ALTER TABLE course ADD COLUMN Note VARCHAR(16);",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  }
+]

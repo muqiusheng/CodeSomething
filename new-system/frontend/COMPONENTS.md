@@ -4,6 +4,8 @@
 
 # 组件来源与复用
 
+数据库备考页复用 Radix Tabs、Modal、PageSkeleton、WorkbenchResultGrid、账号级只读缓存和 lucide-react。CodeEditor 的可选 `traceRange` 为单步调试增加整行范围高亮，`getSelectionStartLine()` 提供选区的源码行偏移。备考样式集中在 `src/styles/school-exam.css`，使用既有语义主题变量。
+
 `src/components/shared/LoadingState.tsx` 提供自有品牌启动态、行内圆环、三点等待提示和结构化骨架屏。样式集中在 `src/styles/loading.css`，复用 BrandMark 和主题语义变量。骨架由真实表面和低对比细线组成，220ms后淡入。品牌启动态使用细圆弧，编辑器使用等尺寸覆盖层。两种减少动效设置均使用静态占位。只读快照由 `useScopedRead` 复用，默认20秒内切页直接使用缓存，课程元数据为60秒。动态数据只在当前页面可见时每120秒校验，管理端沿用各表的轮询间隔。完成内容后按受影响的资源在后台刷新已访问的数据，手动重试也会立即读取。允许持久化的资源按账号保存到 `sessionState`，重新载入时静默校验。课内实验详情使用内存缓存，未提交的编辑仍走原草稿恢复逻辑。无新增运行依赖。
 
 0.13.1：HeaderNavigation为自有React组件，采用daisyui breadcrumbs/menu的语义参考，使用现有React Router与Lucide，无新增组件库。原生details/summary展开栏目链接，按钮进行历史导航；sessionStorage只保存当前标签页访问分支。navigation.css沿用双主题角色；移除usePointerFeedback中的侧栏跟随测量及旧伪元素，80ms行级反馈遵循make-interfaces-feel-better高频交互规则。

@@ -1,0 +1,529 @@
+{
+  "id": "exam-lab-06",
+  "title": "实验六专项卷 · 存储过程、参数传递与流程控制",
+  "group": "specialty",
+  "labId": "lab-06-procedures",
+  "questions": [
+    {
+      "id": "exam-lab-06-r3-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "执行已建立的 p_course('006') 应使用什么？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "过程"
+      ],
+      "options": {
+        "A": "RUN p_course '006'",
+        "B": "EXECUTE FUNCTION p_course('006')",
+        "C": "CALL p_course('006')",
+        "D": "SELECT p_course('006')"
+      },
+      "answer": "C",
+      "explanation": "MySQL 用 CALL 调用存储过程，SELECT 函数调用是不同的语法。"
+    },
+    {
+      "id": "exam-lab-06-r3-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "过程参数用来接收课号输入且不回传修改应声明什么？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "options": {
+        "A": "RETURN",
+        "B": "IN",
+        "C": "OUT",
+        "D": "INOUT"
+      },
+      "answer": "B",
+      "explanation": "IN 从调用者接收值，不把参数赋值带回。"
+    },
+    {
+      "id": "exam-lab-06-r3-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "将已有值传入过程再让过程修改，应选哪种参数？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "options": {
+        "A": "OUT",
+        "B": "IN",
+        "C": "DECLARE",
+        "D": "INOUT"
+      },
+      "answer": "D",
+      "explanation": "INOUT 同时完成输入与输出。"
+    },
+    {
+      "id": "exam-lab-06-r3-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "若存储过程内仅对 InnoDB 的 sc 执行普通 UPDATE，且过程从未显式提交，调用者在事务内执行 CALL 后再 ROLLBACK 会怎样？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "过程与事务"
+      ],
+      "options": {
+        "A": "改动随当前事务回滚",
+        "B": "CALL 返回时过程内 DML 已自动提交",
+        "C": "只有局部变量回滚",
+        "D": "调用任何过程都会结束当前事务"
+      },
+      "answer": "A",
+      "explanation": "在所述条件下，过程中的 DML 属于调用者的事务。"
+    },
+    {
+      "id": "exam-lab-06-r3-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "DECLARE v_total INT 应放在过程 BEGIN...END 内什么位置？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "局部变量"
+      ],
+      "options": {
+        "A": "END 后的客户端指令中",
+        "B": "块开头，在可执行语句前",
+        "C": "任意 SELECT 后",
+        "D": "CALL 参数表的最后"
+      },
+      "answer": "B",
+      "explanation": "DECLARE 局部变量需要位于块的声明区。"
+    },
+    {
+      "kind": "choice",
+      "points": 2,
+      "prompt": "库存巡检过程需要把“物资是否存在”的判断结果写回调用者。一项输出参数应怎么声明？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "无参过程"
+      ],
+      "explanation": "OUT 参数用于向调用者回传，局部变量只在过程体内有效。",
+      "options": {
+        "A": "DECLARE exists_flag INT",
+        "B": "SET exists_flag=1",
+        "C": "OUT exists_flag INT",
+        "D": "IN exists_flag INT"
+      },
+      "answer": "C",
+      "id": "exam-lab-06-r3-q06"
+    },
+    {
+      "id": "exam-lab-06-r3-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "过程 IF 语句结束需要什么？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "流程控制"
+      ],
+      "options": {
+        "A": "END IF;",
+        "B": "END WHERE;",
+        "C": "ENDIF ELSE;",
+        "D": "单独 END CASE;"
+      },
+      "answer": "A",
+      "explanation": "IF 条件 THEN ... ELSE ... END IF 是过程语句写法。"
+    },
+    {
+      "id": "exam-lab-06-r3-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "调用带 OUT 参数的过程，应该传什么作为接收者？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "options": {
+        "A": "常量 0",
+        "B": "函数 NOW()",
+        "C": "条件 NULL IS NULL",
+        "D": "会话变量 @n"
+      },
+      "answer": "D",
+      "explanation": "OUT 需要可写变量，调用者随后 SELECT @n 查看。"
+    },
+    {
+      "id": "exam-lab-06-r3-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "希望把 COUNT(*) 赋给局部变量 v_n，正确写法是？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "过程"
+      ],
+      "options": {
+        "A": "COUNT(*) AS INTO v_n FROM sc",
+        "B": "INSERT COUNT(*) INTO v_n",
+        "C": "SELECT COUNT(*) INTO v_n FROM sc",
+        "D": "SELECT v_n INTO COUNT(*) FROM sc"
+      },
+      "answer": "C",
+      "explanation": "SELECT ... INTO 给局部变量赋单行查询值。"
+    },
+    {
+      "id": "exam-lab-06-r3-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "需要至少执行一次循环体再判断退出，应选什么？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "循环"
+      ],
+      "options": {
+        "A": "SELECT ... GROUP BY",
+        "B": "REPEAT ... UNTIL ... END REPEAT",
+        "C": "WHILE ... DO ... END WHILE",
+        "D": "IF ... THEN ... END IF"
+      },
+      "answer": "B",
+      "explanation": "REPEAT 先执行循环体，WHILE 先判断进入条件。"
+    },
+    {
+      "id": "exam-lab-06-r3-q11",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "同一连接 CALL 后可以用 SELECT @n 读取 OUT 值。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "answer": "true",
+      "explanation": "@n 存在当前会话，换连接后不共享。"
+    },
+    {
+      "id": "exam-lab-06-r3-q12",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "过程 p 的 IN 参数即使在过程体内被重新赋值，也不把该参数的新值回传给调用者。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "存储过程"
+      ],
+      "answer": "true",
+      "explanation": "IN 用于传入，INOUT 用于传入并回传，OUT 用于输出。"
+    },
+    {
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "游标用 FETCH 读到最后一行之后，再取一次时，可以通过 NOT FOUND 处理器设置循环结束标志。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "无参过程"
+      ],
+      "explanation": "处理器改变标记，取数后应先判断标记再处理行。",
+      "answer": "true",
+      "id": "exam-lab-06-r3-q13"
+    },
+    {
+      "id": "exam-lab-06-r3-q14",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "BEGIN...END 中的 DECLARE 局部变量可以在块外 SELECT。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "局部变量"
+      ],
+      "answer": "false",
+      "explanation": "局部变量作用域限于声明块及其内层。"
+    },
+    {
+      "id": "exam-lab-06-r3-q15",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "存储程序的 IF 语句和 SELECT 中的 IF() 函数语法不同。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "流程控制"
+      ],
+      "answer": "true",
+      "explanation": "一个控制语句执行，另一个计算表达式值。"
+    },
+    {
+      "id": "exam-lab-06-r3-q16",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全过程定义，接收课号并回传人数。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "template": "CREATE PROCEDURE p_count({{1}} p_cno CHAR(3), {{2}} p_n INT) SELECT COUNT(*) INTO p_n FROM registration WHERE ModuleNo=p_cno;",
+      "blanks": [
+        [
+          "IN"
+        ],
+        [
+          "OUT"
+        ]
+      ],
+      "explanation": "IN 传课号，OUT 回传统计。"
+    },
+    {
+      "id": "exam-lab-06-r3-q17",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "执行过程并读取同会话的返回值。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "过程"
+      ],
+      "template": "{{1}} p_count('006', {{2}}); SELECT @n;",
+      "blanks": [
+        [
+          "CALL"
+        ],
+        [
+          "@n"
+        ]
+      ],
+      "explanation": "用户变量可作为 OUT 的实参。"
+    },
+    {
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全用于逐行读取仓库名称的声明。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "无参过程"
+      ],
+      "explanation": "DECLARE name CURSOR FOR 定义可逐行读取的查询。",
+      "template": "DECLARE c {{1}} FOR SELECT DISTINCT warehouse FROM Stock;",
+      "blanks": [
+        [
+          "CURSOR"
+        ]
+      ],
+      "id": "exam-lab-06-r3-q18"
+    },
+    {
+      "id": "exam-lab-06-r3-q19",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全过程 IF 分支。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "流程控制"
+      ],
+      "template": "IF p_grade>=60 {{1}} SET p_state='及格'; {{2}};",
+      "blanks": [
+        [
+          "THEN"
+        ],
+        [
+          "END IF"
+        ]
+      ],
+      "explanation": "IF 语句从 THEN 开始执行分支，由 END IF 闭合。"
+    },
+    {
+      "id": "exam-lab-06-r3-q20",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "向过程局部变量取平均值。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "局部变量"
+      ],
+      "template": "SELECT AVG(Grade) {{1}} v_avg FROM registration WHERE ModuleNo=p_cno;",
+      "blanks": [
+        [
+          "INTO"
+        ]
+      ],
+      "explanation": "INTO 把单行聚合值赋给变量。"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "定义无参过程 pending_repairs()。每次调用返回未填写结束日期的 prj_num、prj_name、start_date，按工程号升序。只提交过程定义。\n\n### 涉及数据表：Salvaging（电力抢修工程表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | PRIMARY KEY | 工程编号 |\n| `prj_name` | VARCHAR(50) | NOT NULL | 工程名称 |\n| `start_date` | DATETIME | NOT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 开始日期 |\n| `end_date` | DATETIME | NULL; DEFAULT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 结束日期 |\n| `prj_status` | BIT(1) | NOT NULL; DEFAULT b'0' | 工程状态（0 为未结算，1 为已结算） |\n\n**数据预览（前 2 行）**\n| prj_num | prj_name | start_date | end_date | prj_status |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | 南桥站配电抢修 | 2011-03-01 00:00:00 | 2011-03-04 00:00:00 | 1 |\n| 20110002 | 海湾站电缆抢修 | 2011-03-02 00:00:00 | 2011-03-08 00:00:00 | 0 |",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "无参过程",
+        "CALL"
+      ],
+      "explanation": "无参过程仍要写括号。CALL 时过程读取当前表的数据。",
+      "referenceSql": "DELIMITER $$\nCREATE PROCEDURE pending_repairs()\nBEGIN\nSELECT prj_num,prj_name,start_date FROM Salvaging WHERE end_date IS NULL ORDER BY prj_num;\nEND$$\nDELIMITER ;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "CALL pending_repairs();"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "CALL pending_repairs();",
+          "variantSql": "INSERT INTO Salvaging VALUES ('20110006','东海电缆抢修','2011-03-02',NULL,b'0');"
+        }
+      ],
+      "id": "exam-lab-06-r3-q21"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "定义过程 supplies_by_spec(IN p_spec VARCHAR(20))。按照输入规格返回 Stock 的 mat_num、mat_name、amount，按物资号升序。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "IN 参数",
+        "过程查询"
+      ],
+      "explanation": "参数名与列名区分，规格筛选使用调用者的输入。",
+      "referenceSql": "DELIMITER $$\nCREATE PROCEDURE supplies_by_spec(IN p_spec VARCHAR(20))\nBEGIN\nSELECT mat_num,mat_name,amount FROM Stock WHERE speci=p_spec ORDER BY mat_num;\nEND$$\nDELIMITER ;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "CALL supplies_by_spec('YJV-35');"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "CALL supplies_by_spec('YJV-35'); CALL supplies_by_spec('DT-16');",
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',65,18);"
+        }
+      ],
+      "id": "exam-lab-06-r3-q22"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "定义过程 issued_units(IN p_material CHAR(4), OUT p_total INT)。把指定物资在全部工程中被领取的数量和写入输出参数 p_total；没有记录时写 0。\n\n### 涉及数据表：Out_stock（工程领料记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | FK → Salvaging.prj_num; PRIMARY KEY（第 1 列） | 工程编号 |\n| `mat_num` | CHAR(4) | FK → Stock.mat_num; PRIMARY KEY（第 2 列） | 物资编号 |\n| `amount` | INT | NOT NULL; CHECK (amount >= 0) | 数量 |\n| `get_date` | DATETIME | NOT NULL; DEFAULT CURRENT_TIMESTAMP | 领料时间 |\n| `department` | VARCHAR(20) | NOT NULL | 领料部门 |\n\n**数据预览（前 2 行）**\n| prj_num | mat_num | amount | get_date | department |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | m001 | 4 | 2011-03-01 00:00:00 | 工程 1 部 |\n| 20110001 | m002 | 3 | 2011-03-02 00:00:00 | 工程 1 部 |",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "OUT 参数",
+        "COALESCE"
+      ],
+      "explanation": "用 SELECT INTO 写输出参数。无匹配行时 SUM 为 NULL，用 COALESCE 得到 0。",
+      "referenceSql": "DELIMITER $$\nCREATE PROCEDURE issued_units(IN p_material CHAR(4), OUT p_total INT)\nBEGIN\nSELECT COALESCE(SUM(amount),0) INTO p_total FROM Out_stock WHERE mat_num=p_material;\nEND$$\nDELIMITER ;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "CALL issued_units('m001',@units); SELECT @units AS total;"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "CALL issued_units('m001',@units); SELECT @units AS total; CALL issued_units('m007',@units); SELECT @units AS total;",
+          "variantSql": "INSERT INTO Out_stock VALUES ('20110005','m001',13,'2011-03-02','工程 1 部');"
+        }
+      ],
+      "id": "exam-lab-06-r3-q23"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "定义过程 stock_band(IN p_material CHAR(4), OUT p_band VARCHAR(12))。库存 NULL、编号不存在时输出 unknown，库存少于 50 时输出 low，其余输出 ready。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "IF",
+        "分档过程"
+      ],
+      "explanation": "先判断库存是否为 NULL，再判断数值区间。使用标量子查询处理不存在的编号。",
+      "referenceSql": "DELIMITER $$\nCREATE PROCEDURE stock_band(IN p_material CHAR(4), OUT p_band VARCHAR(12))\nBEGIN\nDECLARE n INT DEFAULT NULL;\nSET n=(SELECT amount FROM Stock WHERE mat_num=p_material);\nIF n IS NULL THEN SET p_band='unknown';\nELSEIF n<50 THEN SET p_band='low';\nELSE SET p_band='ready';\nEND IF;\nEND$$\nDELIMITER ;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "CALL stock_band('m005',@band); SELECT @band AS band;"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "CALL stock_band('m008',@band); SELECT @band AS band; CALL stock_band('m999',@band); SELECT @band AS band;",
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',49,18);"
+        }
+      ],
+      "id": "exam-lab-06-r3-q24"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "用游标定义 warehouse_chain(OUT p_chain VARCHAR(400))。逐个遍历不同的非空仓库名，按仓库名升序，用 | 连接为单个字符串，无前导或末尾分隔符。空集合输出空串。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "CURSOR",
+        "循环",
+        "NOT FOUND"
+      ],
+      "explanation": "按声明顺序定义变量、游标和 NOT FOUND handler。每次 FETCH 后检查终止标记，避免重复末行。",
+      "referenceSql": "DELIMITER $$\nCREATE PROCEDURE warehouse_chain(OUT p_chain VARCHAR(400))\nBEGIN\nDECLARE finished BOOL DEFAULT FALSE;\nDECLARE wh VARCHAR(20);\nDECLARE warehouses CURSOR FOR SELECT DISTINCT warehouse FROM Stock WHERE warehouse IS NOT NULL ORDER BY warehouse;\nDECLARE CONTINUE HANDLER FOR NOT FOUND SET finished=TRUE;\nSET p_chain='';\nOPEN warehouses;\nread_warehouses: LOOP\n  FETCH warehouses INTO wh;\n  IF finished THEN LEAVE read_warehouses; END IF;\n  SET p_chain=IF(p_chain='',wh,CONCAT(p_chain,'|',wh));\nEND LOOP;\nCLOSE warehouses;\nEND$$\nDELIMITER ;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "CALL warehouse_chain(@chain); SELECT @chain AS warehouse_chain;"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "CALL warehouse_chain(@chain); SELECT @chain AS warehouse_chain;",
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','临时仓',65,18);INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m009','应急电缆','YJV-35','临时仓',65,18);"
+        }
+      ],
+      "id": "exam-lab-06-r3-q25"
+    }
+  ],
+  "revision": 3
+}

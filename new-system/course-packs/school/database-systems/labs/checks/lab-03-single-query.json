@@ -1,0 +1,496 @@
+[
+  {
+    "id": "q01",
+    "referenceSql": "SELECT * FROM student; SELECT Sno,Sname FROM student;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q02",
+    "referenceSql": "SELECT Sno AS 学号,Sname AS 学生,Home_addr AS 家庭地址 FROM student;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": true,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": true,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q03",
+    "referenceSql": "SELECT Sno,Cno,Grade FROM sc WHERE Grade>80; SELECT Sno,Cno,Grade FROM sc WHERE Grade BETWEEN 75 AND 80; SELECT Sno,Cno,Grade FROM sc WHERE Cno='002' AND Grade>80; SELECT Sno,Cno,Grade FROM sc WHERE Grade IS NULL;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q04",
+    "referenceSql": "SELECT * FROM course WHERE Cname IN ('高数','C语言程序设计');",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO course VALUES('914','高数',80,4),('915','C语言程序',80,4);",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q05",
+    "referenceSql": "SELECT * FROM sc WHERE Grade BETWEEN 70 AND 80;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q06",
+    "referenceSql": "SELECT Sno,Sname FROM student WHERE Sname LIKE '张%'; SELECT Sno,Sname FROM student WHERE Sname LIKE '_红%' OR Sname LIKE '_虹%'; SELECT Credit FROM course WHERE Cname LIKE 'Visual!_Basic' ESCAPE '!';",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80); INSERT INTO course VALUES('915','VisualXBasic',32,2);",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q07",
+    "referenceSql": "SELECT Cno,COUNT(*) FROM sc GROUP BY Cno ORDER BY COUNT(*) DESC,Cno LIMIT 3; SELECT Sno FROM sc WHERE Grade IS NOT NULL GROUP BY Sno ORDER BY AVG(Grade) DESC,Sno LIMIT 3 OFFSET 2;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": true
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": true
+      }
+    ]
+  },
+  {
+    "id": "q08",
+    "referenceSql": "SELECT DISTINCT Cno FROM sc;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q09",
+    "referenceSql": "SELECT Sname,TIMESTAMPDIFF(YEAR,Birth,'2026-11-24') FROM student;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80); UPDATE student SET Birth='1993-11-25' WHERE Sno='20110001';",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q10",
+    "referenceSql": "SELECT * FROM student ORDER BY Classno,Sno; SELECT Sname,TIMESTAMPDIFF(YEAR,Birth,'2026-11-24') AS Age FROM student ORDER BY Age DESC,Sno;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": true
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": true
+      }
+    ]
+  },
+  {
+    "id": "q11",
+    "referenceSql": "SELECT COUNT(*) FROM student; SELECT ROUND(AVG(Grade),2),MAX(Grade),MIN(Grade) FROM sc WHERE Cno='002';",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q12",
+    "referenceSql": "SELECT Classno,COUNT(*) FROM student GROUP BY Classno; SELECT Sno,SUM(Grade) FROM sc GROUP BY Sno HAVING SUM(Grade)>150; SELECT Cno,COUNT(*) FROM sc GROUP BY Cno;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q13",
+    "referenceSql": "SELECT Sno,COUNT(*),ROUND(AVG(Grade),2) FROM sc GROUP BY Sno WITH ROLLUP;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q14",
+    "referenceSql": "SELECT Sno,Sname FROM student WHERE Sname REGEXP '[张林赵]';",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q15",
+    "referenceSql": "SELECT Cno,COUNT(*),COUNT(Grade),COUNT(*)-COUNT(Grade) FROM sc GROUP BY Cno;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q16",
+    "referenceSql": "SELECT Sno,Cno,Grade,CASE WHEN Grade IS NULL THEN '缺考' WHEN Grade>=60 THEN '及格' ELSE '未及格' END FROM sc;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q17",
+    "referenceSql": "SELECT Sno,Sname,Classno FROM student WHERE Classno='051' AND (Sname LIKE '张%' OR Sname LIKE '%红');",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80); UPDATE student SET Sname='张霞' WHERE Sno='20110005';",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ]
+  },
+  {
+    "id": "q18",
+    "referenceSql": "SELECT Cno,Cname,ROUND(Total_perior/Credit,2) AS ratio FROM course WHERE Total_perior/Credit>14 ORDER BY ratio DESC,Cno;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": true
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": true
+      }
+    ]
+  },
+  {
+    "id": "q19",
+    "referenceSql": "SELECT Classno,COUNT(*) AS n,MIN(Birth),MAX(Birth) FROM student GROUP BY Classno HAVING n>=2 ORDER BY n DESC,Classno;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": true
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": true
+      }
+    ]
+  }
+]

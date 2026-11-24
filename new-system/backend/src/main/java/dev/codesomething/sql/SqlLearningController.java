@@ -52,10 +52,14 @@ public class SqlLearningController {
     }
     @PreDestroy void close(){environmentWorker.shutdownNow();}
     @GetMapping("/environment") public MysqlEnvironment.Environment environment(){return mysql().status();}
+    @PostMapping("/environment/activity")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void activity() { if (publicMode) mysql().touch(); }
+
     @PostMapping("/environment/start") public synchronized MysqlEnvironment.Environment start(){
         var mysql=mysql();
-        if(!Set.of("starting","ready").contains(mysql.status().status()))environmentWorker.submit(mysql::start);
-        else if(mysql.status().status().equals("ready"))environmentWorker.submit(mysql::start);
+        if(!Set.of("starting","ready").contains(mysql.status().status()))environmentWorker.submit(() -> { try (var activity = mysql.activity()) { mysql.start(); } });
+        else if(mysql.status().status().equals("ready"))environmentWorker.submit(() -> { try (var activity = mysql.activity()) { mysql.start(); } });
         return mysql.status();
     }
     public record ResetPreview(String target,String token,String expiresAt,String consequence) {}
@@ -69,7 +73,11 @@ public class SqlLearningController {
     @PostMapping("/environment/reset") public synchronized Map<String,String> reset(@RequestBody ResetWrite write){
         if(!MysqlEnvironment.PRACTICE.equals(write.target()))throw conflict("RESET_TARGET_REJECTED","只允许重置cs_practice练习库。");
         if(write.token()==null||jdbc.queryForObject("SELECT count(*) FROM sql_reset_tokens WHERE token=? AND target=? AND expires_at>?",Integer.class,write.token(),write.target(),Instant.now().toString())!=1)throw conflict("RESET_EXPIRED","重置预览已失效，请重新查看目标后确认。");
-        try{mysql().reset(write.target());}catch(MysqlEnvironment.Failure e){throw conflict(e.status,e.getMessage());}
+        var environment=mysql();
+        try(var activity=environment.activity()){
+            if (publicMode && "hibernated".equals(environment.status().status())) environment.start();
+            environment.reset(write.target());
+        }catch(MysqlEnvironment.Failure e){throw conflict(e.status,e.getMessage());}
         jdbc.update("DELETE FROM sql_reset_tokens WHERE token=?",write.token());
         return Map.of("message","cs_practice已恢复6条初始任务。","target",write.target());
     }
@@ -87,6 +95,7 @@ public class SqlLearningController {
             return attempt(row);
         }
         if(jdbc.queryForObject("SELECT count(*) FROM sql_attempts WHERE status IN ('queued','running','cancelling')",Integer.class) >= (publicMode ? 2 : 20))throw conflict("QUEUE_FULL","SQL检查队列已满，请等待已有任务结束。");
+        if (publicMode) mysql().touch();
         String id=UUID.randomUUID().toString();
         jdbc.update("INSERT INTO sql_attempts(id,course_version,stage_id,mode,source,digest,idempotency_key,status,created_at) VALUES(?,?,?,?,?,?,?,'queued',?)",id,write.courseVersion(),write.stageId(),write.mode(),write.sql(),MysqlEnvironment.digest(write.sql()),write.idempotencyKey(),Instant.now().toString());
         return read(id);
@@ -113,12 +122,14 @@ public class SqlLearningController {
         var attempt=read(id);String status;Report report;
         try {
             var mysql = mysql();
-            if (publicMode && !"ready".equals(mysql.status().status())) mysql.start();
-            java.util.function.BooleanSupplier cancelled=()->Thread.currentThread().isInterrupted()||!"running".equals(jdbc.queryForObject("SELECT status FROM sql_attempts WHERE id=?",String.class,id));
-            MysqlEnvironment.Outcome outcome;
-            if(attempt.mode().equals("practice"))outcome=new MysqlEnvironment.Outcome("executed",List.of(),mysql.practice(attempt.sql(),cancelled),"试运行完成；未写入关卡完成证据。",MysqlEnvironment.digest(course.seed(false)+course.seed(true)));
-            else outcome=mysql.check(id,attempt.stageId(),attempt.sql(),cancelled);
-            status=outcome.status();report=new Report(SqlCourse.ID,attempt.courseVersion(),attempt.stageId(),attempt.digest(),"sql-"+attempt.stageId()+"-1",SqlCourse.RULE,MysqlEnvironment.IMAGE,outcome.seedDigest(),outcome.assertions(),outcome.result(),outcome.message(),Instant.now().toString());
+            try (var activity = mysql.activity()) {
+                if (publicMode && !"ready".equals(mysql.status().status())) mysql.start();
+                java.util.function.BooleanSupplier cancelled=()->Thread.currentThread().isInterrupted()||!"running".equals(jdbc.queryForObject("SELECT status FROM sql_attempts WHERE id=?",String.class,id));
+                MysqlEnvironment.Outcome outcome;
+                if(attempt.mode().equals("practice"))outcome=new MysqlEnvironment.Outcome("executed",List.of(),mysql.practice(attempt.sql(),cancelled),"试运行完成；未写入关卡完成证据。",MysqlEnvironment.digest(course.seed(false)+course.seed(true)));
+                else outcome=mysql.check(id,attempt.stageId(),attempt.sql(),cancelled);
+                status=outcome.status();report=new Report(SqlCourse.ID,attempt.courseVersion(),attempt.stageId(),attempt.digest(),"sql-"+attempt.stageId()+"-1",SqlCourse.RULE,MysqlEnvironment.IMAGE,outcome.seedDigest(),outcome.assertions(),outcome.result(),outcome.message(),Instant.now().toString());
+            }
         }catch(MysqlEnvironment.Failure e){status=e.status;report=failed(attempt,e.getMessage());}
         catch(Exception e){status="environment_error";report=failed(attempt,"检查服务中断，请重试；不计为SQL错误。");}
         if(jdbc.update("UPDATE sql_attempts SET status=?,report=?,finished_at=? WHERE id=? AND status='running'",status,json.writeValueAsString(report),report.finishedAt(),id)==0)

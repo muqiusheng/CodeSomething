@@ -1,0 +1,522 @@
+{
+  "id": "exam-lab-03",
+  "title": "实验三专项卷 · 单表查询、排序与分组汇总",
+  "group": "specialty",
+  "labId": "lab-03-single-query",
+  "questions": [
+    {
+      "id": "exam-lab-03-r3-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "列出出现过的各个院系且每个只出现一次。选哪条？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "去重"
+      ],
+      "options": {
+        "A": "SELECT Sdept FROM student ORDER BY Sdept",
+        "B": "SELECT COUNT(Sdept) FROM student",
+        "C": "SELECT Sdept FROM student LIMIT 1",
+        "D": "SELECT DISTINCT Sdept FROM student"
+      },
+      "answer": "D",
+      "explanation": "DISTINCT 删除投影后的重复行，排序不去重。"
+    },
+    {
+      "id": "exam-lab-03-r3-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "查成绩最高的五条选课记录时，应怎样保证并列顺序稳定？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "排序"
+      ],
+      "options": {
+        "A": "ORDER BY Sno, Cno LIMIT 5",
+        "B": "ORDER BY Grade DESC, Sno, Cno LIMIT 5",
+        "C": "ORDER BY Grade DESC LIMIT 5",
+        "D": "LIMIT 5 后再按 Grade 排序"
+      },
+      "answer": "B",
+      "explanation": "成绩为首排序键，联合主键解决全部并列，再取前五。"
+    },
+    {
+      "id": "exam-lab-03-r3-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "统计每门课已经登记成绩的人数应使用哪个表达式？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "options": {
+        "A": "COUNT(Grade)",
+        "B": "COUNT(*)",
+        "C": "SUM(Grade)",
+        "D": "MAX(Grade)"
+      },
+      "answer": "A",
+      "explanation": "COUNT(列) 忽略空值，COUNT(*) 统计所有选课记录。"
+    },
+    {
+      "id": "exam-lab-03-r3-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "筛选至少 4 条选课记录的课程，条件写在哪里？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "分组"
+      ],
+      "options": {
+        "A": "WHERE COUNT(*) >= 4 GROUP BY Cno",
+        "B": "GROUP BY Cno WHERE COUNT(*) >= 4",
+        "C": "ORDER BY COUNT(*) >= 4",
+        "D": "GROUP BY Cno HAVING COUNT(*) >= 4"
+      },
+      "answer": "D",
+      "explanation": "HAVING 用于聚合后的分组过滤。"
+    },
+    {
+      "id": "exam-lab-03-r3-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "单列统计中 COUNT(*) - COUNT(Grade) 的结果？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "options": {
+        "A": "未登记成绩的行数",
+        "B": "不及格人数",
+        "C": "零分人数",
+        "D": "已登记非零成绩数"
+      },
+      "answer": "A",
+      "explanation": "两个计数差在于 Grade 是否为空。"
+    },
+    {
+      "kind": "choice",
+      "points": 2,
+      "prompt": "库存 40 的物资中，两种物资单价同为 80。若要求每次都按物资号从小到大列出这两种物资，应该怎样排序？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "WHERE"
+      ],
+      "explanation": "追加唯一编号可以消除前序排序列并列。",
+      "options": {
+        "A": "ORDER BY amount,unit DESC,mat_num DESC",
+        "B": "ORDER BY amount,unit DESC,mat_num",
+        "C": "ORDER BY amount,unit DESC",
+        "D": "ORDER BY mat_num DESC"
+      },
+      "answer": "B",
+      "id": "exam-lab-03-r3-q06"
+    },
+    {
+      "id": "exam-lab-03-r3-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "只有 NULL 的成绩集合执行 AVG(Grade)，结果是什么？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "NULL"
+      ],
+      "options": {
+        "A": "0",
+        "B": "1",
+        "C": "抛出除零异常",
+        "D": "NULL"
+      },
+      "answer": "D",
+      "explanation": "AVG 跳过 NULL，无有效输入时返回 NULL。"
+    },
+    {
+      "id": "exam-lab-03-r3-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "WHERE Classno IN ('051','061') 等价于什么？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "条件"
+      ],
+      "options": {
+        "A": "Classno NOT IN ('051','061')",
+        "B": "Classno='051' OR Classno='061'",
+        "C": "Classno='051' AND Classno='061'",
+        "D": "Classno BETWEEN '051' AND '061'"
+      },
+      "answer": "B",
+      "explanation": "IN 可表示多个精确值的 OR。"
+    },
+    {
+      "id": "exam-lab-03-r3-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "在指定日期按完整年数计算年龄，首选什么？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "日期"
+      ],
+      "options": {
+        "A": "TIMESTAMPDIFF(YEAR,Birth,'2026-11-23')",
+        "B": "YEAR('2026-11-23')-YEAR(Birth)",
+        "C": "DATEDIFF('2026-11-23',Birth)",
+        "D": "DAY(Birth)"
+      },
+      "answer": "A",
+      "explanation": "TIMESTAMPDIFF 按指定单位计算完整年份，年份直接相减没考虑生日是否已过。"
+    },
+    {
+      "id": "exam-lab-03-r3-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "GROUP BY Cno WITH ROLLUP 会额外产生什么？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "分组"
+      ],
+      "options": {
+        "A": "每门课重复两行",
+        "B": "只保留课程总分最高的行",
+        "C": "每个成绩产生一条明细",
+        "D": "所有课程的汇总行"
+      },
+      "answer": "D",
+      "explanation": "ROLLUP 在普通分组外计算更高层汇总。"
+    },
+    {
+      "id": "exam-lab-03-r3-q11",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "没有 ORDER BY 的查询仍保证按主键升序。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "排序"
+      ],
+      "answer": "false",
+      "explanation": "MySQL 可选不同执行计划，只有 ORDER BY 指定结果顺序。"
+    },
+    {
+      "id": "exam-lab-03-r3-q12",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "WHERE Grade <> 60 会保留 Grade 为 NULL 的行。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "NULL"
+      ],
+      "answer": "false",
+      "explanation": "NULL 与 60 比较得 UNKNOWN，WHERE 只保留 TRUE。"
+    },
+    {
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "Stock.amount 可以是 NULL 时，SUM(amount) 与 SUM(COALESCE(amount,0)) 对全 NULL 分组一定返回相同值。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "WHERE"
+      ],
+      "explanation": "SUM 忽略 NULL，全部缺失返回 NULL；替换成 0 后返回 0。",
+      "answer": "false",
+      "id": "exam-lab-03-r3-q13"
+    },
+    {
+      "id": "exam-lab-03-r3-q14",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "COUNT(DISTINCT Sdept) 可统计不同的非空院系数。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "answer": "true",
+      "explanation": "DISTINCT 去重，COUNT 跳过 NULL。"
+    },
+    {
+      "id": "exam-lab-03-r3-q15",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "SELECT 为列定义的别名通常可直接用于本查询的 WHERE。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "别名"
+      ],
+      "answer": "false",
+      "explanation": "WHERE 先过滤源行，别名可供 ORDER BY 等阶段使用。"
+    },
+    {
+      "id": "exam-lab-03-r3-q16",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全不同班级数的计算。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "template": "SELECT COUNT({{1}}) FROM student;",
+      "blanks": [
+        [
+          "DISTINCT Classno",
+          "DISTINCT student.Classno"
+        ]
+      ],
+      "explanation": "在 COUNT 内去重统计类别。"
+    },
+    {
+      "id": "exam-lab-03-r3-q17",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全缺考记录的过滤。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "NULL"
+      ],
+      "template": "SELECT TraineeNo,ModuleNo FROM registration WHERE Grade {{1}};",
+      "blanks": [
+        [
+          "IS NULL"
+        ]
+      ],
+      "explanation": "NULL 需要专门谓词。"
+    },
+    {
+      "kind": "blank",
+      "points": 4,
+      "prompt": "按仓库分组后，仅保留至少 3 种物资的组。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "WHERE"
+      ],
+      "explanation": "HAVING 在分组后筛选聚合结果。",
+      "template": "SELECT warehouse, COUNT(*) FROM Stock GROUP BY warehouse {{1}} COUNT(*)>=3;",
+      "blanks": [
+        [
+          "HAVING"
+        ]
+      ],
+      "id": "exam-lab-03-r3-q18"
+    },
+    {
+      "id": "exam-lab-03-r3-q19",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "按课号统计，筛选已登记至少两人的课程。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "分组"
+      ],
+      "template": "SELECT ModuleNo,COUNT(Grade) FROM registration {{1}} ModuleNo {{2}} COUNT(Grade)>=2;",
+      "blanks": [
+        [
+          "GROUP BY"
+        ],
+        [
+          "HAVING"
+        ]
+      ],
+      "explanation": "按 ModuleNo 聚合后再以计数过滤。"
+    },
+    {
+      "id": "exam-lab-03-r3-q20",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "先按学分降序，再按课号升序，只取三门。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "排序"
+      ],
+      "template": "SELECT Cno,Credit FROM course {{1}} Credit {{2}}, Cno {{3}} {{4}};",
+      "blanks": [
+        [
+          "ORDER BY"
+        ],
+        [
+          "DESC"
+        ],
+        [
+          "ASC"
+        ],
+        [
+          "LIMIT 3"
+        ]
+      ],
+      "explanation": "先指定顺序及并列规则，再截取前三行。"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "从 Stock 找出已分配仓库且符合任一条件的物资：库存低于 45，或单价至少 70。输出 mat_num、warehouse、amount、unit，按物资号升序。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "WHERE",
+        "布尔条件"
+      ],
+      "explanation": "用括号先合并两个 OR 条件，再和“仓库已分配”取交集。",
+      "referenceSql": "SELECT mat_num,warehouse,amount,unit FROM Stock WHERE warehouse IS NOT NULL AND (amount<45 OR unit>=70) ORDER BY mat_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,amount,unit) VALUES('m008','临时工具','T-1',10,75);INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m009','应急电缆','YJV-35','供电局 1# 仓库',60,70);"
+        }
+      ],
+      "id": "exam-lab-03-r3-q21"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "查找名称以“站”开头或末尾含“检修”二字的工程，输出 prj_num、prj_name，按工程号升序。\n\n### 涉及数据表：Salvaging（电力抢修工程表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | PRIMARY KEY | 工程编号 |\n| `prj_name` | VARCHAR(50) | NOT NULL | 工程名称 |\n| `start_date` | DATETIME | NOT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 开始日期 |\n| `end_date` | DATETIME | NULL; DEFAULT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 结束日期 |\n| `prj_status` | BIT(1) | NOT NULL; DEFAULT b'0' | 工程状态（0 为未结算，1 为已结算） |\n\n**数据预览（前 2 行）**\n| prj_num | prj_name | start_date | end_date | prj_status |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | 南桥站配电抢修 | 2011-03-01 00:00:00 | 2011-03-04 00:00:00 | 1 |\n| 20110002 | 海湾站电缆抢修 | 2011-03-02 00:00:00 | 2011-03-08 00:00:00 | 0 |",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "LIKE",
+        "模式匹配"
+      ],
+      "explanation": "百分号匹配任意长度的字符序列。前缀与后缀需要两种不同的模式。",
+      "referenceSql": "SELECT prj_num,prj_name FROM Salvaging WHERE prj_name LIKE '站%' OR prj_name LIKE '%检修' ORDER BY prj_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Salvaging VALUES ('20110006','站前备用线路','2011-03-02','2011-03-09',b'0');INSERT INTO Salvaging VALUES ('20110007','综合检修演练','2011-03-02','2011-03-09',b'0');"
+        }
+      ],
+      "id": "exam-lab-03-r3-q22"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "生成仓库盘点清单，只列已分配仓库的物资。输出 warehouse、mat_num、amount，先按仓库名升序、再按库存降序、最后按物资号升序。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "ORDER BY",
+        "同值排序"
+      ],
+      "explanation": "每个排序方向只作用于对应的表达式，最后一列处理库存并列。",
+      "referenceSql": "SELECT warehouse,mat_num,amount FROM Stock WHERE warehouse IS NOT NULL ORDER BY warehouse,amount DESC,mat_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',50,18);INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m009','应急电缆','YJV-35','供电局 1# 仓库',130,18);"
+        }
+      ],
+      "id": "exam-lab-03-r3-q23"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "按部门统计 Out_stock 的领料记录数与领取总量，输出 department、issue_count、issued_quantity，按部门名升序。\n\n### 涉及数据表：Out_stock（工程领料记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | FK → Salvaging.prj_num; PRIMARY KEY（第 1 列） | 工程编号 |\n| `mat_num` | CHAR(4) | FK → Stock.mat_num; PRIMARY KEY（第 2 列） | 物资编号 |\n| `amount` | INT | NOT NULL; CHECK (amount >= 0) | 数量 |\n| `get_date` | DATETIME | NOT NULL; DEFAULT CURRENT_TIMESTAMP | 领料时间 |\n| `department` | VARCHAR(20) | NOT NULL | 领料部门 |\n\n**数据预览（前 2 行）**\n| prj_num | mat_num | amount | get_date | department |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | m001 | 4 | 2011-03-01 00:00:00 | 工程 1 部 |\n| 20110001 | m002 | 3 | 2011-03-02 00:00:00 | 工程 1 部 |",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "GROUP BY",
+        "SUM"
+      ],
+      "explanation": "一行 Out_stock 代表一对项目和物资的领用，按部门计数和求和。",
+      "referenceSql": "SELECT department,COUNT(*) AS issue_count,SUM(amount) AS issued_quantity FROM Out_stock GROUP BY department ORDER BY department;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Out_stock VALUES ('20110005','m001',0,'2011-03-02','工程 4 部');INSERT INTO Out_stock VALUES ('20110004','m002',4,'2011-03-02','工程 1 部');"
+        }
+      ],
+      "id": "exam-lab-03-r3-q24"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "找出已分配仓库中库存总量至少 100 且单价超过 50 的物资至少有两种的仓库。输出 warehouse、stock_quantity、expensive_count，按仓库名升序。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "HAVING",
+        "条件聚合"
+      ],
+      "explanation": "库存总量覆盖仓内所有物资。用 CASE 仅计数单价超过 50 的行，再应用 HAVING。",
+      "referenceSql": "SELECT warehouse,SUM(amount) AS stock_quantity,SUM(CASE WHEN unit>50 THEN 1 ELSE 0 END) AS expensive_count FROM Stock WHERE warehouse IS NOT NULL GROUP BY warehouse HAVING SUM(amount)>=100 AND SUM(CASE WHEN unit>50 THEN 1 ELSE 0 END)>=2 ORDER BY warehouse;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',90,70);INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m009','应急电缆','YJV-35','供电局 1# 仓库',35,60);"
+        }
+      ],
+      "id": "exam-lab-03-r3-q25"
+    }
+  ],
+  "revision": 3
+}

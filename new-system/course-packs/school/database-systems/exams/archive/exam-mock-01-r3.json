@@ -1,0 +1,538 @@
+{
+  "id": "exam-mock-01",
+  "title": "综合模拟卷一 · 期末全真标准冲刺",
+  "group": "mock",
+  "revision": 3,
+  "questions": [
+    {
+      "id": "exam-mock-01-r3-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "过程 p_min(IN p_sno CHAR(8), OUT p_grade INT) 已从 sc 读取该生的最低成绩。调用者要在同一连接保存本次结果并用于后续查询，应如何调用？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "options": {
+        "A": "SELECT p_min('20110001', @low);",
+        "B": "CALL p_min('20110001', @low); SELECT @low;",
+        "C": "CALL p_min('20110001', 0); SELECT 0;",
+        "D": "CALL p_min('20110001'); SELECT p_grade;"
+      },
+      "answer": "B",
+      "explanation": "OUT 位置需要可写入的变量，用户变量 @low 可由调用者继续读取。"
+    },
+    {
+      "id": "exam-mock-01-r3-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "选课记录准备批量导入。某条合法格式的记录 Sno 已存在于 student，Cno 在 course 中尚未建档。假设检查开启，直接插入 sc 会怎样？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "外键"
+      ],
+      "options": {
+        "A": "因已有学生而插入成功",
+        "B": "只将 Grade 自动改为 NULL",
+        "C": "自动建一条没有课名的课程",
+        "D": "被 fk_sc_course 拒绝"
+      },
+      "answer": "D",
+      "explanation": "学生与课程两个外键分别检查。已有学生不能替代缺失的课程父行。"
+    },
+    {
+      "id": "exam-mock-01-r3-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "管理员在同一账号的两个查询窗口分别执行 USE teaching_a 和 USE teaching_b。随后分别查询 DATABASE()，返回值如何？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "Workbench"
+      ],
+      "options": {
+        "A": "两个均为 teaching_b",
+        "B": "第一个为 teaching_a，第二个为 teaching_b",
+        "C": "两个均为 teaching_a",
+        "D": "两个均为 NULL"
+      },
+      "answer": "B",
+      "explanation": "USE 只改变当前连接的默认数据库。同一账号的两条连接维护独立的会话状态。"
+    },
+    {
+      "id": "exam-mock-01-r3-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "要将 course 中课时超过 48 的课程延长 2 课时，学分不得改动。哪条语句符合要求？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "options": {
+        "A": "UPDATE course SET Total_perior=2 WHERE Total_perior>48",
+        "B": "UPDATE course SET Credit=Credit+2 WHERE Total_perior>48",
+        "C": "UPDATE course SET Total_perior=Total_perior+2 WHERE Total_perior>=48",
+        "D": "UPDATE course SET Total_perior=Total_perior+2 WHERE Total_perior>48"
+      },
+      "answer": "D",
+      "explanation": "SET 用原课时加 2，WHERE 严格排除 48 课时边界。"
+    },
+    {
+      "id": "exam-mock-01-r3-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "系部报表只统计 Classno 为 051 的学生，再保留学生数超过 3 人的 Sdept。正确的过滤顺序是哪一项？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "分组"
+      ],
+      "options": {
+        "A": "GROUP BY Sdept HAVING COUNT(*)>3 WHERE Classno='051'",
+        "B": "WHERE Classno='051' GROUP BY Sdept HAVING COUNT(*)>3",
+        "C": "WHERE Classno='051' AND COUNT(*)>3 GROUP BY Sdept",
+        "D": "GROUP BY Sdept HAVING MAX(Classno)='051' AND COUNT(*)>3"
+      },
+      "answer": "B",
+      "explanation": "WHERE 先限定参与分组的行，HAVING 再淘汰人数不够的分组。"
+    },
+    {
+      "kind": "choice",
+      "points": 2,
+      "prompt": "领料记录按 department、mat_num 分组。只保留至少两个工程参与的组合，哪种条件最准确？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "DDL"
+      ],
+      "explanation": "同组的物资相同，所需计数口径是不同项目号。",
+      "options": {
+        "A": "HAVING COUNT(DISTINCT prj_num)>=2",
+        "B": "WHERE COUNT(prj_num)>=2",
+        "C": "HAVING COUNT(DISTINCT mat_num)>=2",
+        "D": "WHERE prj_num>=2"
+      },
+      "answer": "A",
+      "id": "exam-mock-01-r3-q06"
+    },
+    {
+      "id": "exam-mock-01-r3-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "已知 SELECT s.Sno FROM student s WHERE EXISTS (SELECT 1 FROM sc x WHERE x.Cno='006')。若至少一人选修 006，这条查询会返回谁？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "相关子查询"
+      ],
+      "options": {
+        "A": "只有选修 006 的学生",
+        "B": "只返回一个 Sno",
+        "C": "只有未选修 006 的学生",
+        "D": "student 中的所有学生"
+      },
+      "answer": "D",
+      "explanation": "子查询未引用外层学生，EXISTS 的真假对所有外层行一致。"
+    },
+    {
+      "id": "exam-mock-01-r3-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "某门课的四条 Grade 依次为 59、60、100、NULL。使用 AVG(COALESCE(Grade,0)) 的统计口径时，得到的数值是多少？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "options": {
+        "A": "73",
+        "B": "60",
+        "C": "54.75",
+        "D": "NULL"
+      },
+      "answer": "C",
+      "explanation": "COALESCE 把缺失成绩换成 0 后纳入平均值，分子为 219，分母为 4。"
+    },
+    {
+      "id": "exam-mock-01-r3-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "单表视图 v_names 只选 student 的 Sno、Sname。假设已有学号和新姓名均合法，哪个操作可通过此视图完成？",
+      "labId": "lab-05-views",
+      "tags": [
+        "可更新性"
+      ],
+      "options": {
+        "A": "INSERT INTO v_names VALUES ('20119999','林青')",
+        "B": "UPDATE v_names SET Sdept='软件工程' WHERE Sno='20110001'",
+        "C": "UPDATE v_names SET Sname='林青' WHERE Sno='20110001'",
+        "D": "SELECT Entrance_date FROM v_names"
+      },
+      "answer": "C",
+      "explanation": "现有行可以通过简单视图修改已投影的列。INSERT 缺少基表其他无默认值必填列，另外两项访问了视图未暴露的列。"
+    },
+    {
+      "id": "exam-mock-01-r3-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "要在一份结构报告中精确比较当前数据库的两张表各列出现的先后次序，应读取 information_schema.COLUMNS 中哪个字段？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "元数据"
+      ],
+      "options": {
+        "A": "ORDINAL_POSITION",
+        "B": "IS_NULLABLE",
+        "C": "COLUMN_DEFAULT",
+        "D": "TABLE_SCHEMA"
+      },
+      "answer": "A",
+      "explanation": "ORDINAL_POSITION 从 1 开始表示列定义的位置，对每张表分别排序可恢复列顺序。"
+    },
+    {
+      "id": "exam-mock-01-r3-q11",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "若某门课报名有十人，sc 的 Cno 可以重复十次而仍满足现有复合主键约束。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "主键"
+      ],
+      "answer": "true",
+      "explanation": "主键约束的是 Sno 与 Cno 的组合。不同学生选同一门课可形成十个不同键。"
+    },
+    {
+      "id": "exam-mock-01-r3-q12",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "执行 UPDATE course SET Cname='待审核' WHERE Cno='未建' 后，如果该条件未匹配，语句会替补插入一门新课程。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "answer": "false",
+      "explanation": "UPDATE 只处理已存在并匹配的行。无匹配时更新 0 行，不执行插入。"
+    },
+    {
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "LEFT JOIN 后在 WHERE 中要求 Out_stock.amount>0，会淘汰完全没有领料的工程。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "DDL"
+      ],
+      "explanation": "补出的 NULL 无法满足 WHERE，若仍需保留工程应使用适当的 ON 条件。",
+      "answer": "true",
+      "id": "exam-mock-01-r3-q13"
+    },
+    {
+      "id": "exam-mock-01-r3-q14",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "用 WHERE Grade IS NOT NULL 过滤 sc 再计算 AVG(Grade)，在至少存在一个非空成绩时，结果与直接计算 AVG(Grade) 相同。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "answer": "true",
+      "explanation": "AVG 本身忽略 NULL。额外的过滤不会改变非空值或其数量。"
+    },
+    {
+      "id": "exam-mock-01-r3-q15",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "Sname LIKE '张_' 可匹配“张虹”和“张小明”两个姓名。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "LIKE"
+      ],
+      "answer": "false",
+      "explanation": "下划线恰好匹配一个字符。三字符姓名需要额外匹配位置。"
+    },
+    {
+      "id": "exam-mock-01-r3-q16",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全语句，只列出当前数据库的真实表名，排除普通视图。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "元数据"
+      ],
+      "template": "SELECT TABLE_NAME FROM information_schema.TABLES\nWHERE TABLE_SCHEMA={{1}} AND TABLE_TYPE={{2}};",
+      "blanks": [
+        [
+          "DATABASE()",
+          "SCHEMA()"
+        ],
+        [
+          "'BASE TABLE'"
+        ]
+      ],
+      "explanation": "TABLE_SCHEMA 限制当前数据库，BASE TABLE 区分真正存储数据的表与视图。"
+    },
+    {
+      "id": "exam-mock-01-r3-q17",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全 CASE，把恰好 60 分也计入“达标”，并且只给缺失成绩标记“未登记”。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "条件"
+      ],
+      "template": "SELECT Sno,Cno,CASE WHEN {{1}} THEN '未登记'\nWHEN {{2}} THEN '达标' ELSE '待补考' END AS status FROM sc;",
+      "blanks": [
+        [
+          "Grade IS NULL"
+        ],
+        [
+          "Grade>=60",
+          "60<=Grade"
+        ]
+      ],
+      "explanation": "IS NULL 判断缺失，包含等号的边界比较将 60 分纳入达标。"
+    },
+    {
+      "kind": "blank",
+      "points": 4,
+      "prompt": "核对供电局 1# 仓库物资视图可写入范围，补全视图约束。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "DDL"
+      ],
+      "explanation": "让经视图写入的值仍符合仓库过滤。",
+      "template": "CREATE VIEW v_first_store AS SELECT mat_num,warehouse FROM Stock WHERE warehouse='供电局 1# 仓库' {{1}};",
+      "blanks": [
+        [
+          "WITH CHECK OPTION"
+        ]
+      ],
+      "id": "exam-mock-01-r3-q18"
+    },
+    {
+      "id": "exam-mock-01-r3-q19",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全关联条件，选出尚未有人登记有效成绩的课程。保留无选课和有选课但成绩全为空的课程。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "相关子查询"
+      ],
+      "template": "SELECT c.Cno FROM course c WHERE NOT EXISTS (\n  SELECT 1 FROM sc x WHERE {{1}} AND {{2}}\n);",
+      "blanks": [
+        [
+          "x.Cno=c.Cno",
+          "c.Cno=x.Cno"
+        ],
+        [
+          "x.Grade IS NOT NULL"
+        ]
+      ],
+      "explanation": "子查询描述“本课程存在有效成绩”，NOT EXISTS 反选同时覆盖两类课程。"
+    },
+    {
+      "id": "exam-mock-01-r3-q20",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "创建只发布软件工程学生的视图，列名要严格为 student_no 和 full_name。",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "template": "CREATE VIEW v_software ({{1}}) AS\nSELECT Sno,Sname FROM student WHERE {{2}};",
+      "blanks": [
+        [
+          "student_no,full_name"
+        ],
+        [
+          "Sdept='软件工程'",
+          "'软件工程'=Sdept"
+        ]
+      ],
+      "explanation": "视图列清单为两个投影指定公开名称，WHERE 负责行级筛选。"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "按课件例 3.1–3.3 重建空的 Salvaging。定义 prj_num CHAR(8) 主键、非空 prj_name VARCHAR(50) 和 start_date DATETIME、可空 end_date DATETIME，以及非空 BIT 状态 prj_status（默认 0）。结束日期若有值，不得早于开始日期。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DDL",
+        "默认值",
+        "CHECK"
+      ],
+      "explanation": "用表级 CHECK 比较两个日期。省略状态列时由默认值填入 0。",
+      "referenceSql": "CREATE TABLE Salvaging (\n prj_num CHAR(8) PRIMARY KEY, prj_name VARCHAR(50) NOT NULL,\n start_date DATETIME NOT NULL, end_date DATETIME,\n prj_status BIT NOT NULL DEFAULT b'0',\n CHECK (end_date IS NULL OR end_date>=start_date)\n);",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "SELECT LOWER(COLUMN_NAME) AS column_name,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS\nWHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='Salvaging' ORDER BY ORDINAL_POSITION;\nSELECT INDEX_NAME,SEQ_IN_INDEX,LOWER(COLUMN_NAME) AS column_name FROM information_schema.STATISTICS\nWHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='Salvaging' AND INDEX_NAME='PRIMARY' ORDER BY SEQ_IN_INDEX;"
+        },
+        {
+          "kind": "negative_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": false,
+          "checkColumnNames": true,
+          "sql": "SELECT prj_num,prj_status+0 AS prj_status FROM Salvaging ORDER BY prj_num;",
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',65,18);",
+          "positiveSql": "INSERT INTO Salvaging(prj_num,prj_name,start_date) VALUES ('20120001','测试工程','2011-05-01');",
+          "negativeSql": "INSERT INTO Salvaging(prj_num,prj_name,start_date,end_date) VALUES ('20120002','日期反序','2011-05-01','2011-04-30');",
+          "errorCode": 3819
+        }
+      ],
+      "setupSql": "DROP TABLE Out_stock; DROP TABLE Salvaging;",
+      "id": "exam-mock-01-r3-q21"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "按部门和物资编号统计领料项目数与领取总量。只保留至少涉及两个不同项目的组合，输出 department、mat_num、project_count、total_amount，按部门、物资编号升序。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "GROUP BY",
+        "HAVING"
+      ],
+      "explanation": "课件例 3.39–3.41。按双列分组，再用 HAVING 筛选聚合后的项目数。",
+      "referenceSql": "SELECT department,mat_num,COUNT(DISTINCT prj_num) AS project_count,SUM(amount) AS total_amount FROM Out_stock GROUP BY department,mat_num HAVING COUNT(DISTINCT prj_num)>=2 ORDER BY department,mat_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Out_stock VALUES ('20110003','m004',8,'2011-03-02','工程 2 部');"
+        }
+      ],
+      "id": "exam-mock-01-r3-q22"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "用 LEFT JOIN 列出所有抢修工程及其领料记录，保留尚未领料的工程。输出 prj_num、prj_name、start_date、mat_num、amount、get_date，按开工日期、项目号、物资编号依次升序。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "LEFT JOIN",
+        "复合排序"
+      ],
+      "explanation": "课件例 3.45、3.48。以工程表为保留侧，未匹配行的领料列为 NULL。",
+      "referenceSql": "SELECT s.prj_num,s.prj_name,s.start_date,o.mat_num,o.amount,o.get_date FROM Salvaging s LEFT JOIN Out_stock o ON o.prj_num=s.prj_num ORDER BY s.start_date,s.prj_num,o.mat_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Salvaging VALUES ('20110006','东海电缆抢修','2011-03-02','2011-03-09',b'0');INSERT INTO Salvaging VALUES ('20110007','新建待领料工程','2011-03-02','2011-03-09',b'0');INSERT INTO Out_stock VALUES ('20110006','m005',7,'2011-03-02','工程 1 部');"
+        }
+      ],
+      "id": "exam-mock-01-r3-q23"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "按课件例 3.71，用子查询定位供电局 1# 仓库的物资，将这些物资在 Out_stock 中的领取量置零。其余领料和库存数据保持原值。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "子查询",
+        "批量 UPDATE"
+      ],
+      "explanation": "仓库信息来自 Stock。按 mat_num 对领取表做集合筛选。",
+      "referenceSql": "UPDATE Out_stock SET amount=0 WHERE mat_num IN (SELECT mat_num FROM Stock WHERE warehouse='供电局 1# 仓库');",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT prj_num,mat_num,amount,get_date,department FROM Out_stock ORDER BY prj_num,mat_num;SELECT mat_num,mat_name,speci,warehouse,amount,unit FROM Stock ORDER BY mat_num;"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT prj_num,mat_num,amount,get_date,department FROM Out_stock ORDER BY prj_num,mat_num;SELECT mat_num,mat_name,speci,warehouse,amount,unit FROM Stock ORDER BY mat_num;",
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',65,18);INSERT INTO Out_stock VALUES ('20110005','m008',7,'2011-03-02','工程 1 部');"
+        }
+      ],
+      "id": "exam-mock-01-r3-q24"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "创建 s2_stock 视图，限定供电局 1# 仓库并输出 mat_num、mat_name、speci、warehouse、amount、unit。加 WITH CHECK OPTION，使通过视图写入的记录仍属于该仓库。",
+      "labId": "lab-05-views",
+      "tags": [
+        "可更新视图",
+        "WITH CHECK OPTION"
+      ],
+      "explanation": "课件例 3.75–3.76。保留 warehouse 以便直接验证视图更新能否越过筛选条件。",
+      "referenceSql": "CREATE VIEW s2_stock AS SELECT mat_num,mat_name,speci,warehouse,amount,unit FROM Stock WHERE warehouse='供电局 1# 仓库' WITH CHECK OPTION;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT mat_num,mat_name,speci,warehouse,amount,unit FROM s2_stock ORDER BY mat_num;"
+        },
+        {
+          "kind": "negative_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT mat_num,mat_name,speci,warehouse,amount,unit FROM s2_stock ORDER BY mat_num;",
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',65,18);",
+          "positiveSql": "UPDATE s2_stock SET amount=amount+1 WHERE mat_num='m008';",
+          "negativeSql": "UPDATE s2_stock SET warehouse='供电局 2# 仓库' WHERE mat_num='m008';",
+          "errorCode": 1369
+        }
+      ],
+      "id": "exam-mock-01-r3-q25"
+    }
+  ]
+}

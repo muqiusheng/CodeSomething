@@ -1,0 +1,574 @@
+{
+  "id": "exam-lab-02",
+  "title": "实验二专项卷 · DDL 建表、约束变更与数据维护",
+  "group": "specialty",
+  "labId": "lab-02-ddl-tables",
+  "questions": [
+    {
+      "id": "exam-lab-02-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "为 course 新增可空备注 Note 的正确语句？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DDL"
+      ],
+      "options": {
+        "A": "INSERT INTO course COLUMN Note VARCHAR(80)",
+        "B": "ALTER COLUMN Note ON course",
+        "C": "ALTER TABLE course ADD COLUMN Note VARCHAR(80)",
+        "D": "UPDATE course ADD Note VARCHAR(80)"
+      },
+      "answer": "C",
+      "explanation": "ALTER TABLE 改变表结构，ADD COLUMN 指定新列定义。"
+    },
+    {
+      "id": "exam-lab-02-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "约束新增学分只能取 1 到 6，哪个写法包含两个边界？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "CHECK"
+      ],
+      "options": {
+        "A": "CHECK (Credit IN (1,6))",
+        "B": "CHECK (Credit BETWEEN 1 AND 6)",
+        "C": "CHECK (Credit > 1 AND Credit < 6)",
+        "D": "CHECK (Credit > 6)"
+      },
+      "answer": "B",
+      "explanation": "BETWEEN 含两端且包含中间整数。"
+    },
+    {
+      "id": "exam-lab-02-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "只把课号 006 的 Credit 改为 5，应使用什么？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "options": {
+        "A": "UPDATE course SET Credit=5 WHERE Cno='006'",
+        "B": "UPDATE course SET Cno='006',Credit=5",
+        "C": "ALTER TABLE course SET Credit=5",
+        "D": "INSERT INTO course VALUES (5)"
+      },
+      "answer": "A",
+      "explanation": "WHERE 精确限定当前主键，更新列写在 SET。"
+    },
+    {
+      "id": "exam-lab-02-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "course 中的 006 仍有 sc 引用，直接删除会发生什么？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键"
+      ],
+      "options": {
+        "A": "自动清除全部子记录",
+        "B": "把 sc.Cno 自动置空",
+        "C": "把 Grade 置零但保留子行",
+        "D": "外键拒绝删除"
+      },
+      "answer": "D",
+      "explanation": "种子库外键未指定级联，默认限制父行删除。"
+    },
+    {
+      "id": "exam-lab-02-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "保持 student 当前默认，哪种方法能取得默认 Sex？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "默认值"
+      ],
+      "options": {
+        "A": "提供任意非法字符",
+        "B": "省略 Sno 但保留 Sex",
+        "C": "INSERT 列清单省略 Sex 并补齐其它必填列",
+        "D": "为 Sex 传 NULL"
+      },
+      "answer": "C",
+      "explanation": "默认值作用在其对应列，显式 NULL 仍受 NOT NULL 约束。"
+    },
+    {
+      "id": "exam-lab-02-q06",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "测试性更新学分后恢复原值，哪组操作正确？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "事务"
+      ],
+      "options": {
+        "A": "START TRANSACTION → UPDATE → CREATE TABLE → ROLLBACK",
+        "B": "START TRANSACTION → UPDATE → ROLLBACK",
+        "C": "UPDATE → START TRANSACTION → ROLLBACK",
+        "D": "START TRANSACTION → UPDATE → COMMIT"
+      },
+      "answer": "B",
+      "explanation": "事务须在更新前开始，中途避免隐式提交，最后回滚。"
+    },
+    {
+      "id": "exam-lab-02-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "仅复制结构且保留主键和索引，应选哪条？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "复制表"
+      ],
+      "options": {
+        "A": "CREATE TABLE copy LIKE sc",
+        "B": "CREATE TABLE copy AS SELECT * FROM sc",
+        "C": "INSERT INTO copy SELECT * FROM sc",
+        "D": "ALTER TABLE copy RENAME sc"
+      },
+      "answer": "A",
+      "explanation": "LIKE 复制列与索引等定义，但不自动复制外键。"
+    },
+    {
+      "id": "exam-lab-02-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "为 sc 增加以 Cno、Grade 为键的复合索引应怎样写？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "索引"
+      ],
+      "options": {
+        "A": "ALTER INDEX idx_sc_grade sc(Cno,Grade)",
+        "B": "UPDATE sc ADD INDEX(Cno,Grade)",
+        "C": "CREATE KEY sc FROM Cno,Grade",
+        "D": "CREATE INDEX idx_sc_grade ON sc(Cno,Grade)"
+      },
+      "answer": "D",
+      "explanation": "CREATE INDEX 指定索引名、目标表和索引列顺序。"
+    },
+    {
+      "id": "exam-lab-02-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "移除课表列 Note 应使用什么？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DDL"
+      ],
+      "options": {
+        "A": "DROP TABLE course.Note",
+        "B": "UPDATE course SET Note=NULL",
+        "C": "ALTER TABLE course DROP COLUMN Note",
+        "D": "DELETE Note FROM course"
+      },
+      "answer": "C",
+      "explanation": "DROP COLUMN 删除结构，UPDATE 只改值。"
+    },
+    {
+      "id": "exam-lab-02-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "只删除某生某课的记录，必须限定哪些值才能精准定位？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "options": {
+        "A": "仅 Grade",
+        "B": "Sno 与 Cno",
+        "C": "仅 Sno",
+        "D": "仅 Cno"
+      },
+      "answer": "B",
+      "explanation": "sc 的身份由两列组合成主键。"
+    },
+    {
+      "id": "exam-lab-02-q11",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "Grade=101 写入成功需要规避哪条规则？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "CHECK"
+      ],
+      "options": {
+        "A": "Grade BETWEEN 0 AND 100",
+        "B": "Cno 的外键",
+        "C": "Sno 的外键",
+        "D": "课表 Credit 上界"
+      },
+      "answer": "A",
+      "explanation": "成绩超过 100，直接违反成绩范围检查。"
+    },
+    {
+      "id": "exam-lab-02-q12",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "重命名数据库内测试表 course_copy 为 course_backup 应使用什么？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DDL"
+      ],
+      "options": {
+        "A": "UPDATE TABLE course_copy AS course_backup",
+        "B": "RENAME COLUMN course_copy TO course_backup",
+        "C": "ALTER DATABASE course_copy TO course_backup",
+        "D": "RENAME TABLE course_copy TO course_backup"
+      },
+      "answer": "D",
+      "explanation": "RENAME TABLE 将已存在表重命名。"
+    },
+    {
+      "id": "exam-lab-02-q13",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "若需要同一 Cname 只能出现一次，什么约束直接表达需求？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "唯一性"
+      ],
+      "options": {
+        "A": "INDEX(Cname)",
+        "B": "DEFAULT '未命名'",
+        "C": "UNIQUE (Cname)",
+        "D": "CHECK (Cname IS NOT NULL)"
+      },
+      "answer": "C",
+      "explanation": "UNIQUE 负责去重，普通索引、非空和默认值没有唯一性效果。"
+    },
+    {
+      "id": "exam-lab-02-q14",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "向 course 只插入课号与课名，Total_perior 的实际值是什么？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "options": {
+        "A": "表结构中的最大学时",
+        "B": "NULL",
+        "C": "0",
+        "D": "1"
+      },
+      "answer": "B",
+      "explanation": "未提供可空列且无显式默认值时，取 NULL。"
+    },
+    {
+      "id": "exam-lab-02-q15",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "想把父课号变更同步到已选课记录，需要何种引用动作？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键"
+      ],
+      "options": {
+        "A": "ON UPDATE CASCADE",
+        "B": "ON DELETE CASCADE",
+        "C": "ON UPDATE RESTRICT",
+        "D": "ON DELETE SET NULL"
+      },
+      "answer": "A",
+      "explanation": "变更父键对应 UPDATE；CASCADE 将值传播至子行。"
+    },
+    {
+      "id": "exam-lab-02-q16",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "在 MySQL 8.4 中，普通 CREATE TABLE 可以与此前 DML 一起靠 ROLLBACK 撤销。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "事务"
+      ],
+      "answer": "false",
+      "explanation": "普通建表隐式提交，DDL 也不能按一般 DML 那样回滚。"
+    },
+    {
+      "id": "exam-lab-02-q17",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "只写 CHECK (Credit BETWEEN 1 AND 6) 就能拒绝 NULL。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "CHECK"
+      ],
+      "answer": "false",
+      "explanation": "CHECK 接受 UNKNOWN，拒绝 FALSE；拒绝 NULL 应另加 NOT NULL。"
+    },
+    {
+      "id": "exam-lab-02-q18",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "UPDATE 不带 WHERE 可能影响表中所有行。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "answer": "true",
+      "explanation": "缺少过滤条件时，所有行都进入候选更新集合。"
+    },
+    {
+      "id": "exam-lab-02-q19",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "ON DELETE CASCADE 用于父行删除时自动处理引用子行。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键"
+      ],
+      "answer": "true",
+      "explanation": "父行被删除后，对应子记录也会删除。"
+    },
+    {
+      "id": "exam-lab-02-q20",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "CREATE TABLE copy LIKE course 默认会把七条课程数据复制过去。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "复制表"
+      ],
+      "answer": "false",
+      "explanation": "LIKE 只复制结构；数据应另行 INSERT SELECT。"
+    },
+    {
+      "id": "exam-lab-02-q21",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "创建普通索引不会让相同成绩的两行互斥。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "索引"
+      ],
+      "answer": "true",
+      "explanation": "普通索引可包含重复索引键，去重要用 UNIQUE。"
+    },
+    {
+      "id": "exam-lab-02-q22",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "DROP TABLE 和 DELETE FROM 都可以保留原表定义。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DDL"
+      ],
+      "answer": "false",
+      "explanation": "DROP TABLE 删除表定义，DELETE FROM 只删除数据。"
+    },
+    {
+      "id": "exam-lab-02-q23",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "INSERT 时指定 DEFAULT 与显式写 NULL 的语义相同。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "默认值"
+      ],
+      "answer": "false",
+      "explanation": "DEFAULT 请求列默认，NULL 表示空值并受 NOT NULL 检查。"
+    },
+    {
+      "id": "exam-lab-02-q24",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "InnoDB 在显式事务中执行的普通 UPDATE 可以回滚。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "事务"
+      ],
+      "answer": "true",
+      "explanation": "在未提交且没有隐式提交操作时可撤销修改。"
+    },
+    {
+      "id": "exam-lab-02-q25",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "向 sc 插入已经存在的 Sno 和 Cno 组合会被主键拒绝。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "主键"
+      ],
+      "answer": "true",
+      "explanation": "复合主键不允许相同组合再次出现。"
+    },
+    {
+      "id": "exam-lab-02-q26",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "给 course 增加 Note 文本列。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DDL"
+      ],
+      "template": "ALTER TABLE course {{1}} Note VARCHAR(80);",
+      "blanks": [
+        [
+          "ADD COLUMN",
+          "ADD"
+        ]
+      ],
+      "explanation": "ALTER TABLE 的 ADD 可省略 COLUMN。"
+    },
+    {
+      "id": "exam-lab-02-q27",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "仅更新 006 的学时为 68。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "template": "UPDATE course {{1}} Total_perior=68 {{2}} Cno='006';",
+      "blanks": [
+        [
+          "SET"
+        ],
+        [
+          "WHERE"
+        ]
+      ],
+      "explanation": "SET 写更新表达式，WHERE 保留行级条件。"
+    },
+    {
+      "id": "exam-lab-02-q28",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "声明当前学分范围，包含上下限。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "CHECK"
+      ],
+      "template": "CHECK (Credit {{1}})",
+      "blanks": [
+        [
+          "BETWEEN 1 AND 6",
+          ">= 1 AND Credit <= 6",
+          "<= 6 AND Credit >= 1"
+        ]
+      ],
+      "explanation": "两种边界写法都允许 1 到 6，NULL 需单独检查。"
+    },
+    {
+      "id": "exam-lab-02-q29",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全预演更新，明确开始事务并取消。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "事务"
+      ],
+      "template": "{{1}}; UPDATE course SET Credit=5 WHERE Cno='006'; {{2}};",
+      "blanks": [
+        [
+          "START TRANSACTION",
+          "BEGIN",
+          "BEGIN WORK",
+          "START TRANSACTION READ WRITE"
+        ],
+        [
+          "ROLLBACK",
+          "ROLLBACK WORK",
+          "ROLLBACK AND NO CHAIN",
+          "ROLLBACK WORK AND NO CHAIN"
+        ]
+      ],
+      "explanation": "BEGIN 是 START TRANSACTION 在此处的替代，ROLLBACK 撤销更新。"
+    },
+    {
+      "id": "exam-lab-02-q30",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全外键的删除级联动作。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键"
+      ],
+      "template": "FOREIGN KEY (Cno) REFERENCES course(Cno) {{1}}",
+      "blanks": [
+        [
+          "ON DELETE CASCADE"
+        ]
+      ],
+      "explanation": "父行删除后由 CASCADE 联动删除子行。"
+    },
+    {
+      "id": "exam-lab-02-q31",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-02-ddl-tables",
+      "prompt": "给 course 增加可空 Note VARCHAR(40)，给 006 设置备注“期末复习”。其他课程保留空备注。",
+      "referenceSql": "ALTER TABLE course ADD COLUMN Note VARCHAR(40); UPDATE course SET Note='期末复习' WHERE Cno='006';",
+      "tags": [
+        "DDL",
+        "DML"
+      ],
+      "explanation": "先 ALTER 添加可空列，再以课程主键限定 UPDATE。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "state_check",
+          "label": "新增字段类型和可空属性",
+          "points": 8,
+          "sql": "SELECT LOWER(COLUMN_NAME) AS COLUMN_NAME,LOWER(COLUMN_TYPE) AS COLUMN_TYPE,IS_NULLABLE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='course' AND LOWER(COLUMN_NAME)='note';",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "post_query",
+          "label": "只修改指定课号",
+          "points": 4,
+          "sql": "SELECT Cno,Note FROM course ORDER BY Cno;",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO course VALUES ('008','扩展课',30,2);"
+        }
+      ]
+    },
+    {
+      "id": "exam-lab-02-q32",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-02-ddl-tables",
+      "prompt": "建立 credit_plan (Cno CHAR(3) 主键，Credit TINYINT 非空)，要求 Credit 合法区间为 1–6，并将 006 的计划学分写为 5。",
+      "referenceSql": "CREATE TABLE credit_plan (Cno CHAR(3) PRIMARY KEY,Credit TINYINT NOT NULL CHECK(Credit BETWEEN 1 AND 6)); INSERT INTO credit_plan VALUES ('006',5);",
+      "tags": [
+        "CHECK",
+        "DML"
+      ],
+      "explanation": "CHECK 管范围，NOT NULL 明确拒绝空学分。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "post_query",
+          "label": "计划记录正确",
+          "points": 8,
+          "sql": "SELECT Cno,Credit FROM credit_plan ORDER BY Cno;",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "negative_check",
+          "label": "合法边界可写、超限不可写",
+          "points": 4,
+          "sql": "SELECT Cno,Credit FROM credit_plan ORDER BY Cno;",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "positiveSql": "INSERT INTO credit_plan VALUES ('001',1),('007',6);",
+          "negativeSql": "INSERT INTO credit_plan VALUES ('002',7);",
+          "errorCode": 3819
+        }
+      ]
+    }
+  ]
+}

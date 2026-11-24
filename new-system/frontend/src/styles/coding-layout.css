@@ -370,18 +370,21 @@ html[data-motion="reduce"] .workspace-divider > span { transition: none; }
 .project-sync-dot[data-state=error] { background:var(--color-error); }
 .project-tab-toolbar .project-tree-trigger { margin:0 4px;width:34px;padding:0;flex:none; }
 .code-editor-shell:not([open]) { position:relative; }
-.editor-floating-tools,.editor-shortcuts {
- position:absolute;z-index:var(--z-content);right:16px;
+.editor-topbar {
+ display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none;
+ min-height:36px;padding:3px 10px 3px 14px;background:var(--surface-muted);border-bottom:1px solid var(--border);
+ color:var(--text-secondary);font:12px Consolas,monospace;
 }
-.editor-floating-tools { top:4px;display:flex;gap:3px; }
-.editor-floating-tools .button,.editor-shortcuts button {
+.editor-topbar > span { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.editor-toolbar { display:flex;flex:none;gap:4px; }
+.editor-toolbar .button,.editor-shortcuts button {
  display:grid;place-items:center;min-height:28px;width:28px;padding:0;cursor:pointer;
  color:var(--text-secondary);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
 }
-.editor-shortcuts { bottom:3px;margin:0; }
+.editor-shortcuts {position:relative;margin:0;}
 
 .editor-shortcuts span {
- display:none;position:absolute;bottom:100%;right:0;padding:8px;
+ display:none;position:absolute;top:100%;right:0;z-index:var(--z-content);padding:8px;
  width:max-content;max-width:min(280px,70vw);font-size:12px;color:var(--text);
  border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-elevated);
 }

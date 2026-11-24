@@ -19,6 +19,10 @@ public class SchoolReportService {
             var execution=work.executions().get(question.id());
             if(execution==null || !sql.equals(execution.sql())) continue;
             var result=execution.result();
+            if (execution.grade() != null) {
+                var grade = execution.grade();
+                body.append("\n判分 ").append(grade.score()).append("/").append(grade.question().points()).append(" 分\n\n");
+            }
             body.append("\n").append(result.status().equals("ok")?"执行成功":"执行反馈").append(" · ")
                 .append(result.elapsedMs()).append(" ms\n\n");
             if(result.message()!=null) codeBlock(body,"text",result.message());
@@ -81,6 +85,10 @@ public class SchoolReportService {
                 continue;
             }
             var result = execution.result();
+            if (execution.grade() != null) {
+                var grade = execution.grade();
+                html.append("<p>判分 ").append(grade.score()).append("/").append(grade.question().points()).append(" 分</p>");
+            }
             html.append("<p>").append(result.status().equals("ok") ? "执行成功" : "执行反馈")
                 .append(" · ").append(result.elapsedMs()).append(" ms");
             if (result.affectedRows() != null) html.append(" · 末条语句影响 ").append(result.affectedRows()).append(" 行");

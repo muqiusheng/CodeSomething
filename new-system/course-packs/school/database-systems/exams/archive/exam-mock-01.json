@@ -1,0 +1,573 @@
+{
+  "id": "exam-mock-01",
+  "title": "综合模拟卷（一）· 期末标准基线卷",
+  "group": "mock",
+  "revision": 2,
+  "questions": [
+    {
+      "id": "exam-mock-01-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "管理员在同一账号的两个查询窗口分别执行 USE teaching_a 和 USE teaching_b。随后分别查询 DATABASE()，返回值如何？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "Workbench"
+      ],
+      "options": {
+        "A": "两个均为 teaching_b",
+        "B": "第一个为 teaching_a，第二个为 teaching_b",
+        "C": "两个均为 teaching_a",
+        "D": "两个均为 NULL"
+      },
+      "answer": "B",
+      "explanation": "USE 只改变当前连接的默认数据库。同一账号的两条连接维护独立的会话状态。"
+    },
+    {
+      "id": "exam-mock-01-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "要将 course 中课时超过 48 的课程延长 2 课时，学分不得改动。哪条语句符合要求？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "options": {
+        "A": "UPDATE course SET Total_perior=2 WHERE Total_perior>48",
+        "B": "UPDATE course SET Credit=Credit+2 WHERE Total_perior>48",
+        "C": "UPDATE course SET Total_perior=Total_perior+2 WHERE Total_perior>=48",
+        "D": "UPDATE course SET Total_perior=Total_perior+2 WHERE Total_perior>48"
+      },
+      "answer": "D",
+      "explanation": "SET 用原课时加 2，WHERE 严格排除 48 课时边界。"
+    },
+    {
+      "id": "exam-mock-01-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "系部报表只统计 Classno 为 051 的学生，再保留学生数超过 3 人的 Sdept。正确的过滤顺序是哪一项？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "分组"
+      ],
+      "options": {
+        "A": "GROUP BY Sdept HAVING COUNT(*)>3 WHERE Classno='051'",
+        "B": "WHERE Classno='051' GROUP BY Sdept HAVING COUNT(*)>3",
+        "C": "WHERE Classno='051' AND COUNT(*)>3 GROUP BY Sdept",
+        "D": "GROUP BY Sdept HAVING MAX(Classno)='051' AND COUNT(*)>3"
+      },
+      "answer": "B",
+      "explanation": "WHERE 先限定参与分组的行，HAVING 再淘汰人数不够的分组。"
+    },
+    {
+      "id": "exam-mock-01-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "已知 SELECT s.Sno FROM student s WHERE EXISTS (SELECT 1 FROM sc x WHERE x.Cno='006')。若至少一人选修 006，这条查询会返回谁？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "相关子查询"
+      ],
+      "options": {
+        "A": "只有选修 006 的学生",
+        "B": "只返回一个 Sno",
+        "C": "只有未选修 006 的学生",
+        "D": "student 中的所有学生"
+      },
+      "answer": "D",
+      "explanation": "子查询未引用外层学生，EXISTS 的真假对所有外层行一致。"
+    },
+    {
+      "id": "exam-mock-01-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "某门课的四条 Grade 依次为 59、60、100、NULL。使用 AVG(COALESCE(Grade,0)) 的统计口径时，得到的数值是多少？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "options": {
+        "A": "73",
+        "B": "60",
+        "C": "54.75",
+        "D": "NULL"
+      },
+      "answer": "C",
+      "explanation": "COALESCE 把缺失成绩换成 0 后纳入平均值，分子为 219，分母为 4。"
+    },
+    {
+      "id": "exam-mock-01-q06",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "单表视图 v_names 只选 student 的 Sno、Sname。假设已有学号和新姓名均合法，哪个操作可通过此视图完成？",
+      "labId": "lab-05-views",
+      "tags": [
+        "可更新性"
+      ],
+      "options": {
+        "A": "INSERT INTO v_names VALUES ('20119999','林青')",
+        "B": "UPDATE v_names SET Sdept='软件工程' WHERE Sno='20110001'",
+        "C": "UPDATE v_names SET Sname='林青' WHERE Sno='20110001'",
+        "D": "SELECT Entrance_date FROM v_names"
+      },
+      "answer": "C",
+      "explanation": "现有行可以通过简单视图修改已投影的列。INSERT 缺少基表其他无默认值必填列，另外两项访问了视图未暴露的列。"
+    },
+    {
+      "id": "exam-mock-01-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "过程 p_min(IN p_sno CHAR(8), OUT p_grade INT) 已从 sc 读取该生的最低成绩。调用者要在同一连接保存本次结果并用于后续查询，应如何调用？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "options": {
+        "A": "SELECT p_min('20110001', @low);",
+        "B": "CALL p_min('20110001', @low); SELECT @low;",
+        "C": "CALL p_min('20110001', 0); SELECT 0;",
+        "D": "CALL p_min('20110001'); SELECT p_grade;"
+      },
+      "answer": "B",
+      "explanation": "OUT 位置需要可写入的变量，用户变量 @low 可由调用者继续读取。"
+    },
+    {
+      "id": "exam-mock-01-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "选课记录准备批量导入。某条合法格式的记录 Sno 已存在于 student，Cno 在 course 中尚未建档。假设检查开启，直接插入 sc 会怎样？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "外键"
+      ],
+      "options": {
+        "A": "因已有学生而插入成功",
+        "B": "只将 Grade 自动改为 NULL",
+        "C": "自动建一条没有课名的课程",
+        "D": "被 fk_sc_course 拒绝"
+      },
+      "answer": "D",
+      "explanation": "学生与课程两个外键分别检查。已有学生不能替代缺失的课程父行。"
+    },
+    {
+      "id": "exam-mock-01-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "要在一份结构报告中精确比较当前数据库的两张表各列出现的先后次序，应读取 information_schema.COLUMNS 中哪个字段？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "元数据"
+      ],
+      "options": {
+        "A": "ORDINAL_POSITION",
+        "B": "IS_NULLABLE",
+        "C": "COLUMN_DEFAULT",
+        "D": "TABLE_SCHEMA"
+      },
+      "answer": "A",
+      "explanation": "ORDINAL_POSITION 从 1 开始表示列定义的位置，对每张表分别排序可恢复列顺序。"
+    },
+    {
+      "id": "exam-mock-01-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "某两门课程各有如下记录：001 有成绩 0 和 NULL，002 无人选。统计使用 course c LEFT JOIN sc x 并按 c.Cno 分组。两门课的 COUNT(x.Grade) 分别是多少？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "外连接"
+      ],
+      "options": {
+        "A": "1 和 0",
+        "B": "1 和 1",
+        "C": "0 和 0",
+        "D": "2 和 0"
+      },
+      "answer": "A",
+      "explanation": "COUNT(Grade) 忽略 NULL，0 是有效非空成绩。无人选的补空行也不计入。"
+    },
+    {
+      "id": "exam-mock-01-q11",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "已存在 sc(Sno,Cno)=(20110001,001)。保持种子库外键定义且启用检查，将 course 的课号 001 更新为尚不存在的 013 会怎样？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "外键"
+      ],
+      "options": {
+        "A": "父键改变时删掉相应选课",
+        "B": "父键和对应选课自动改为 013",
+        "C": "只有父键改变，既有 sc 继续引用 001",
+        "D": "含引用的父键更新会被拒绝"
+      },
+      "answer": "D",
+      "explanation": "种子库未设置 ON UPDATE CASCADE，InnoDB 拒绝让仍被引用的键失去父行。"
+    },
+    {
+      "id": "exam-mock-01-q12",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "名单要求 Classno 为 051 或 061，且 Sdept 为软件工程。下面哪条 WHERE 谓词按要求过滤？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "条件"
+      ],
+      "options": {
+        "A": "Classno='051' OR Classno='061' AND Sdept='软件工程'",
+        "B": "Classno IN ('051','061') OR Sdept='软件工程'",
+        "C": "Classno IN ('051','061') AND Sdept='软件工程'",
+        "D": "Classno='051' AND Classno='061' AND Sdept='软件工程'"
+      },
+      "answer": "C",
+      "explanation": "IN 把两个班号合成一项，再用 AND 限定院系。缺少括号的 OR 写法会让 051 班无条件通过。"
+    },
+    {
+      "id": "exam-mock-01-q13",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "希望得到选过 001、从未选过 006 的学号。若两侧都投影 Sno，哪种集合运算方向正确？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "集合"
+      ],
+      "options": {
+        "A": "001 名单 EXCEPT 006 名单",
+        "B": "001 名单 INTERSECT 006 名单",
+        "C": "006 名单 EXCEPT 001 名单",
+        "D": "001 名单 UNION 006 名单"
+      },
+      "answer": "A",
+      "explanation": "EXCEPT 保留左集合有、右集合无的成员。集合差方向不可互换。"
+    },
+    {
+      "id": "exam-mock-01-q14",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "视图 v_pass 定义为 SELECT Sno,Cno,Grade FROM sc WHERE Grade>=60，未加 CHECK OPTION。一条 65 分记录经该视图改为 58 分后的现象是什么？",
+      "labId": "lab-05-views",
+      "tags": [
+        "可更新性"
+      ],
+      "options": {
+        "A": "基表与视图都仍显示 65 分",
+        "B": "基表该行仍在，视图不再返回它",
+        "C": "UPDATE 必然因视图过滤条件被拒绝",
+        "D": "这条基表记录被 DELETE"
+      },
+      "answer": "B",
+      "explanation": "简单筛选视图的更新会传递到基表。无 CHECK OPTION 时可以写出筛选范围，随后视图重新按条件取行。"
+    },
+    {
+      "id": "exam-mock-01-q15",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "有四条成绩 NULL、0、59、60。查询 WHERE NOT (Grade < 60 OR Grade IS NULL) 会留下哪些成绩？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "NULL"
+      ],
+      "options": {
+        "A": "留下 NULL 和 60",
+        "B": "留下 0、59、60",
+        "C": "只留下 60",
+        "D": "全部排除"
+      },
+      "answer": "C",
+      "explanation": "NULL 行的 OR 条件为真，取反后被排除。0 和 59 小于 60，只有 60 使括号内条件为假。"
+    },
+    {
+      "id": "exam-mock-01-q16",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "若某门课报名有十人，sc 的 Cno 可以重复十次而仍满足现有复合主键约束。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "主键"
+      ],
+      "answer": "true",
+      "explanation": "主键约束的是 Sno 与 Cno 的组合。不同学生选同一门课可形成十个不同键。"
+    },
+    {
+      "id": "exam-mock-01-q17",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "执行 UPDATE course SET Cname='待审核' WHERE Cno='未建' 后，如果该条件未匹配，语句会替补插入一门新课程。",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "DML"
+      ],
+      "answer": "false",
+      "explanation": "UPDATE 只处理已存在并匹配的行。无匹配时更新 0 行，不执行插入。"
+    },
+    {
+      "id": "exam-mock-01-q18",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "用 WHERE Grade IS NOT NULL 过滤 sc 再计算 AVG(Grade)，在至少存在一个非空成绩时，结果与直接计算 AVG(Grade) 相同。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "answer": "true",
+      "explanation": "AVG 本身忽略 NULL。额外的过滤不会改变非空值或其数量。"
+    },
+    {
+      "id": "exam-mock-01-q19",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "Sname LIKE '张_' 可匹配“张虹”和“张小明”两个姓名。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "LIKE"
+      ],
+      "answer": "false",
+      "explanation": "下划线恰好匹配一个字符。三字符姓名需要额外匹配位置。"
+    },
+    {
+      "id": "exam-mock-01-q20",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "从 student LEFT JOIN sc 并按 student.Sno 分组，若一名学生没有选课，COUNT(*) 仍会给该学生统计为 1。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "外连接"
+      ],
+      "answer": "true",
+      "explanation": "左连接会产生一条右侧补空行，COUNT(*) 计算结果行数，不区分补空行。"
+    },
+    {
+      "id": "exam-mock-01-q21",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "如果视图使用 SQL SECURITY INVOKER，用户只拥有视图的 SELECT 权限就一定能查询视图引用的基表。",
+      "labId": "lab-05-views",
+      "tags": [
+        "权限"
+      ],
+      "answer": "false",
+      "explanation": "INVOKER 以调用者的权限检查底层对象。能够访问视图本身与具备基表权限是两回事。"
+    },
+    {
+      "id": "exam-mock-01-q22",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "查询窗口 A 的过程成功写入 @n，窗口 B 通过同一账号的另一条连接读取 @n，必定得到 A 连接刚写的值。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "answer": "false",
+      "explanation": "用户变量以连接为作用域。另一条连接没有共享窗口 A 的会话变量。"
+    },
+    {
+      "id": "exam-mock-01-q23",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "InnoDB 中，在同一个事务里触发器写入审计表后，外部执行 ROLLBACK 可以同时撤销原更新和审计写入。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "事务"
+      ],
+      "answer": "true",
+      "explanation": "触发器与触发语句同属一个事务，两个事务型表的未提交修改会一起回滚。"
+    },
+    {
+      "id": "exam-mock-01-q24",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "student.Sname 即使允许两名学生同名，也不影响 sc 通过 Sno 将各自的选课归到正确学生。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "关系模型"
+      ],
+      "answer": "true",
+      "explanation": "外键引用唯一的 Sno。姓名作为展示属性无需承担区分实体的责任。"
+    },
+    {
+      "id": "exam-mock-01-q25",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "SELECT EXISTS(SELECT NULL FROM sc WHERE Cno='006') 在 006 至少有一条选课时返回 0，因为子查询投影为 NULL。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "子查询"
+      ],
+      "answer": "false",
+      "explanation": "EXISTS 只测试能否返回行，投影成 NULL 不影响存在性。"
+    },
+    {
+      "id": "exam-mock-01-q26",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全语句，只列出当前数据库的真实表名，排除普通视图。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "元数据"
+      ],
+      "template": "SELECT TABLE_NAME FROM information_schema.TABLES\nWHERE TABLE_SCHEMA={{1}} AND TABLE_TYPE={{2}};",
+      "blanks": [
+        [
+          "DATABASE()",
+          "SCHEMA()"
+        ],
+        [
+          "'BASE TABLE'"
+        ]
+      ],
+      "explanation": "TABLE_SCHEMA 限制当前数据库，BASE TABLE 区分真正存储数据的表与视图。"
+    },
+    {
+      "id": "exam-mock-01-q27",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全 CASE，把恰好 60 分也计入“达标”，并且只给缺失成绩标记“未登记”。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "条件"
+      ],
+      "template": "SELECT Sno,Cno,CASE WHEN {{1}} THEN '未登记'\nWHEN {{2}} THEN '达标' ELSE '待补考' END AS status FROM sc;",
+      "blanks": [
+        [
+          "Grade IS NULL"
+        ],
+        [
+          "Grade>=60",
+          "60<=Grade"
+        ]
+      ],
+      "explanation": "IS NULL 判断缺失，包含等号的边界比较将 60 分纳入达标。"
+    },
+    {
+      "id": "exam-mock-01-q28",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全关联条件，选出尚未有人登记有效成绩的课程。保留无选课和有选课但成绩全为空的课程。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "相关子查询"
+      ],
+      "template": "SELECT c.Cno FROM course c WHERE NOT EXISTS (\n  SELECT 1 FROM sc x WHERE {{1}} AND {{2}}\n);",
+      "blanks": [
+        [
+          "x.Cno=c.Cno",
+          "c.Cno=x.Cno"
+        ],
+        [
+          "x.Grade IS NOT NULL"
+        ]
+      ],
+      "explanation": "子查询描述“本课程存在有效成绩”，NOT EXISTS 反选同时覆盖两类课程。"
+    },
+    {
+      "id": "exam-mock-01-q29",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "创建只发布软件工程学生的视图，列名要严格为 student_no 和 full_name。",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "template": "CREATE VIEW v_software ({{1}}) AS\nSELECT Sno,Sname FROM student WHERE {{2}};",
+      "blanks": [
+        [
+          "student_no,full_name"
+        ],
+        [
+          "Sdept='软件工程'",
+          "'软件工程'=Sdept"
+        ]
+      ],
+      "explanation": "视图列清单为两个投影指定公开名称，WHERE 负责行级筛选。"
+    },
+    {
+      "id": "exam-mock-01-q30",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全调用与读取，让新成绩通过 IN 参数交给 p_recommend(IN p_grade INT, OUT p_label VARCHAR(20))，再读取接收变量。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "template": "{{1}} p_recommend(85,@decision);\n{{2}} @decision AS label;",
+      "blanks": [
+        [
+          "CALL"
+        ],
+        [
+          "SELECT"
+        ]
+      ],
+      "explanation": "调用过程使用 CALL，调用后的 @decision 属于当前会话，SELECT 得到 OUT 值。"
+    },
+    {
+      "id": "exam-mock-01-q31",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-04-complex-query",
+      "prompt": "生成期末课程概况。每门课程一行，包含未选课的课程，输出 Cno、Cname、Chosen（选课数）、Passed（成绩至少 60 的人数），按 Chosen 降序、Cno 升序。",
+      "referenceSql": "SELECT c.Cno,c.Cname,COUNT(x.Sno) AS Chosen,COUNT(CASE WHEN x.Grade>=60 THEN 1 END) AS Passed FROM course c LEFT JOIN sc x ON x.Cno=c.Cno GROUP BY c.Cno,c.Cname ORDER BY Chosen DESC,c.Cno;",
+      "tags": [
+        "外连接"
+      ],
+      "explanation": "用 COUNT 统计非空匹配和达标行，左连接保留空课程。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "result_set",
+          "label": "种子数据结果",
+          "points": 8,
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "label": "变更数据后仍符合题意",
+          "points": 4,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO course VALUES ('008','试卷变体',32,2);INSERT INTO sc VALUES ('20110008','002',60);"
+        }
+      ]
+    },
+    {
+      "id": "exam-mock-01-q32",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-06-procedures",
+      "prompt": "创建 p_credit_total(IN p_sno CHAR(8), OUT p_credit INT)，按及格成绩汇总所获学分，没及格课返回 0，排除 NULL 成绩。",
+      "referenceSql": "DELIMITER $$\nCREATE PROCEDURE p_credit_total(IN p_sno CHAR(8), OUT p_credit INT)\nBEGIN\n SELECT COALESCE(SUM(c.Credit),0) INTO p_credit FROM sc x JOIN course c ON c.Cno=x.Cno WHERE x.Sno=p_sno AND x.Grade>=60;\nEND$$\nDELIMITER ;",
+      "tags": [
+        "过程",
+        "连接"
+      ],
+      "explanation": "先过滤及格成绩，关联课程学分并汇总，空集用 COALESCE。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "post_query",
+          "label": "已通过课程的累计学分",
+          "points": 8,
+          "sql": "CALL p_credit_total('20110001',@n); SELECT @n AS Credit;",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "post_query",
+          "label": "未选课与缺考不计学分",
+          "points": 4,
+          "sql": "CALL p_credit_total('20110008',@a); CALL p_credit_total('20110005',@b); SELECT @a AS EmptyCredit,@b AS StudentCredit;",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO sc VALUES ('20110008','004',null);"
+        }
+      ]
+    }
+  ]
+}

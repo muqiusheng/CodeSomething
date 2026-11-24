@@ -1,0 +1,339 @@
+[
+  {
+    "id": "q01",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE stu_pr()\nBEGIN\nSELECT s.Sno,s.Sname,x.Cno,x.Grade FROM student s LEFT JOIN sc x USING(Sno) WHERE s.Classno='051';\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL stu_pr();"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL stu_pr();"
+      }
+    ]
+  },
+  {
+    "id": "q02",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE dept_course_avg()\nBEGIN\nSELECT s.Sdept,c.Cname,ROUND(AVG(x.Grade),2) FROM student s JOIN sc x USING(Sno) JOIN course c USING(Cno) WHERE c.Cno IN('005','006','007') GROUP BY s.Sdept,c.Cname;\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL dept_course_avg();"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL dept_course_avg();"
+      }
+    ]
+  },
+  {
+    "id": "q03",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE stu_proc1(IN p_dept VARCHAR(20), IN p_name VARCHAR(20))\nBEGIN\nSELECT s.Sno,s.Sname,TIMESTAMPDIFF(YEAR,s.Birth,'2026-11-24'),c.Cname,x.Grade FROM student s JOIN sc x USING(Sno) JOIN course c USING(Cno) WHERE s.Sdept LIKE COALESCE(p_dept,'%') AND s.Sname LIKE COALESCE(p_name,'林%');\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL stu_proc1(NULL,NULL); CALL stu_proc1('软件%','张%');"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL stu_proc1(NULL,NULL); CALL stu_proc1('软件%','张%');"
+      }
+    ]
+  },
+  {
+    "id": "q04",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE student_sc(IN p_start CHAR(8), IN p_end CHAR(8))\nBEGIN\nSELECT s.Sno,s.Sname,SUM(x.Grade) FROM student s LEFT JOIN sc x USING(Sno) WHERE s.Sno BETWEEN p_start AND p_end GROUP BY s.Sno,s.Sname;\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL student_sc('20110001','20110005'); CALL student_sc('20119990','20119990');"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL student_sc('20110001','20110005'); CALL student_sc('20119990','20119990');"
+      }
+    ]
+  },
+  {
+    "id": "q05",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE update_sc(IN p_sno CHAR(8), IN p_cno CHAR(3), IN p_grade TINYINT)\nBEGIN\nUPDATE sc SET Grade=p_grade WHERE Sno=p_sno AND Cno=p_cno;\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL update_sc('20110001','001',86); CALL update_sc('20110002','002',NULL); SELECT * FROM sc ORDER BY Sno,Cno;"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL update_sc('20110001','001',86); CALL update_sc('20110002','002',NULL); SELECT * FROM sc ORDER BY Sno,Cno;"
+      }
+    ]
+  },
+  {
+    "id": "q06",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE course_average(IN p_cno CHAR(3), OUT p_avg DECIMAL(6,2))\nBEGIN\nSELECT AVG(Grade) INTO p_avg FROM sc WHERE Cno=p_cno;\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL course_average('002',@average); SELECT @average; CALL course_average('999',@average); SELECT @average;"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL course_average('002',@average); SELECT @average; CALL course_average('999',@average); SELECT @average;"
+      }
+    ]
+  },
+  {
+    "id": "q07",
+    "referenceSql": "DROP PROCEDURE stu_pr;\nDELIMITER $$\nCREATE PROCEDURE stu_pr()\nBEGIN\nSELECT Sno,Sname FROM student WHERE Classno='051' AND Sex='女';\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL stu_pr();"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL stu_pr();"
+      }
+    ],
+    "setupSql": "DELIMITER $$\nCREATE DEFINER={{sandboxUser}} PROCEDURE stu_pr()\nBEGIN\nSELECT Sno,Sname FROM student WHERE Classno='051';\nEND$$\nDELIMITER ;\n"
+  },
+  {
+    "id": "q08",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE practice_absences(IN p_cno CHAR(3))\nBEGIN\nSELECT s.Sno,s.Sname FROM student s JOIN sc x USING(Sno) WHERE x.Cno=p_cno AND x.Grade IS NULL;\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL practice_absences('002'); CALL practice_absences('001');"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL practice_absences('002'); CALL practice_absences('001');"
+      }
+    ]
+  },
+  {
+    "id": "q09",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE practice_exam_counts(IN p_cno CHAR(3), OUT p_selected INT, OUT p_graded INT)\nBEGIN\nSELECT COUNT(*),COUNT(Grade) INTO p_selected,p_graded FROM sc WHERE Cno=p_cno;\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL practice_exam_counts('002',@chosen,@graded); SELECT @chosen,@graded; CALL practice_exam_counts('999',@chosen,@graded); SELECT @chosen,@graded;"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL practice_exam_counts('002',@chosen,@graded); SELECT @chosen,@graded; CALL practice_exam_counts('999',@chosen,@graded); SELECT @chosen,@graded;"
+      }
+    ]
+  },
+  {
+    "id": "q10",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE practice_add_credit(IN p_cno CHAR(3), INOUT p_total INT)\nBEGIN\nSET p_total=p_total+COALESCE((SELECT Credit FROM course WHERE Cno=p_cno),0);\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SET @n=10; CALL practice_add_credit('001',@n); SELECT @n; CALL practice_add_credit('999',@n); SELECT @n;"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "SET @n=10; CALL practice_add_credit('001',@n); SELECT @n; CALL practice_add_credit('999',@n); SELECT @n;"
+      }
+    ]
+  },
+  {
+    "id": "q11",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE practice_grade_status(IN p_grade INT)\nBEGIN\nSELECT CASE WHEN p_grade IS NULL THEN '缺考' WHEN p_grade<0 OR p_grade>100 THEN '无效' WHEN p_grade<60 THEN '不及格' ELSE '及格' END;\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL practice_grade_status(NULL); CALL practice_grade_status(-1); CALL practice_grade_status(59); CALL practice_grade_status(60); CALL practice_grade_status(100); CALL practice_grade_status(101);"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL practice_grade_status(NULL); CALL practice_grade_status(-1); CALL practice_grade_status(59); CALL practice_grade_status(60); CALL practice_grade_status(100); CALL practice_grade_status(101);"
+      }
+    ]
+  },
+  {
+    "id": "q12",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE practice_grade_band(IN p_cno CHAR(3), IN p_min INT, IN p_max INT)\nBEGIN\nIF p_min>p_max THEN SELECT NULL; ELSE SELECT COUNT(*) FROM sc WHERE Cno=p_cno AND Grade BETWEEN p_min AND p_max; END IF;\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "post_query",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL practice_grade_band('002',60,90); CALL practice_grade_band('006',88,88); CALL practice_grade_band('002',90,60);"
+      },
+      {
+        "kind": "post_query",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "checkColumnNames": false,
+        "orderMatters": false,
+        "sql": "CALL practice_grade_band('002',60,90); CALL practice_grade_band('006',88,88); CALL practice_grade_band('002',90,60);"
+      }
+    ]
+  }
+]

@@ -46,3 +46,70 @@ INSERT INTO sc VALUES
 ('20110005','001',89),('20110005','002',NULL),('20110005','003',92),('20110005','007',81),
 ('20110006','001',77),('20110006','002',85),('20110006','006',87),
 ('20110007','001',65),('20110007','005',88),('20110007','007',58);
+
+-- Extra student-course cases for full-set and query-boundary exercises.
+INSERT INTO student VALUES
+('20110998','陈虹','女','1993-10-11','061','2011-09-01','上海','软件工程','200120');
+INSERT INTO sc VALUES
+('20110998','001',70),('20110998','002',63),('20110998','003',68),
+('20110998','004',71),('20110998','005',66),('20110998','006',79),('20110998','007',75);
+
+-- SampleDB (chapter 3). Independent, synthetic repair-project fixtures.
+CREATE TABLE Salvaging (
+  prj_num CHAR(8) PRIMARY KEY,
+  prj_name VARCHAR(50) NOT NULL,
+  start_date DATETIME NOT NULL,
+  end_date DATETIME,
+  prj_status BIT NOT NULL DEFAULT b'0',
+  CONSTRAINT chk_salvaging_dates CHECK (end_date IS NULL OR end_date >= start_date)
+);
+CREATE TABLE Stock (
+  mat_num CHAR(4) PRIMARY KEY,
+  mat_name VARCHAR(50) NOT NULL,
+  speci VARCHAR(20) NOT NULL,
+  warehouse VARCHAR(20),
+  amount INT CHECK (amount > 0),
+  unit DECIMAL(18,2) CHECK (unit >= 0),
+  total DECIMAL(18,2) GENERATED ALWAYS AS (amount * unit) STORED,
+  CONSTRAINT chk_stock_number CHECK (mat_num REGEXP '^m[0-9]{3}$')
+);
+CREATE TABLE Out_stock (
+  prj_num CHAR(8),
+  mat_num CHAR(4),
+  amount INT NOT NULL CHECK (amount >= 0),
+  get_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  department VARCHAR(20) NOT NULL,
+  PRIMARY KEY (prj_num, mat_num),
+  FOREIGN KEY (prj_num) REFERENCES Salvaging(prj_num),
+  FOREIGN KEY (mat_num) REFERENCES Stock(mat_num)
+);
+CREATE TABLE Prj_cost (
+  prj_num CHAR(8) PRIMARY KEY,
+  cost DECIMAL(18,2) NOT NULL
+);
+INSERT INTO Salvaging VALUES
+('20110001','南桥站配电抢修','2011-03-01','2011-03-04',b'1'),
+('20110002','海湾站电缆抢修','2011-03-02','2011-03-08',b'0'),
+('20110003','观澜站光缆抢修','2011-03-02','2011-03-07',b'0'),
+('20110004','浦东站开关检修','2011-03-06','2011-03-09',b'1'),
+('20110005','滨江线路巡检','2011-03-08',NULL,b'0');
+INSERT INTO Stock (mat_num,mat_name,speci,warehouse,amount,unit) VALUES
+('m001','电力电缆','YJV-35','供电局 1# 仓库',80,45.50),
+('m002','绝缘护套','BVV-35','供电局 1# 仓库',40,27.00),
+('m003','光缆','GYTA-24','供电局 2# 仓库',90,55.00),
+('m004','电缆接头','YJV-35','供电局 2# 仓库',20,80.00),
+('m005','接线端子','DT-16','供电局 1# 仓库',50,50.00),
+('m006','断路器','DZ-32','供电局 3# 仓库',30,115.00),
+('m007','接地线','JDX-25',NULL,12,31.00);
+INSERT INTO Out_stock VALUES
+('20110001','m001',4,'2011-03-01','工程 1 部'),
+('20110001','m002',3,'2011-03-02','工程 1 部'),
+('20110002','m001',5,'2011-03-02','工程 1 部'),
+('20110002','m004',2,'2011-03-03','工程 2 部'),
+('20110003','m001',2,'2011-03-03','工程 1 部'),
+('20110003','m003',6,'2011-03-04','工程 2 部'),
+('20110004','m001',1,'2011-03-06','工程 3 部'),
+('20110004','m006',4,'2011-03-06','工程 3 部');
+
+-- A previously settled cost. The cost-aggregation question clears its own copy.
+INSERT INTO Prj_cost VALUES ('20110004',505.50);

@@ -1,0 +1,541 @@
+{
+  "id": "exam-lab-07",
+  "title": "实验七专项卷 · 触发器、完整性约束与事务回滚",
+  "group": "specialty",
+  "labId": "lab-07-triggers",
+  "questions": [
+    {
+      "id": "exam-lab-07-r2-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "AFTER UPDATE 中比较更新前后的 Grade，应该用什么？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "options": {
+        "A": "NEW.Grade 与 current.Grade",
+        "B": "pre.Grade 与 post.Grade",
+        "C": "OLD.Grade 与 NEW.Grade",
+        "D": "OLD.Grade 与 OLD.Cno"
+      },
+      "answer": "C",
+      "explanation": "更新触发器同时具有 OLD 与 NEW 两套行镜像。"
+    },
+    {
+      "id": "exam-lab-07-r2-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "DELETE 触发器访问被删掉的学号使用什么？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "options": {
+        "A": "DELETED.Sno",
+        "B": "OLD.Sno",
+        "C": "NEW.Sno",
+        "D": "ROW.Sno"
+      },
+      "answer": "B",
+      "explanation": "删除只存在旧行镜像。"
+    },
+    {
+      "id": "exam-lab-07-r2-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "用 InnoDB 记录改分审计后回滚改分，审计行怎样？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "事务"
+      ],
+      "options": {
+        "A": "只有审计行回滚，成绩会提交",
+        "B": "需先 DROP TRIGGER 才可回滚",
+        "C": "同事务内一并回滚",
+        "D": "永久保留"
+      },
+      "answer": "C",
+      "explanation": "触发器 DML 与触发语句在同一事务生命周期中。"
+    },
+    {
+      "id": "exam-lab-07-r2-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "为保证成绩在 0–100，且简单静态范围需覆盖直接 UPDATE，最简通用规则？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "约束"
+      ],
+      "options": {
+        "A": "给 Grade 增加 CHECK 范围规则",
+        "B": "只加 AFTER INSERT 触发器",
+        "C": "给 Grade 建普通索引",
+        "D": "把 Grade 设为外键"
+      },
+      "answer": "A",
+      "explanation": "CHECK 在写入行时验证常规范围，无需拆分插入和更新。"
+    },
+    {
+      "id": "exam-lab-07-r2-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "sc 触发器中对正在被外层语句修改的 sc 执行 UPDATE 会发生什么？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "触发限制"
+      ],
+      "options": {
+        "A": "自动递归，直到没有匹配行",
+        "B": "更改隐式移至提交之后",
+        "C": "只更新第一条行",
+        "D": "报目标表不能在此触发器中再次修改"
+      },
+      "answer": "D",
+      "explanation": "MySQL 禁止触发器再次修改当前语句正在使用的表。"
+    },
+    {
+      "kind": "choice",
+      "points": 2,
+      "prompt": "写领料申请前发现请求数量超过实际库存，需要原写入直接失败。最适合哪项？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "BEFORE INSERT"
+      ],
+      "explanation": "在写入前检查 NEW 并用 SIGNAL 让原语句失败。",
+      "options": {
+        "A": "建立普通非唯一索引",
+        "B": "BEFORE INSERT 中 SIGNAL",
+        "C": "AFTER DELETE 中返回常量",
+        "D": "CREATE VIEW 后提交事务"
+      },
+      "answer": "B",
+      "id": "exam-lab-07-r2-q06"
+    },
+    {
+      "id": "exam-lab-07-r2-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "希望 INSERT 时修正 NEW.Grade，应在哪个时间点赋值？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "options": {
+        "A": "AFTER DELETE",
+        "B": "BEFORE DELETE",
+        "C": "BEFORE INSERT",
+        "D": "AFTER INSERT"
+      },
+      "answer": "C",
+      "explanation": "BEFORE 可赋给 NEW 允许的列，AFTER 行已写入。"
+    },
+    {
+      "id": "exam-lab-07-r2-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "一条 UPDATE 实际处理五行，行级触发器如何运行？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "触发时机"
+      ],
+      "options": {
+        "A": "只对最后一行触发",
+        "B": "对处理的行逐行触发",
+        "C": "每语句只触发一次",
+        "D": "事务提交时才触发一次"
+      },
+      "answer": "B",
+      "explanation": "FOR EACH ROW 指明按行执行。"
+    },
+    {
+      "id": "exam-lab-07-r2-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "核对触发器绑定表、事件和 BEFORE/AFTER，从哪看？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "元数据"
+      ],
+      "options": {
+        "A": "SHOW TRIGGERS",
+        "B": "SHOW PROCEDURE STATUS",
+        "C": "SHOW OPEN TABLES",
+        "D": "SHOW PROCESSLIST"
+      },
+      "answer": "A",
+      "explanation": "SHOW TRIGGERS 提供事件及表等元数据。"
+    },
+    {
+      "id": "exam-lab-07-r2-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "两条成绩相同而学生不同，可以同时存在的直接原因？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "约束"
+      ],
+      "options": {
+        "A": "Grade 是唯一主键",
+        "B": "同一 Cno 不允许两名学生",
+        "C": "触发器必定重写第二个 Grade",
+        "D": "sc 检查的是 Sno/Cno 组合唯一"
+      },
+      "answer": "D",
+      "explanation": "主键未包含 Grade，成绩可重复。"
+    },
+    {
+      "id": "exam-lab-07-r2-q11",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "INSERT 触发器可以读取 OLD.Cno。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "answer": "false",
+      "explanation": "插入没有旧行，只能读取 NEW。"
+    },
+    {
+      "id": "exam-lab-07-r2-q12",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "对于常见字段，BEFORE UPDATE 中可以 SET NEW.Grade。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "answer": "true",
+      "explanation": "BEFORE 阶段可修改即将写入的 NEW 列值。"
+    },
+    {
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "一个 AFTER DELETE 触发器可以用 NEW.ticket_id 读取被删除工单的编号。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "BEFORE INSERT"
+      ],
+      "explanation": "DELETE 事件只有旧行 OLD。",
+      "answer": "false",
+      "id": "exam-lab-07-r2-q13"
+    },
+    {
+      "id": "exam-lab-07-r2-q14",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "触发器中允许执行 COMMIT，单独提交审计行。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "事务"
+      ],
+      "answer": "false",
+      "explanation": "MySQL 触发器不能显式提交事务。"
+    },
+    {
+      "id": "exam-lab-07-r2-q15",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "SIGNAL SQLSTATE '45000' 可以让非法操作失败。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "SIGNAL"
+      ],
+      "answer": "true",
+      "explanation": "它是在存储程序中报告用户自定义异常的方式。"
+    },
+    {
+      "id": "exam-lab-07-r2-q16",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "在插入成绩前执行处理。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "触发时机"
+      ],
+      "template": "CREATE TRIGGER grade_gate {{1}} ON registration {{2}} SET NEW.Grade=COALESCE(NEW.Grade,0);",
+      "blanks": [
+        [
+          "BEFORE INSERT"
+        ],
+        [
+          "FOR EACH ROW"
+        ]
+      ],
+      "explanation": "BEFORE INSERT 可补齐 NEW 值，每条新行触发。"
+    },
+    {
+      "id": "exam-lab-07-r2-q17",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全触发器中的拒绝语句。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "SIGNAL"
+      ],
+      "template": "{{1}} '45000' SET {{2}}='成绩未达要求';",
+      "blanks": [
+        [
+          "SIGNAL SQLSTATE",
+          "SIGNAL SQLSTATE VALUE"
+        ],
+        [
+          "MESSAGE_TEXT"
+        ]
+      ],
+      "explanation": "SQLSTATE 45000 配合 MESSAGE_TEXT 返回业务诊断。"
+    },
+    {
+      "kind": "blank",
+      "points": 4,
+      "prompt": "当物资单价从未知变为明确数值时也需要记账。补全判断两个值是否 NULL 安全相等的运算符。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "BEFORE INSERT"
+      ],
+      "explanation": "NULL 安全比较在两边均为 NULL 时返回真。",
+      "template": "IF NOT (OLD.unit {{1}} NEW.unit) THEN INSERT INTO unit_audit VALUES (NEW.mat_num,OLD.unit,NEW.unit); END IF;",
+      "blanks": [
+        [
+          "<=>"
+        ]
+      ],
+      "id": "exam-lab-07-r2-q18"
+    },
+    {
+      "id": "exam-lab-07-r2-q19",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全比较符，确保两个 NULL 视为相同。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "NULL"
+      ],
+      "template": "IF NOT (OLD.Grade {{1}} NEW.Grade) THEN SET @changed=1; END IF;",
+      "blanks": [
+        [
+          "<=>"
+        ]
+      ],
+      "explanation": "NULL 安全相等避免 UNKNOWN 破坏条件判断。"
+    },
+    {
+      "id": "exam-lab-07-r2-q20",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "在删除后写入旧学号、课号。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "template": "INSERT INTO delete_audit(TraineeNo,ModuleNo) VALUES ({{1}}, {{2}});",
+      "blanks": [
+        [
+          "OLD.TraineeNo"
+        ],
+        [
+          "OLD.ModuleNo"
+        ]
+      ],
+      "explanation": "DELETE 事件可读 OLD 的两列。"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "在预置 issue_request 上创建 BEFORE INSERT 触发器。申请量 qty 超过 Stock 中该物资的库存量时，用 SQLSTATE 45000 拒绝；数量等于库存时允许写入。测试对象均是具有已知库存的有效物资编号。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "BEFORE INSERT",
+        "SIGNAL"
+      ],
+      "explanation": "从 Stock 取得库存，比较 NEW.qty，并用 SIGNAL 拦截越界申请。",
+      "referenceSql": "DELIMITER $$\nCREATE TRIGGER req_qty_guard BEFORE INSERT ON issue_request FOR EACH ROW\nBEGIN\nIF NEW.qty>(SELECT amount FROM Stock WHERE mat_num=NEW.mat_num) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='申请量超过库存'; END IF;\nEND$$\nDELIMITER ;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "INSERT INTO issue_request VALUES(1,'m001',80); SELECT id,mat_num,qty FROM issue_request ORDER BY id;"
+        },
+        {
+          "kind": "negative_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT id,mat_num,qty FROM issue_request ORDER BY id;",
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',40,18);",
+          "positiveSql": "INSERT INTO issue_request VALUES(2,'m008',40);",
+          "negativeSql": "INSERT INTO issue_request VALUES(3,'m008',41);",
+          "errorCode": 1644
+        }
+      ],
+      "setupSql": "CREATE TABLE issue_request(id INT PRIMARY KEY,mat_num CHAR(4) NOT NULL,qty INT NOT NULL);",
+      "id": "exam-lab-07-r2-q21"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "在预置 issue_request 上创建 AFTER INSERT 触发器，按新申请的 mat_num 将 Stock.amount 扣减 NEW.qty。申请量均为正且小于当前库存，保留其他物资。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "AFTER INSERT",
+        "库存联动"
+      ],
+      "explanation": "利用 NEW 提供物资编号和扣减量。按主键限定本次更新。",
+      "referenceSql": "DELIMITER $$\nCREATE TRIGGER req_deduct AFTER INSERT ON issue_request FOR EACH ROW\nBEGIN\nUPDATE Stock SET amount=amount-NEW.qty WHERE mat_num=NEW.mat_num;\nEND$$\nDELIMITER ;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "INSERT INTO issue_request VALUES(1,'m001',3);SELECT mat_num,mat_name,speci,warehouse,amount,unit FROM Stock ORDER BY mat_num;"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "INSERT INTO issue_request VALUES(2,'m008',4),(3,'m008',2);SELECT mat_num,mat_name,speci,warehouse,amount,unit FROM Stock ORDER BY mat_num;",
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',65,18);"
+        }
+      ],
+      "setupSql": "CREATE TABLE issue_request(id INT PRIMARY KEY,mat_num CHAR(4) NOT NULL,qty INT NOT NULL);",
+      "id": "exam-lab-07-r2-q22"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "在 Stock 上创建 AFTER UPDATE 触发器。当单价 unit 发生变化时，将 mat_num、旧单价和新单价写入预置的 unit_audit，正确处理 NULL 与非 NULL 之间的变化。其它字段变化不记日志。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "AFTER UPDATE",
+        "审计",
+        "NULL 安全"
+      ],
+      "explanation": "用 NULL 安全相等运算符 <=> 识别变化，再从 OLD 和 NEW 写入审计结果。",
+      "referenceSql": "DELIMITER $$\nCREATE TRIGGER log_unit_change AFTER UPDATE ON Stock FOR EACH ROW\nBEGIN\nIF NOT (OLD.unit<=>NEW.unit) THEN INSERT INTO unit_audit VALUES(NEW.mat_num,OLD.unit,NEW.unit); END IF;\nEND$$\nDELIMITER ;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "UPDATE Stock SET unit=46 WHERE mat_num='m001'; UPDATE Stock SET amount=amount+1 WHERE mat_num='m002'; SELECT mat_num,old_unit,new_unit FROM unit_audit ORDER BY mat_num;"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "UPDATE Stock SET unit=NULL WHERE mat_num='m008'; UPDATE Stock SET unit=11 WHERE mat_num='m008'; SELECT mat_num,old_unit,new_unit FROM unit_audit ORDER BY mat_num,old_unit;",
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',65,18);"
+        }
+      ],
+      "setupSql": "CREATE TABLE unit_audit(mat_num CHAR(4),old_unit DECIMAL(18,2),new_unit DECIMAL(18,2));",
+      "id": "exam-lab-07-r2-q23"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "为预置 dispatch_ticket 创建 AFTER DELETE 触发器。删除调拨工单时，将预置 dispatch_line 中相同 ticket_id 的所有明细同步删除，保留其他工单的明细。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "AFTER DELETE",
+        "关联清理"
+      ],
+      "explanation": "DELETE 触发器读取 OLD.ticket_id，供明细表删除条件使用。",
+      "referenceSql": "DELIMITER $$\nCREATE TRIGGER clean_dispatch_lines AFTER DELETE ON dispatch_ticket FOR EACH ROW\nBEGIN\nDELETE FROM dispatch_line WHERE ticket_id=OLD.ticket_id;\nEND$$\nDELIMITER ;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "DELETE FROM dispatch_ticket WHERE ticket_id=1; SELECT ticket_id,line_no FROM dispatch_line ORDER BY ticket_id,line_no;"
+        },
+        {
+          "kind": "state_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "DELETE FROM dispatch_ticket WHERE ticket_id IN (1,3); SELECT ticket_id,line_no FROM dispatch_line ORDER BY ticket_id,line_no;",
+          "variantSql": "INSERT INTO dispatch_ticket VALUES(3); INSERT INTO dispatch_line VALUES(3,1),(3,2);"
+        }
+      ],
+      "setupSql": "CREATE TABLE dispatch_ticket(ticket_id INT PRIMARY KEY); CREATE TABLE dispatch_line(ticket_id INT,line_no INT,PRIMARY KEY(ticket_id,line_no)); INSERT INTO dispatch_ticket VALUES(1),(2); INSERT INTO dispatch_line VALUES(1,1),(1,2),(2,1);",
+      "id": "exam-lab-07-r2-q24"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "为预置 outage_window 添加用户定义完整性规则。恢复时间 restore_at 如已填写，必须严格晚于断电开始时间 opened_at。未恢复时允许 NULL，保留已有数据。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "用户定义完整性",
+        "跨列 CHECK"
+      ],
+      "explanation": "跨列条件用表级 CHECK。显式为未恢复状态保留 NULL 分支。",
+      "referenceSql": "ALTER TABLE outage_window ADD CHECK(restore_at IS NULL OR restore_at>opened_at);",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "state_check",
+          "points": 5,
+          "label": "核对对象与数据状态",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT CONSTRAINT_TYPE FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='outage_window' AND CONSTRAINT_TYPE='CHECK';"
+        },
+        {
+          "kind": "negative_check",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT id,opened_at,restore_at FROM outage_window ORDER BY id;",
+          "variantSql": "INSERT INTO outage_window VALUES(2,'2026-11-24 06:00:00','2026-11-24 07:00:00');",
+          "positiveSql": "INSERT INTO outage_window VALUES(3,'2026-11-24 08:00:00',NULL);",
+          "negativeSql": "INSERT INTO outage_window VALUES(4,'2026-11-24 08:00:00','2026-11-24 08:00:00');",
+          "errorCode": 3819
+        }
+      ],
+      "setupSql": "CREATE TABLE outage_window(id INT PRIMARY KEY,opened_at DATETIME NOT NULL,restore_at DATETIME); INSERT INTO outage_window VALUES(1,'2026-11-24 05:00:00',NULL);",
+      "id": "exam-lab-07-r2-q25"
+    }
+  ],
+  "revision": 2
+}

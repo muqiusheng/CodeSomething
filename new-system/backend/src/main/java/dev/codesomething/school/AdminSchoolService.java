@@ -45,14 +45,15 @@ public class AdminSchoolService {
         return result;
     }
 
-    private static Progress progress(SchoolCourseCatalog.Course course, SchoolCourseCatalog.LabOutline outline,
+    private Progress progress(SchoolCourseCatalog.Course course, SchoolCourseCatalog.LabOutline outline,
                                      SchoolCourseCatalog.Lab lab, SchoolDraftStore.Draft work) {
         int required=0,completed=0;
+        boolean grading=catalog.hasLabChecks(course,lab);
         for(var question:lab.questions()) {
             if(question.optional()) continue;
             required++;
             var execution=work.executions().get(question.id());
-            if(execution!=null && "ok".equals(execution.result().status()) && execution.sql().equals(work.drafts().get(question.id()))) completed++;
+            if(execution!=null && execution.completed(grading) && execution.sql().equals(work.drafts().get(question.id()))) completed++;
         }
         return new Progress(course.id(),outline.id(),outline.title(),completed,required);
     }

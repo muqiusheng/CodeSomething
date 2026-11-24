@@ -1,0 +1,542 @@
+{
+  "id": "exam-lab-07",
+  "title": "实验七专项卷 · 触发器、完整性约束与事务回滚",
+  "group": "specialty",
+  "labId": "lab-07-triggers",
+  "questions": [
+    {
+      "id": "exam-lab-07-r3-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "AFTER UPDATE 中比较更新前后的 Grade，应该用什么？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "options": {
+        "A": "NEW.Grade 与 current.Grade",
+        "B": "pre.Grade 与 post.Grade",
+        "C": "OLD.Grade 与 NEW.Grade",
+        "D": "OLD.Grade 与 OLD.Cno"
+      },
+      "answer": "C",
+      "explanation": "更新触发器同时具有 OLD 与 NEW 两套行镜像。"
+    },
+    {
+      "id": "exam-lab-07-r3-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "DELETE 触发器访问被删掉的学号使用什么？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "options": {
+        "A": "DELETED.Sno",
+        "B": "OLD.Sno",
+        "C": "NEW.Sno",
+        "D": "ROW.Sno"
+      },
+      "answer": "B",
+      "explanation": "删除只存在旧行镜像。"
+    },
+    {
+      "id": "exam-lab-07-r3-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "用 InnoDB 记录改分审计后回滚改分，审计行怎样？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "事务"
+      ],
+      "options": {
+        "A": "只有审计行回滚，成绩会提交",
+        "B": "需先 DROP TRIGGER 才可回滚",
+        "C": "同事务内一并回滚",
+        "D": "永久保留"
+      },
+      "answer": "C",
+      "explanation": "触发器 DML 与触发语句在同一事务生命周期中。"
+    },
+    {
+      "id": "exam-lab-07-r3-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "为保证成绩在 0–100，且简单静态范围需覆盖直接 UPDATE，最简通用规则？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "约束"
+      ],
+      "options": {
+        "A": "给 Grade 增加 CHECK 范围规则",
+        "B": "只加 AFTER INSERT 触发器",
+        "C": "给 Grade 建普通索引",
+        "D": "把 Grade 设为外键"
+      },
+      "answer": "A",
+      "explanation": "CHECK 在写入行时验证常规范围，无需拆分插入和更新。"
+    },
+    {
+      "id": "exam-lab-07-r3-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "sc 触发器中对正在被外层语句修改的 sc 执行 UPDATE 会发生什么？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "触发限制"
+      ],
+      "options": {
+        "A": "自动递归，直到没有匹配行",
+        "B": "更改隐式移至提交之后",
+        "C": "只更新第一条行",
+        "D": "报目标表不能在此触发器中再次修改"
+      },
+      "answer": "D",
+      "explanation": "MySQL 禁止触发器再次修改当前语句正在使用的表。"
+    },
+    {
+      "kind": "choice",
+      "points": 2,
+      "prompt": "写领料申请前发现请求数量超过实际库存，需要原写入直接失败。最适合哪项？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "BEFORE INSERT"
+      ],
+      "explanation": "在写入前检查 NEW 并用 SIGNAL 让原语句失败。",
+      "options": {
+        "A": "建立普通非唯一索引",
+        "B": "BEFORE INSERT 中 SIGNAL",
+        "C": "AFTER DELETE 中返回常量",
+        "D": "CREATE VIEW 后提交事务"
+      },
+      "answer": "B",
+      "id": "exam-lab-07-r3-q06"
+    },
+    {
+      "id": "exam-lab-07-r3-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "希望 INSERT 时修正 NEW.Grade，应在哪个时间点赋值？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "options": {
+        "A": "AFTER DELETE",
+        "B": "BEFORE DELETE",
+        "C": "BEFORE INSERT",
+        "D": "AFTER INSERT"
+      },
+      "answer": "C",
+      "explanation": "BEFORE 可赋给 NEW 允许的列，AFTER 行已写入。"
+    },
+    {
+      "id": "exam-lab-07-r3-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "一条 UPDATE 实际处理五行，行级触发器如何运行？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "触发时机"
+      ],
+      "options": {
+        "A": "只对最后一行触发",
+        "B": "对处理的行逐行触发",
+        "C": "每语句只触发一次",
+        "D": "事务提交时才触发一次"
+      },
+      "answer": "B",
+      "explanation": "FOR EACH ROW 指明按行执行。"
+    },
+    {
+      "id": "exam-lab-07-r3-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "核对触发器绑定表、事件和 BEFORE/AFTER，从哪看？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "元数据"
+      ],
+      "options": {
+        "A": "SHOW TRIGGERS",
+        "B": "SHOW PROCEDURE STATUS",
+        "C": "SHOW OPEN TABLES",
+        "D": "SHOW PROCESSLIST"
+      },
+      "answer": "A",
+      "explanation": "SHOW TRIGGERS 提供事件及表等元数据。"
+    },
+    {
+      "id": "exam-lab-07-r3-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "两条成绩相同而学生不同，可以同时存在的直接原因？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "约束"
+      ],
+      "options": {
+        "A": "Grade 是唯一主键",
+        "B": "同一 Cno 不允许两名学生",
+        "C": "触发器必定重写第二个 Grade",
+        "D": "sc 检查的是 Sno/Cno 组合唯一"
+      },
+      "answer": "D",
+      "explanation": "主键未包含 Grade，成绩可重复。"
+    },
+    {
+      "id": "exam-lab-07-r3-q11",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "INSERT 触发器可以读取 OLD.Cno。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "answer": "false",
+      "explanation": "插入没有旧行，只能读取 NEW。"
+    },
+    {
+      "id": "exam-lab-07-r3-q12",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "对于常见字段，BEFORE UPDATE 中可以 SET NEW.Grade。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "answer": "true",
+      "explanation": "BEFORE 阶段可修改即将写入的 NEW 列值。"
+    },
+    {
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "Out_stock 的 AFTER DELETE 触发器可以用 NEW.mat_num 读取已被删除的物资号。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "触发事件"
+      ],
+      "explanation": "DELETE 只有 OLD 行镜像，物资号应从 OLD.mat_num 读取。",
+      "answer": "false",
+      "id": "exam-lab-07-r3-q13"
+    },
+    {
+      "id": "exam-lab-07-r3-q14",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "触发器中允许执行 COMMIT，单独提交审计行。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "事务"
+      ],
+      "answer": "false",
+      "explanation": "MySQL 触发器不能显式提交事务。"
+    },
+    {
+      "id": "exam-lab-07-r3-q15",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "SIGNAL SQLSTATE '45000' 可以让非法操作失败。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "SIGNAL"
+      ],
+      "answer": "true",
+      "explanation": "它是在存储程序中报告用户自定义异常的方式。"
+    },
+    {
+      "id": "exam-lab-07-r3-q16",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "在插入成绩前执行处理。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "触发时机"
+      ],
+      "template": "CREATE TRIGGER grade_gate {{1}} ON registration {{2}} SET NEW.Grade=COALESCE(NEW.Grade,0);",
+      "blanks": [
+        [
+          "BEFORE INSERT"
+        ],
+        [
+          "FOR EACH ROW"
+        ]
+      ],
+      "explanation": "BEFORE INSERT 可补齐 NEW 值，每条新行触发。"
+    },
+    {
+      "id": "exam-lab-07-r3-q17",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全触发器中的拒绝语句。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "SIGNAL"
+      ],
+      "template": "{{1}} '45000' SET {{2}}='成绩未达要求';",
+      "blanks": [
+        [
+          "SIGNAL SQLSTATE",
+          "SIGNAL SQLSTATE VALUE"
+        ],
+        [
+          "MESSAGE_TEXT"
+        ]
+      ],
+      "explanation": "SQLSTATE 45000 配合 MESSAGE_TEXT 返回业务诊断。"
+    },
+    {
+      "kind": "blank",
+      "points": 4,
+      "prompt": "在 Stock 的更新触发器中，补全 NULL 安全比较运算符，以识别单价从 NULL 变为数值或从数值变为 NULL。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "AFTER UPDATE",
+        "空值比较"
+      ],
+      "explanation": "NULL 安全比较在两边均为 NULL 时返回真。",
+      "template": "IF NOT (OLD.unit {{1}} NEW.unit) THEN\n  SET @price_changed = TRUE;\nEND IF;",
+      "blanks": [
+        [
+          "<=>"
+        ]
+      ],
+      "id": "exam-lab-07-r3-q18"
+    },
+    {
+      "id": "exam-lab-07-r3-q19",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全比较符，确保两个 NULL 视为相同。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "NULL"
+      ],
+      "template": "IF NOT (OLD.Grade {{1}} NEW.Grade) THEN SET @changed=1; END IF;",
+      "blanks": [
+        [
+          "<=>"
+        ]
+      ],
+      "explanation": "NULL 安全相等避免 UNKNOWN 破坏条件判断。"
+    },
+    {
+      "id": "exam-lab-07-r3-q20",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "在删除后写入旧学号、课号。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "template": "INSERT INTO delete_audit(TraineeNo,ModuleNo) VALUES ({{1}}, {{2}});",
+      "blanks": [
+        [
+          "OLD.TraineeNo"
+        ],
+        [
+          "OLD.ModuleNo"
+        ]
+      ],
+      "explanation": "DELETE 事件可读 OLD 的两列。"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "在 Out_stock 上创建 BEFORE INSERT 触发器。新登记的领取量超过该物资在 Stock 中的库存时，用 SQLSTATE 45000 拒绝。刚好等于库存时允许登记。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |\n\n### 涉及数据表：Out_stock（工程领料记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | FK → Salvaging.prj_num; PRIMARY KEY（第 1 列） | 工程编号 |\n| `mat_num` | CHAR(4) | FK → Stock.mat_num; PRIMARY KEY（第 2 列） | 物资编号 |\n| `amount` | INT | NOT NULL; CHECK (amount >= 0) | 数量 |\n| `get_date` | DATETIME | NOT NULL; DEFAULT CURRENT_TIMESTAMP | 领料时间 |\n| `department` | VARCHAR(20) | NOT NULL | 领料部门 |\n\n**数据预览（前 2 行）**\n| prj_num | mat_num | amount | get_date | department |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | m001 | 4 | 2011-03-01 00:00:00 | 工程 1 部 |\n| 20110001 | m002 | 3 | 2011-03-02 00:00:00 | 工程 1 部 |",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "BEFORE INSERT",
+        "SIGNAL"
+      ],
+      "explanation": "BEFORE INSERT 可在行写入前依据库存拒绝不合规的记录。",
+      "referenceSql": "DELIMITER $$\nCREATE TRIGGER out_stock_guard BEFORE INSERT ON Out_stock FOR EACH ROW BEGIN IF NEW.amount>(SELECT amount FROM Stock WHERE mat_num=NEW.mat_num) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='领取量超过库存'; END IF; END$$\nDELIMITER ;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "SQL 脚本完整执行",
+          "points": 2
+        },
+        {
+          "kind": "post_query",
+          "label": "基础数据与对象状态",
+          "points": 5,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT ACTION_TIMING,EVENT_MANIPULATION FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=DATABASE() AND LOWER(EVENT_OBJECT_TABLE)='out_stock'; SELECT prj_num,mat_num,amount,get_date,department FROM Out_stock ORDER BY prj_num,mat_num;"
+        },
+        {
+          "kind": "negative_check",
+          "label": "变式数据与约束边界",
+          "points": 3,
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES('m090','绝缘胶带','XD-1','供电局 1# 仓库',60,18.50);",
+          "positiveSql": "INSERT INTO Out_stock VALUES('20110005','m090',60,'2011-03-08','工程 2 部');",
+          "negativeSql": "INSERT INTO Out_stock VALUES('20110003','m090',61,'2011-03-08','工程 2 部');",
+          "errorCodes": [
+            1644
+          ],
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT ACTION_TIMING,EVENT_MANIPULATION FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=DATABASE() AND LOWER(EVENT_OBJECT_TABLE)='out_stock'; SELECT prj_num,mat_num,amount,get_date,department FROM Out_stock ORDER BY prj_num,mat_num;"
+        }
+      ],
+      "id": "exam-lab-07-r3-q21"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "创建 Out_stock 的 AFTER INSERT 触发器，按新登记的物资从 Stock 扣减相应领取量。测试领取量为正且小于库存。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |\n\n### 涉及数据表：Out_stock（工程领料记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | FK → Salvaging.prj_num; PRIMARY KEY（第 1 列） | 工程编号 |\n| `mat_num` | CHAR(4) | FK → Stock.mat_num; PRIMARY KEY（第 2 列） | 物资编号 |\n| `amount` | INT | NOT NULL; CHECK (amount >= 0) | 数量 |\n| `get_date` | DATETIME | NOT NULL; DEFAULT CURRENT_TIMESTAMP | 领料时间 |\n| `department` | VARCHAR(20) | NOT NULL | 领料部门 |\n\n**数据预览（前 2 行）**\n| prj_num | mat_num | amount | get_date | department |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | m001 | 4 | 2011-03-01 00:00:00 | 工程 1 部 |\n| 20110001 | m002 | 3 | 2011-03-02 00:00:00 | 工程 1 部 |",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "AFTER INSERT",
+        "NEW"
+      ],
+      "explanation": "NEW 提供实际写入行的物资编号和领料数量。",
+      "referenceSql": "CREATE TRIGGER out_stock_deduct AFTER INSERT ON Out_stock FOR EACH ROW UPDATE Stock SET amount=amount-NEW.amount WHERE mat_num=NEW.mat_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "SQL 脚本完整执行",
+          "points": 2
+        },
+        {
+          "kind": "post_query",
+          "label": "基础数据与对象状态",
+          "points": 5,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "INSERT INTO Out_stock VALUES('20110005','m002',8,'2011-03-08','工程 2 部'); SELECT mat_num,mat_name,speci,warehouse,amount,unit FROM Stock ORDER BY mat_num; SELECT ACTION_TIMING,EVENT_MANIPULATION FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=DATABASE() AND LOWER(EVENT_OBJECT_TABLE)='out_stock';"
+        },
+        {
+          "kind": "post_query",
+          "label": "变式数据校验",
+          "points": 3,
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES('m090','绝缘胶带','XD-1','供电局 1# 仓库',60,18.50);",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "INSERT INTO Out_stock VALUES('20110005','m090',17,'2011-03-08','工程 2 部'); SELECT mat_num,mat_name,speci,warehouse,amount,unit FROM Stock ORDER BY mat_num; SELECT ACTION_TIMING,EVENT_MANIPULATION FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=DATABASE() AND LOWER(EVENT_OBJECT_TABLE)='out_stock';"
+        }
+      ],
+      "id": "exam-lab-07-r3-q22"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "补齐工程费用维护规则：Out_stock 的领取量改变后，将对应工程的最新领料费用写入 Prj_cost。费用为该工程各领料行 amount × Stock.unit 之和，缺失费用按 0 计。没有费用行时插入，已有费用行时更新。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |\n\n### 涉及数据表：Out_stock（工程领料记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | FK → Salvaging.prj_num; PRIMARY KEY（第 1 列） | 工程编号 |\n| `mat_num` | CHAR(4) | FK → Stock.mat_num; PRIMARY KEY（第 2 列） | 物资编号 |\n| `amount` | INT | NOT NULL; CHECK (amount >= 0) | 数量 |\n| `get_date` | DATETIME | NOT NULL; DEFAULT CURRENT_TIMESTAMP | 领料时间 |\n| `department` | VARCHAR(20) | NOT NULL | 领料部门 |\n\n**数据预览（前 2 行）**\n| prj_num | mat_num | amount | get_date | department |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | m001 | 4 | 2011-03-01 00:00:00 | 工程 1 部 |\n| 20110001 | m002 | 3 | 2011-03-02 00:00:00 | 工程 1 部 |\n\n### 涉及数据表：Prj_cost（工程领料费用表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | PRIMARY KEY | 工程编号 |\n| `cost` | DECIMAL(18,2) | NOT NULL | 领料总费用（元） |\n\n**数据预览（前 1 行）**\n| prj_num | cost |\n| :--- | :--- |\n| 20110004 | 505.50 |",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "AFTER UPDATE",
+        "OLD 与 NEW"
+      ],
+      "explanation": "用 OLD、NEW 识别数量变化，基于同一工程的全部明细重算费用。",
+      "referenceSql": "DELIMITER $$\nCREATE TRIGGER refresh_prj_cost AFTER UPDATE ON Out_stock FOR EACH ROW\nBEGIN\n IF NOT (OLD.amount <=> NEW.amount) THEN\n  INSERT INTO Prj_cost(prj_num,cost) SELECT NEW.prj_num,COALESCE(SUM(o.amount*s.unit),0) FROM Out_stock o JOIN Stock s USING(mat_num) WHERE o.prj_num=NEW.prj_num ON DUPLICATE KEY UPDATE cost=COALESCE((SELECT SUM(o.amount*s.unit) FROM Out_stock o JOIN Stock s USING(mat_num) WHERE o.prj_num=NEW.prj_num),0);\n END IF;\nEND$$\nDELIMITER ;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "SQL 脚本完整执行",
+          "points": 2
+        },
+        {
+          "kind": "post_query",
+          "label": "基础数据与对象状态",
+          "points": 5,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "UPDATE Out_stock SET amount=7 WHERE prj_num='20110001' AND mat_num='m001'; UPDATE Out_stock SET amount=amount WHERE prj_num='20110003'; SELECT * FROM Prj_cost ORDER BY prj_num;"
+        },
+        {
+          "kind": "post_query",
+          "label": "变式数据校验",
+          "points": 3,
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES('m090','绝缘胶带','XD-1','供电局 1# 仓库',60,18.50); INSERT INTO Out_stock VALUES('20110002','m090',9,'2011-03-08','工程 2 部');",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "UPDATE Out_stock SET amount=11 WHERE prj_num='20110002' AND mat_num='m090'; UPDATE Out_stock SET amount=1 WHERE prj_num='20110004' AND mat_num='m006'; SELECT * FROM Prj_cost ORDER BY prj_num;"
+        }
+      ],
+      "id": "exam-lab-07-r3-q23"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "创建 Salvaging 的 AFTER DELETE 触发器。删除一个已结算且没有领料记录的工程时，从 Prj_cost 清理该工程的费用行，保留其他项目的费用。\n\n### 涉及数据表：Salvaging（电力抢修工程表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | PRIMARY KEY | 工程编号 |\n| `prj_name` | VARCHAR(50) | NOT NULL | 工程名称 |\n| `start_date` | DATETIME | NOT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 开始日期 |\n| `end_date` | DATETIME | NULL; DEFAULT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 结束日期 |\n| `prj_status` | BIT(1) | NOT NULL; DEFAULT b'0' | 工程状态（0 为未结算，1 为已结算） |\n\n**数据预览（前 2 行）**\n| prj_num | prj_name | start_date | end_date | prj_status |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | 南桥站配电抢修 | 2011-03-01 00:00:00 | 2011-03-04 00:00:00 | 1 |\n| 20110002 | 海湾站电缆抢修 | 2011-03-02 00:00:00 | 2011-03-08 00:00:00 | 0 |\n\n### 涉及数据表：Prj_cost（工程领料费用表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | PRIMARY KEY | 工程编号 |\n| `cost` | DECIMAL(18,2) | NOT NULL | 领料总费用（元） |\n\n**数据预览（前 2 行）**\n| prj_num | cost |\n| :--- | :--- |\n| 20110004 | 505.50 |\n| 20110005 | 0.00 |",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "AFTER DELETE",
+        "OLD"
+      ],
+      "explanation": "删除后的行镜像通过 OLD 访问。",
+      "referenceSql": "CREATE TRIGGER clear_prj_cost AFTER DELETE ON Salvaging FOR EACH ROW DELETE FROM Prj_cost WHERE prj_num=OLD.prj_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "SQL 脚本完整执行",
+          "points": 2
+        },
+        {
+          "kind": "post_query",
+          "label": "基础数据与对象状态",
+          "points": 5,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "DELETE FROM Salvaging WHERE prj_num='20110005'; SELECT * FROM Prj_cost ORDER BY prj_num; SELECT ACTION_TIMING,EVENT_MANIPULATION FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=DATABASE() AND LOWER(EVENT_OBJECT_TABLE)='salvaging';"
+        },
+        {
+          "kind": "post_query",
+          "label": "变式数据校验",
+          "points": 3,
+          "variantSql": "INSERT INTO Salvaging VALUES('20119990','备用线路抢修','2011-03-07',NULL,b'0'); INSERT INTO Prj_cost VALUES('20119990',15.25);",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "DELETE FROM Salvaging WHERE prj_num='20119990'; SELECT * FROM Prj_cost ORDER BY prj_num; SELECT ACTION_TIMING,EVENT_MANIPULATION FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=DATABASE() AND LOWER(EVENT_OBJECT_TABLE)='salvaging';"
+        }
+      ],
+      "id": "exam-lab-07-r3-q24",
+      "setupSql": "INSERT INTO Prj_cost VALUES('20110005',0);"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "Salvaging 的日期检查已移除。为它添加用户定义完整性约束：end_date 可空，有值时须严格晚于 start_date。保留既有工程。\n\n### 涉及数据表：Salvaging（电力抢修工程表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | PRIMARY KEY | 工程编号 |\n| `prj_name` | VARCHAR(50) | NOT NULL | 工程名称 |\n| `start_date` | DATETIME | NOT NULL | 开始日期 |\n| `end_date` | DATETIME | NULL; DEFAULT NULL | 结束日期 |\n| `prj_status` | BIT(1) | NOT NULL; DEFAULT b'0' | 工程状态（0 为未结算，1 为已结算） |\n\n**数据预览（前 2 行）**\n| prj_num | prj_name | start_date | end_date | prj_status |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | 南桥站配电抢修 | 2011-03-01 00:00:00 | 2011-03-04 00:00:00 | 1 |\n| 20110002 | 海湾站电缆抢修 | 2011-03-02 00:00:00 | 2011-03-08 00:00:00 | 0 |",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "用户定义完整性",
+        "CHECK"
+      ],
+      "explanation": "严格大于排除同一时刻，NULL 记录仍表示尚未结束。",
+      "referenceSql": "ALTER TABLE Salvaging ADD CHECK(end_date IS NULL OR end_date>start_date);",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "SQL 脚本完整执行",
+          "points": 2
+        },
+        {
+          "kind": "post_query",
+          "label": "基础数据与对象状态",
+          "points": 5,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT prj_num,prj_name,start_date,end_date,prj_status+0 AS prj_status FROM Salvaging ORDER BY prj_num;"
+        },
+        {
+          "kind": "negative_check",
+          "label": "变式数据与约束边界",
+          "points": 3,
+          "variantSql": "INSERT INTO Salvaging VALUES('20119990','备用线路抢修','2011-03-07',NULL,b'0');",
+          "positiveSql": "INSERT INTO Salvaging VALUES('20119991','未完工工程','2011-03-09',NULL,b'0');",
+          "negativeSql": "INSERT INTO Salvaging VALUES('20119992','零时长工程','2011-03-09','2011-03-09',b'1');",
+          "errorCodes": [
+            3819
+          ],
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT prj_num,prj_name,start_date,end_date,prj_status+0 AS prj_status FROM Salvaging ORDER BY prj_num;"
+        }
+      ],
+      "id": "exam-lab-07-r3-q25",
+      "setupSql": "ALTER TABLE Salvaging DROP CHECK chk_salvaging_dates;"
+    }
+  ],
+  "revision": 3
+}

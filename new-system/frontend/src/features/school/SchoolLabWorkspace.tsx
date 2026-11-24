@@ -3,15 +3,17 @@ import {refreshLearning} from '../../api/learning-api';
 import {PageSkeleton} from '../../components/shared/LoadingState';
 import {sessionState} from '../../api/browser-state.mjs';
 import {useCallback, useEffect, useRef, useState} from 'react';
-import {ArrowLeft, Check, ChevronRight, Database, FileText, ListTree, Play, RotateCcw, Save, TextQuote} from 'lucide-react';
+import {ArrowLeft, Check, ChevronDown, ChevronRight, Database, FileText, Play, RotateCcw, Save, TextQuote} from 'lucide-react';
 import {Link, useParams} from 'react-router-dom';
 import {CodeEditor, type CodeEditorHandle} from '../../components/code/CodeEditor';
 import {Modal} from '../../components/ui/modal';
-import {Tabs, TabsContent, TabsList, TabsTrigger} from '../../components/ui/tabs';
 import {ReportExportModal} from './ReportExportModal';
+import {LabTablePreview} from './LabTablePreview';
 import {SchoolOriginalMaterials} from './SchoolOriginalMaterials';
 import {WorkbenchNavigator} from './WorkbenchNavigator';
 import {WorkbenchResultGrid} from './WorkbenchResultGrid';
+import {ItemFeedback, QuestionText} from './exams/ExamShared';
+import {sqlErrorLine} from './exams/exam-state.mjs';
 import {isConnectionTask} from './source-tables.mjs';
 import {errorMessage, labUrl, schoolRequest, type LabDetails, type RunResult, type Work} from './school-api';
 import '../../styles/school.css';
@@ -41,9 +43,10 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
   const {lab, course, outline} = details;
   const [work, setWork] = useState(details.work);
   const [drafts, setDrafts] = useState(() => recover(url, details.work));
-  const [selected, setSelected] = useState(lab.questions.find(question => details.work.executions[question.id]?.result.status !== 'ok')?.id || lab.questions[0].id);
+  const [selected, setSelected] = useState(lab.questions.find(question => (details.grading ? details.work.executions[question.id]?.grade?.status !== 'correct' : details.work.executions[question.id]?.result.status !== 'ok'))?.id || lab.questions[0].id);
   const [busy, setBusy] = useState('');
   const active = useRef(false);
+  const [resetFeedback, setResetFeedback] = useState<string>();
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [lengthError, setLengthError] = useState(false);
@@ -59,9 +62,7 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
   const editor = useRef<CodeEditorHandle>(null);
   const [report, setReport] = useState(false);
   const [reset, setReset] = useState(false);
-  const [toolsOpen,setToolsOpen] = useState(false);
-  const [wide] = useState(() => matchMedia('(min-width:821px)').matches);
-  const [inspectorOpen, setInspectorOpen] = useState(() => matchMedia('(min-width:1200px)').matches);
+  const [objectsOpen, setObjectsOpen] = useState(false);
   const question = lab.questions.find(item => item.id === selected)!;
   const value = drafts[selected] ?? '';
   const mysql = course.engine === 'mysql';
@@ -72,20 +73,20 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
     return execution?.sql === drafts[id] ? execution?.result : undefined;
   };
   const preview = selectionRun?.questionId === selected && selectionRun.sql === value ? selectionRun.result : undefined;
-  const result = preview ?? resultFor(selected);
+  const gradeFor = (id: string) => resultFor(id) ? work.executions[id]?.grade : undefined;
+  const passed = (id: string) => details.grading ? gradeFor(id)?.status === 'correct' : resultFor(id)?.status === 'ok';
+  const grade = !preview && resetFeedback !== selected ? gradeFor(selected) : undefined;
+  const result = preview ?? (!details.grading ? resultFor(selected) : undefined);
   const required = lab.questions.filter(item => !item.optional);
-  const executed = required.filter(item => resultFor(item.id)?.status === 'ok').length;
+  const executed = required.filter(item => passed(item.id)).length;
   const complete = mysql && required.length > 0 && executed === required.length;
   const percent = required.length ? Math.floor(executed * 100 / required.length) : 0;
   const labIndex = course.labs.findIndex(item => item.id === outline.id);
   const nextLab = labIndex >= 0 ? course.labs[labIndex + 1] : undefined;
-  const completion = useRef<HTMLDivElement>(null);
-  const wasComplete = useRef(complete);
-
+  const feedback = useRef<HTMLElement>(null);
   useEffect(() => {
-    if (complete && !wasComplete.current) completion.current?.scrollIntoView({block: 'nearest'});
-    wasComplete.current = complete;
-  }, [complete]);
+    if (feedback.current) feedback.current.scrollTop = 0;
+  }, [selected, busy, resultRevision]);
 
   useEffect(() => {
     if (!lengthError) return;
@@ -144,18 +145,20 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
     });
   }
 
-  function run(all: boolean) {
-    const selection = all ? '' : editor.current?.getSelectedText() ?? '';
+  function run(all: boolean, selection = '', trial = false) {
     const useSelection = Boolean(selection.trim());
-    void act(all ? '正在运行全部作答…' : useSelection ? '正在运行 SQL 选区…' : '正在运行当前题…', async () => {
+    const previewSql = useSelection ? selection : trial ? value : null;
+    void act(previewSql ? '试运行中…' : details.grading ? '判分中…' : '正在运行 SQL…', async () => {
+      setResetFeedback(undefined);
       setSelectionRun(undefined);
-      const response = await schoolRequest<{work: Work; results: Record<string, RunResult>}>(url + '/run',
-        {...payload, questionId: all ? null : selected, selection: useSelection ? selection : null, database});
+      const response = await schoolRequest<{work: Work; results: Record<string, RunResult>}>(url + (details.grading ? '/grade' : '/run'),
+        {...payload, questionId: all ? null : selected, selection: previewSql, database,
+          offset: useSelection ? (editor.current?.getSelectionStartLine() ?? 1)-1 : 0});
       const lastSuccess = Object.values(response.results).reverse().find(result => result.status === 'ok');
-      if (lastSuccess) setDatabase(lastSuccess.database ?? '');
-      setSchemaRevision(value => value + 1);
+      if (!details.grading && lastSuccess) setDatabase(lastSuccess.database ?? '');
+      if (!details.grading) setSchemaRevision(value => value + 1);
       setResultRevision(value => value + 1);
-      if (useSelection) {
+      if (previewSql) {
         setBatch([]);
         const result = response.results[selected];
         if (result) setSelectionRun({questionId: selected, sql: value, result});
@@ -163,6 +166,7 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
       }
       applyWork(response.work);
       refreshLearning('school');
+      if (Object.values(response.results).some(result=>result.status==='unavailable')) setError('隔离 MySQL 不可用，已保留作答，请稍后重试。');
       const ids = lab.questions.filter(item => response.results[item.id]).map(item => item.id);
       setBatch(all ? ids : []);
       if (all) {
@@ -189,6 +193,7 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
     setReset(false);
     void act('正在重置练习库…', async () => {
       const response = await schoolRequest<{message: string}>(url + '/reset', {empty});
+      setDatabase(details.database ?? '');
       setSchemaRevision(value => value + 1);
       setSelectionRun(undefined);
       setNotice(response.message + ' 草稿和历史运行记录已保留。');
@@ -212,121 +217,148 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
     lab.fixtureSql
   );
 
-  return <div className={`page school-workspace ${hasOriginalData && inspectorOpen ? 'workspace-wide' : ''}`}>
-    <Link to="/school" className="back-link"><ArrowLeft size={15} aria-hidden="true"/>{course.title}</Link>
-    <div className="school-lab-heading"><h1>{outline.title}</h1>
+  return <div className="page school-workspace school-practice-workspace">
+    <header className="school-lab-heading">
+      <Link to="/school" className="back-link"><ArrowLeft size={16} aria-hidden="true"/>{course.title}</Link>
+      <h1>{outline.title}</h1>
       {mysql && <span className="badge school-badge">必做 {executed}/{required.length}</span>}
-    </div>
-    <div className={`school-grid ${hasOriginalData && inspectorOpen ? 'has-inspector' : ''}`}>
-      <section className="school-pane school-brief" aria-label="实验资料与数据库对象">
-        <Tabs defaultValue="questions">
-          {mysql && <TabsList className="school-workbench-tabs" aria-label="工作台导航">
-            <TabsTrigger value="questions">实验题目</TabsTrigger>
-            <TabsTrigger value="schema"><ListTree size={14} aria-hidden="true"/>对象浏览 (SCHEMAS)</TabsTrigger>
-          </TabsList>}
-          <TabsContent value="questions">
-        <details open={wide}><summary>实验目的与要求</summary><p className="school-original-text">{lab.originalObjective || lab.objective}</p><p>{lab.requirements}</p></details>
-        <details open={wide} className="school-question-menu">
-          <summary><h2>题目目录</h2>{complete && <span className="badge badge-success school-badge">已通关</span>}</summary>
-          {mysql && required.length > 0 && <div className="school-outline-progress">
-            <progress className="progress progress-success" max={required.length} value={executed} aria-label="必做题进度"/>
-            <span>{percent}%</span>
-          </div>}
-          <ol className="school-questions" aria-label="实验题目">
-          {lab.questions.map(item => {
+    </header>
+    <div className="school-practice-grid">
+      <aside className="school-pane school-brief" aria-label="实验题目">
+        <div className="school-outline-title">
+          <h2>题目目录</h2>
+          {complete && <span className="badge badge-success school-badge">已通关</span>}
+        </div>
+        <details className="school-lab-objective"><summary>实验目的与要求</summary>
+          <p className="school-original-text">{lab.originalObjective || lab.objective}</p><p>{lab.requirements}</p>
+        </details>
+        {mysql && required.length > 0 && <div className="school-outline-progress">
+          <progress className="progress progress-success" max={required.length} value={executed} aria-label="必做题进度"/>
+          <span>{percent}%</span>
+        </div>}
+        <ol className="school-questions" aria-label="实验题目">
+          {lab.questions.map((item, index) => {
             const outcome = resultFor(item.id);
-            const status = outcome?.status === 'ok' ? '已运行' : outcome ? '有运行反馈' : drafts[item.id]?.trim() ? '有草稿' : '待作答';
-            return <li key={item.id}><button aria-current={selected === item.id ? 'step' : undefined}
-              disabled={!!busy} onClick={() => setSelected(item.id)}>
+            const status = passed(item.id) ? (details.grading ? '已通过' : '已运行') : gradeFor(item.id) ? '待订正' : outcome && !details.grading ? '有运行反馈' : drafts[item.id]?.trim() ? '有草稿' : '待作答';
+            return <li key={item.id} data-passed={passed(item.id)}><button aria-current={selected === item.id ? 'step' : undefined}
+              disabled={!!busy} onClick={() => setSelected(item.id)} title={item.title + ' · ' + status}>
+              <span className="school-question-index">{index+1}</span>
               <span>{item.title}{item.optional && <small> · 选做</small>}</span>
-              <span className="school-question-status">{outcome?.status === 'ok' && <Check size={14} aria-hidden="true"/>}{status}</span>
+              {passed(item.id) && <span className="school-question-status"><Check size={14} aria-hidden="true"/><span className="sr-only">{status}</span></span>}
             </button></li>;
           })}
-          </ol>
-        </details>
-          </TabsContent>
-          {mysql && <TabsContent value="schema"><WorkbenchNavigator courseId={course.id} revision={schemaRevision}
-            database={database} onDatabaseChange={setDatabase} busy={!!busy}/></TabsContent>}
-        </Tabs>
+        </ol>
+      </aside>
+      <section className="sql-practice-reference school-pane school-practice-prompt" aria-labelledby="school-question" tabIndex={0}
+        key={selected}>
+        <div className="school-question-header">
+          <h2 id="school-question">{question.title}</h2>
+          {next && <button type="button" className="button secondary" disabled={!!busy} onClick={() => setSelected(next.id)}>
+            下一题<ChevronRight size={15} aria-hidden="true"/>
+          </button>}
+        </div>
+        <p className="school-question-requirement"><QuestionText text={question.requirement}/></p>
+        {(question.hint || mysql && !details.grading) && <details className="school-hint"><summary>考点提示</summary>
+          {question.hint && <p>{question.hint}</p>}
+          {mysql && !details.grading && <p>当前库 {database ? <code>{database}</code> : '未选择数据库'}</p>}
+          {mysql && !details.grading && isConnectionTask(question) && <p>
+            用 <code>SHOW DATABASES;</code> 列出可见数据库。在对象浏览新建或切换数据库，也可运行
+            {' '}<code>CREATE DATABASE student_info;</code>，再用 <code>USE student_info;</code> 选中。
+          </p>}
+        </details>}
+        {details.grading && <LabTablePreview url={url} question={question}/>}
+        {hasOriginalData && <SchoolOriginalMaterials lab={lab} question={question} collapsed={!!details.grading}/>}
       </section>
-      <div className="school-editor-column">
-        <section className="school-pane school-editor-pane" aria-labelledby="school-question">
-          <div className="school-question-header">
-            <h2 id="school-question">{question.title}</h2>
-          </div>
-          <p className="school-question-requirement">{question.requirement}</p>
-          {(question.hint || details.database) && <details className="school-hint"><summary>考点提示</summary>
-            {question.hint && <p>{question.hint}</p>}
-            {mysql && <p>当前库 {database ? <code>{database}</code> : '未选择数据库'}</p>}
-            {mysql && isConnectionTask(question) && <p>
-              用 <code>SHOW DATABASES;</code> 列出可见数据库。在对象浏览新建或切换数据库，也可在这里运行
-              {' '}<code>CREATE DATABASE student_info;</code>，再用 <code>USE student_info;</code> 选中它。
-            </p>}
-          </details>}
-          <div className="school-actions school-tools">
-            {mysql && <button className="btn button primary school-run-current" disabled={!!busy || !value.trim()} onClick={() => run(false)} title="Ctrl+Enter · 优先运行选中 SQL"><Play aria-hidden="true" size={15}/>运行当前题</button>}
-            <button className="btn button secondary" disabled={!!busy} aria-label={dirty ? '保存（有未保存修改）' : '保存'}
-              onClick={() => void act('正在保存…', save)}><Save aria-hidden="true" size={15}/>保存
-              {dirty && <span className="school-dirty-dot" aria-hidden="true"/>}
+      <div className="school-practice-sql">
+        {mysql ? <div className="school-monaco sql-practice-editor" onKeyDownCapture={event => {
+          if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !event.repeat) {
+            event.preventDefault(); event.stopPropagation();
+            if (!busy && value.trim()) run(false, details.grading ? '' : editor.current?.getSelectedText() ?? '');
+          }
+        }}>
+          <CodeEditor path={selected + '.sql'} value={value} onChange={edit} readOnly={!!busy} selectionRef={editor}
+            wordWrap={false} errorLine={grade ? sqlErrorLine(grade) : undefined}/>
+        </div> : <textarea className="textarea school-notes" aria-label="作答草稿" value={value} disabled={!!busy}
+          onChange={event => edit(event.target.value)} maxLength={8192}/>}
+        <div className="school-actions sql-practice-tools">
+          {mysql && <button type="button" className="btn button sql-practice-run" disabled={!!busy || !value.trim()}
+            aria-keyshortcuts="Control+Enter Meta+Enter" onClick={() => run(false)}>
+            <Play aria-hidden="true" size={15}/>{busy === '判分中…' ? busy : details.grading ? '运行并判分' : '运行当前题'}
+            {busy !== '判分中…' && <kbd aria-hidden="true">Ctrl+Enter</kbd>}
+          </button>}
+          {details.grading && <>
+            <button type="button" className="btn button secondary" disabled={!!busy || !value.trim()}
+              onClick={() => run(false, editor.current?.getSelectedText() ?? '', true)}>
+              {busy === '试运行中…' ? busy : '试运行'}
             </button>
-            <button type="button" className="button secondary school-tool-toggle" aria-expanded={toolsOpen}
-              aria-controls="school-extra-tools" onClick={() => setToolsOpen(!toolsOpen)}>更多操作<ChevronRight size={14} aria-hidden="true"/></button>
-            <div id="school-extra-tools" className="school-extra-tools" data-open={toolsOpen}>
-            {mysql && <button className="btn button secondary" disabled={!!busy || !Object.values(drafts).some(text => text.trim())} onClick={() => run(true)}>运行全部</button>}
-            {mysql && <button className="btn button secondary" disabled={!!busy || !value.trim()} onClick={formatSql}>
-              <TextQuote size={15} aria-hidden="true"/>格式化 SQL
-            </button>}
-            {hasOriginalData && (
-              <button
-                type="button"
-                className={`btn button secondary ${inspectorOpen ? 'active' : ''}`}
-                disabled={!!busy}
-                onClick={() => setInspectorOpen(!inspectorOpen)}
-                aria-expanded={inspectorOpen}
-                title={inspectorOpen ? "收起右侧实验数据面板" : "展开右侧实验数据面板"}
-              >
-                <Database aria-hidden="true" size={15}/>
-                <span>实验数据</span>
-              </button>
-            )}
-            {mysql && <button className="btn button secondary" disabled={!!busy} onClick={() => setReset(true)}><RotateCcw aria-hidden="true" size={15}/>重置练习库</button>}
-            {!complete && <button className="btn button secondary" disabled={!!busy} onClick={openReport}>
-              <FileText aria-hidden="true" size={15}/>导出实验报告
-            </button>}
-            </div>
-          </div>
-          {mysql ? <div className="school-monaco" onKeyDownCapture={event => {
-            if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !event.repeat) {
-              event.preventDefault(); event.stopPropagation();
-              if (!busy && value.trim()) run(false);
-            }
+            <button type="button" className="btn button secondary" disabled={!!busy} onClick={() => {
+              setSelectionRun(undefined); setResetFeedback(selected); setError('');
+              setNotice('本题已恢复初始数据，SQL 草稿已保留。');
+              if (feedback.current) feedback.current.scrollTop = 0;
+            }}><RotateCcw aria-hidden="true" size={15}/>重置本题数据</button>
+          </>}
+          <details className="exam-debug-more dropdown dropdown-end" onBlur={event => {
+            if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open=false;
+          }} onKeyDown={event => {
+            if (event.key !== 'Escape' || !event.currentTarget.open) return;
+            event.currentTarget.open=false;
+            event.currentTarget.querySelector('summary')?.focus();
           }}>
-            <CodeEditor path={selected + '.sql'} value={value} onChange={edit} readOnly={!!busy} selectionRef={editor}/>
-          </div> : <textarea className="textarea school-notes" aria-label="作答草稿" value={value} disabled={!!busy}
-            onChange={event => edit(event.target.value)} maxLength={8192}/>}
-          <div className="school-editor-foot">
-            {mysql && <div className="school-snippets">
-              {question.starterSql && <button className="button secondary" disabled={!!busy || !!value.trim()} onClick={() => edit(question.starterSql)}>插入本题模板</button>}
-              <select className="select" aria-label="插入常用 SQL" disabled={!!busy} value="" onChange={event => {
-                if (event.target.value) edit(value + (value && !value.endsWith('\n') ? '\n' : '') + event.target.value);
-              }}><option value="">插入常用 SQL…</option><option value={'SELECT 列名\nFROM 表名\nWHERE 条件;\n'}>SELECT / WHERE</option>
+            <summary className="btn button secondary">更多 <ChevronDown size={14} aria-hidden="true"/></summary>
+            <div className="exam-debug-menu dropdown-content" onClick={event => {
+              if (!(event.target instanceof HTMLButtonElement) || event.target.disabled) return;
+              const menu=event.currentTarget.closest('details');
+              if (menu) {menu.open=false; menu.querySelector('summary')?.focus();}
+            }}>
+              <button type="button" disabled={!!busy} aria-label={dirty ? '保存（有未保存修改）' : '保存'}
+                onClick={() => void act('正在保存…', save)}><Save size={14} aria-hidden="true"/>保存草稿
+                {dirty && <span className="school-dirty-dot" aria-hidden="true"/>}
+              </button>
+              {mysql && <button type="button" disabled={!!busy || !value.trim()} onClick={formatSql}>
+                <TextQuote size={14} aria-hidden="true"/>格式化 SQL
+              </button>}
+              {mysql && question.starterSql && <button type="button" disabled={!!busy || !!value.trim()}
+                onClick={() => edit(question.starterSql)}>插入本题模板</button>}
+              {mysql && <select className="select select-sm" aria-label="插入常用 SQL" disabled={!!busy} value="" onChange={event => {
+                if (!event.target.value) return;
+                edit(value + (value && !value.endsWith('\n') ? '\n' : '') + event.target.value);
+                const menu=event.currentTarget.closest('details');
+                if (menu) {menu.open=false; menu.querySelector('summary')?.focus();}
+              }}>
+                <option value="">插入常用 SQL…</option>
+                <option value={'SELECT 列名\nFROM 表名\nWHERE 条件;\n'}>SELECT / WHERE</option>
                 <option value={'SELECT 分组列, COUNT(*)\nFROM 表名\nGROUP BY 分组列;\n'}>GROUP BY</option>
-                <option value={'DELIMITER $$\nCREATE PROCEDURE 过程名()\nBEGIN\n    SELECT 1;\nEND$$\nDELIMITER ;\n'}>存储过程</option></select>
-            </div>}
-            {next && <button className="button secondary" disabled={!!busy} onClick={() => setSelected(next.id)}>下一题<ChevronRight size={15} aria-hidden="true"/></button>}
-          </div>
-        </section>
-        {(complete || busy || error || notice || result || batch.length > 0) && <section className="school-pane school-results" aria-labelledby="school-results">
-          <h2 id="school-results">{mysql ? '执行结果' : '作答状态'}</h2>
-          {complete && <div className="school-completion" ref={completion}>
-            <span className="school-completion-icon"><Check size={24} aria-hidden="true"/></span>
+                <option value={'DELIMITER $$\nCREATE PROCEDURE 过程名()\nBEGIN\n    SELECT 1;\nEND$$\nDELIMITER ;\n'}>存储过程</option>
+              </select>}
+              {mysql && <button type="button" disabled={!!busy} onClick={() => setObjectsOpen(true)}>
+                <Database size={14} aria-hidden="true"/>浏览课程练习库
+              </button>}
+              {mysql && !details.grading && <>
+                <button type="button" disabled={!!busy || !Object.values(drafts).some(text => text.trim())} onClick={() => run(true)}>运行全部</button>
+                <button type="button" disabled={!!busy} onClick={() => setReset(true)}>重置练习库</button>
+              </>}
+              <button type="button" disabled={!!busy} onClick={openReport}><FileText size={14} aria-hidden="true"/>导出实验报告</button>
+            </div>
+          </details>
+        </div>
+        <section ref={feedback} className="sql-practice-results school-results" aria-labelledby="school-results" tabIndex={0}>
+          <h2 id="school-results">{details.grading && !preview ? '运行与判分结果' : mysql ? '执行结果' : '作答状态'}</h2>
+          {!busy && !notice && !error && !grade && !result && batch.length === 0 &&
+            <p>在编辑器中作答后，这里会显示{details.grading ? '判分与结果。' : '运行或保存状态。'}</p>}
+          {(busy || notice) && <p role="status">{busy || notice}</p>}
+          {error && <p className="school-error-panel school-result-message" role="alert">{error}</p>}
+          {batch.length > 0 && <div className="school-actions" aria-label="批量运行结果">{batch.map(id =>
+            <button className="button secondary" key={id} onClick={() => setSelected(id)} aria-pressed={id === selected} disabled={!!busy}>
+              {lab.questions.find(item => item.id === id)?.title} · {resultFor(id)?.status === 'ok' ? '成功' : resultFor(id) ? '有反馈' : '已编辑'}
+            </button>)}</div>}
+          {preview && <p>试运行结果</p>}
+          {grade && !busy && <ItemFeedback key={selected + ':' + resultRevision} item={grade}/>}
+          {result && <LabResult key={selected + ':' + resultRevision} result={result} database={details.database}/>}
+          {complete && <div className="school-completion">
+            <span className="school-completion-icon"><Check size={20} aria-hidden="true"/></span>
             <div>
-              <h3 role="status">恭喜！你已完成本实验所有必做题目（{executed}/{required.length}）</h3>
-              <p>实验数据与 SQL 作答已完整记录，可直接导出符合学校格式的实验报告。</p>
+              <h3 role="status">已完成全部必做题（{executed}/{required.length}）</h3>
               <div className="school-actions">
-                <button className="btn button primary" disabled={!!busy} onClick={openReport}>
-                  <FileText size={16} aria-hidden="true"/>一键导出实验报告
-                </button>
                 {nextLab && !busy && <Link className="btn button secondary"
                   to={`/school/${encodeURIComponent(course.id)}/${encodeURIComponent(nextLab.id)}`}>
                   进入下一实验<ChevronRight size={16} aria-hidden="true"/>
@@ -334,26 +366,16 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
               </div>
             </div>
           </div>}
-          {(busy || notice) && <p role="status">{busy || notice}</p>}
-          {error && <p className="school-error-panel school-result-message" role="alert">{error}</p>}
-          {batch.length > 0 && <div className="school-actions" aria-label="批量运行结果">{batch.map(id =>
-            <button className="button secondary" key={id} onClick={() => setSelected(id)} aria-pressed={id === selected} disabled={!!busy}>
-              {lab.questions.find(item => item.id === id)?.title} · {resultFor(id)?.status === 'ok' ? '成功' : resultFor(id) ? '有反馈' : '已编辑'}
-            </button>)}</div>}
-          {preview && <p>选区运行结果</p>}
-          {result && <LabResult key={selected + ':' + resultRevision} result={result} database={details.database}/>}
-        </section>}
+        </section>
       </div>
-      {hasOriginalData && inspectorOpen && (
-        <SchoolOriginalMaterials
-          key={selected}
-          lab={lab}
-          question={question}
-          isPanel
-          onClose={() => setInspectorOpen(false)}
-        />
-      )}
     </div>
+    {objectsOpen && <Modal open onOpenChange={setObjectsOpen} title="课程练习库"
+      description="这里的对象独立于每题判分使用的初始数据。" className="school-objects-modal">
+      <WorkbenchNavigator courseId={course.id} revision={schemaRevision}
+        database={database} onDatabaseChange={setDatabase} busy={!!busy}/>
+      {details.grading && <div className="school-actions"><button type="button" className="btn button secondary" disabled={!!busy}
+        onClick={() => {setObjectsOpen(false); setReset(true);}}>管理课程练习库数据</button></div>}
+    </Modal>}
     {lengthError && <div className="toast school-toast"><div className="alert school-error-panel" role="alert">每题最多 8192 字符，请缩短 SQL 后重试。</div></div>}
     {report && <ReportExportModal url={url + '/export'} student={details.student} onClose={() => setReport(false)}/>}
     {reset && <Modal open onOpenChange={open => setReset(open)} title="重置这门课的练习库"

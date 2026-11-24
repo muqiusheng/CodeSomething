@@ -1,0 +1,523 @@
+{
+  "id": "exam-lab-01",
+  "title": "实验一专项卷 · 数据库系统与关系模型",
+  "group": "specialty",
+  "labId": "lab-01-workbench",
+  "questions": [
+    {
+      "id": "exam-lab-01-r3-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "数据库三级模式结构中，保证物理数据独立性的是哪一层映像？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "数据独立性"
+      ],
+      "options": {
+        "A": "外模式／模式映像",
+        "B": "模式／内模式映像",
+        "C": "外模式／内模式映像",
+        "D": "应用程序／外模式映像"
+      },
+      "answer": "B",
+      "explanation": "存储结构改变时，调整模式／内模式映像可保持模式及应用程序稳定。"
+    },
+    {
+      "id": "exam-lab-01-r3-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "选课库中学生与课程的多对多关系如何落地？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "关系模型"
+      ],
+      "options": {
+        "A": "在 student 中放一个 Cno",
+        "B": "在 course 中放一个 Sno",
+        "C": "把学生姓名作为课程主键",
+        "D": "用 sc 记录 Sno 和 Cno 组合"
+      },
+      "answer": "D",
+      "explanation": "sc 每行记录一个关联，两侧均能对应多行。"
+    },
+    {
+      "id": "exam-lab-01-r3-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "课号 001、002 需保留前导零，适合哪个类型？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "字段类型"
+      ],
+      "options": {
+        "A": "FLOAT",
+        "B": "CHAR(3)",
+        "C": "SMALLINT",
+        "D": "DECIMAL(3,0)"
+      },
+      "answer": "B",
+      "explanation": "固定长度字符编码保留前导零，数值列不会保存原数字串格式。"
+    },
+    {
+      "id": "exam-lab-01-r3-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "sc.Cno 外键应引用哪列？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "外键"
+      ],
+      "options": {
+        "A": "course.Cno",
+        "B": "student.Sno",
+        "C": "course.Credit",
+        "D": "sc.Grade"
+      },
+      "answer": "A",
+      "explanation": "外键连接对应的课程身份，Cno 是 course 的主键。"
+    },
+    {
+      "id": "exam-lab-01-r3-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "一个数据库可以为不同用户提供多种数据视图。此类用户视图处于哪一级？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "三级模式"
+      ],
+      "options": {
+        "A": "内模式",
+        "B": "概念模式",
+        "C": "外模式",
+        "D": "物理文件组织"
+      },
+      "answer": "C",
+      "explanation": "外模式描述特定用户或应用所见数据，是概念模式的局部视图。"
+    },
+    {
+      "kind": "choice",
+      "points": 2,
+      "prompt": "在关系模式 R(A,B,C) 中，已知 A → B、B → C，且各属性不可进一步分解。以下哪个属性集是候选键？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "候选键"
+      ],
+      "explanation": "A 的属性闭包为 {A,B,C}，且 A 是最小决定全体属性的属性集。",
+      "options": {
+        "A": "{B}",
+        "B": "{A,B}",
+        "C": "{A}",
+        "D": "{C}"
+      },
+      "answer": "C",
+      "id": "exam-lab-01-r3-q06"
+    },
+    {
+      "id": "exam-lab-01-r3-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "为没有邮编的学生保留未知状态应使用什么？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "空值"
+      ],
+      "options": {
+        "A": "字符串 'NULL'",
+        "B": "字符串 '000000'",
+        "C": "NULL",
+        "D": "0"
+      },
+      "answer": "C",
+      "explanation": "NULL 表示缺失，假邮编与字符串都会成为实际存储值。"
+    },
+    {
+      "id": "exam-lab-01-r3-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "INSERT 显式列名且省略 Sex，使用种子库定义会得到什么？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "默认值"
+      ],
+      "options": {
+        "A": "固定报错",
+        "B": "男",
+        "C": "NULL",
+        "D": "空字符串"
+      },
+      "answer": "B",
+      "explanation": "Sex 的 DEFAULT 为男，省略列触发默认值。"
+    },
+    {
+      "id": "exam-lab-01-r3-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "关系中的属性通常映射为 SQL 的什么？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "关系模型"
+      ],
+      "options": {
+        "A": "行",
+        "B": "库",
+        "C": "事务",
+        "D": "列"
+      },
+      "answer": "D",
+      "explanation": "关系模式的属性定义各列，元组是行。"
+    },
+    {
+      "id": "exam-lab-01-r3-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "函数依赖在 student 当前设计中可由哪个属性唯一确定 Sname？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "关系模型"
+      ],
+      "options": {
+        "A": "Sdept",
+        "B": "Classno",
+        "C": "Sno",
+        "D": "Sex"
+      },
+      "answer": "C",
+      "explanation": "Sno 是主键，每个 Sno 至多映射到一个姓名。"
+    },
+    {
+      "id": "exam-lab-01-r3-q11",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "完全相同的 Sno 和 Cno 可以在 sc 录入两次。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "主键"
+      ],
+      "answer": "false",
+      "explanation": "复合主键拒绝重复组合，即使 Grade 不同。"
+    },
+    {
+      "id": "exam-lab-01-r3-q12",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "sc 的 Cno 是非空外键。它的每一个取值都必须能在被引用的 course.Cno 中找到。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "参照完整性"
+      ],
+      "answer": "true",
+      "explanation": "外键的非空取值必须引用被引用关系中现存的键值。"
+    },
+    {
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "改变数据库的概念模式时，可以通过调整外模式／模式映像使所涉及的外模式保持稳定。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "逻辑数据独立性"
+      ],
+      "explanation": "外模式／模式映像把应用所见的数据结构与概念模式解耦。",
+      "answer": "true",
+      "id": "exam-lab-01-r3-q13"
+    },
+    {
+      "id": "exam-lab-01-r3-q14",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "student 的 Sname 可重名，不能用姓名替代主键。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "关系模型"
+      ],
+      "answer": "true",
+      "explanation": "姓名不是稳定唯一标识，Sno 负责实体完整性。"
+    },
+    {
+      "id": "exam-lab-01-r3-q15",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "按不同顺序写出同一批元组，得到的仍是同一个数学关系。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "关系的性质"
+      ],
+      "answer": "true",
+      "explanation": "关系是元组集合，元组排列顺序不属于关系的定义。"
+    },
+    {
+      "id": "exam-lab-01-r3-q16",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全 SQL 查询语句，对 Stock 投影物资名称和规格两个属性。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "SELECT"
+      ],
+      "template": "{{1}} mat_name,speci FROM Stock;",
+      "blanks": [
+        [
+          "SELECT"
+        ]
+      ],
+      "explanation": "SELECT 从现有表读取指定字段。"
+    },
+    {
+      "id": "exam-lab-01-r3-q17",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全关键字，声明 student 的学号为主键。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "实体完整性"
+      ],
+      "template": "CREATE TABLE student (Sno CHAR(8) {{1}}, Sname VARCHAR(20) NOT NULL);",
+      "blanks": [
+        [
+          "PRIMARY KEY"
+        ]
+      ],
+      "explanation": "主键标识每个元组，要求唯一且非空。"
+    },
+    {
+      "kind": "blank",
+      "points": 4,
+      "prompt": "给库存数量列定义省略字段时使用的默认值 1。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "默认值"
+      ],
+      "explanation": "列缺省值处理未提供该列的插入操作。",
+      "template": "ALTER TABLE Stock ALTER COLUMN amount SET {{1}} 1;",
+      "blanks": [
+        [
+          "DEFAULT"
+        ]
+      ],
+      "id": "exam-lab-01-r3-q18"
+    },
+    {
+      "id": "exam-lab-01-r3-q19",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "为选课关系声明复合主键，列顺序与 seed 一致。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "主键"
+      ],
+      "template": "{{1}} ({{2}})",
+      "blanks": [
+        [
+          "PRIMARY KEY"
+        ],
+        [
+          "TraineeNo, ModuleNo"
+        ]
+      ],
+      "explanation": "键顺序是 TraineeNo 在前、ModuleNo 在后，组合唯一即可表示一次选课。"
+    },
+    {
+      "id": "exam-lab-01-r3-q20",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "在 Out_stock 中添加物资参照完整性约束。补全引用列及被引用的表和列。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "外键引用"
+      ],
+      "template": "ALTER TABLE Out_stock ADD FOREIGN KEY ({{1}}) REFERENCES {{2}};",
+      "blanks": [
+        [
+          "mat_num"
+        ],
+        [
+          "Stock(mat_num)"
+        ]
+      ],
+      "explanation": "外键声明先指定子表列，再写被引用的父表及列。"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "查询 student 中计算机系的学生，返回 Sno、Sname、Sdept，按学号升序。\n\n### 涉及数据表：student（学生表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `Sno` | CHAR(8) | PRIMARY KEY | 学号 |\n| `Sname` | VARCHAR(20) | NOT NULL | 姓名 |\n| `Sex` | CHAR(2) | NOT NULL; DEFAULT '男' | 性别 |\n| `Birth` | DATE | NOT NULL; CHECK (Entrance_date > Birth) | 出生日期 |\n| `Classno` | CHAR(3) | NOT NULL | 班级编号 |\n| `Entrance_date` | DATE | NOT NULL; CHECK (Entrance_date > Birth) | 入学日期 |\n| `Home_addr` | VARCHAR(40) | NULL; DEFAULT NULL | 家庭地址 |\n| `Sdept` | VARCHAR(20) | NOT NULL | 所在系 |\n| `Postcode` | CHAR(6) | NULL; DEFAULT NULL; CHECK ((Postcode is null) or Postcode REGEXP '^[0-9]{6}$') | 邮政编码 |\n\n**数据预览（前 2 行）**\n| Sno | Sname | Sex | Birth | Classno | Entrance_date | Home_addr | Sdept | Postcode |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| 20110001 | 张虹 | 男 | 1992-09-01 | 051 | 2011-09-01 | 南京 | 计算机系 | 200413 |\n| 20110002 | 林红 | 女 | 1991-11-12 | 051 | 2011-09-01 | 北京 | 计算机系 | 100010 |",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "选择与投影"
+      ],
+      "explanation": "WHERE 对元组进行选择，SELECT 指定投影属性。",
+      "referenceSql": "SELECT Sno,Sname,Sdept FROM student WHERE Sdept='计算机系' ORDER BY Sno;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "SQL 脚本完整执行",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "label": "基础数据与对象状态",
+          "points": 5,
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "label": "变式数据校验",
+          "points": 3,
+          "variantSql": "INSERT INTO student(Sno,Sname,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','周新','1993-03-08','051','2011-09-01','计算机系');",
+          "orderMatters": true,
+          "checkColumnNames": true
+        }
+      ],
+      "id": "exam-lab-01-r3-q21"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "建立缺失的 Prj_cost。定义 prj_num CHAR(8) 为主键，cost DECIMAL(18,2) 非空且默认 0。无需录入数据。\n\n### 涉及数据表：Prj_cost（工程领料费用表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | PRIMARY KEY | 工程编号 |\n| `cost` | DECIMAL(18,2) | NOT NULL; DEFAULT 0.00 | 领料总费用（元） |\n\n**数据预览：待创建表，初始沙箱中不存在。**",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "实体完整性",
+        "CREATE TABLE"
+      ],
+      "explanation": "主键保证工程费用记录唯一，DEFAULT 在省略费用时生效。",
+      "referenceSql": "CREATE TABLE Prj_cost(prj_num CHAR(8) PRIMARY KEY,cost DECIMAL(18,2) NOT NULL DEFAULT 0);",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "SQL 脚本完整执行",
+          "points": 2
+        },
+        {
+          "kind": "post_query",
+          "label": "基础数据与对象状态",
+          "points": 5,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT LOWER(COLUMN_NAME) AS col,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='prj_cost' AND LOWER(COLUMN_NAME) IN ('prj_num','cost') ORDER BY ORDINAL_POSITION;SELECT COLUMN_NAME,ORDINAL_POSITION FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='prj_cost' AND CONSTRAINT_NAME='PRIMARY' ORDER BY ORDINAL_POSITION; SELECT * FROM Prj_cost ORDER BY prj_num;"
+        },
+        {
+          "kind": "negative_check",
+          "label": "变式数据与约束边界",
+          "points": 3,
+          "variantSql": "INSERT INTO Salvaging VALUES('20119990','备用线路抢修','2011-03-07',NULL,b'0');",
+          "positiveSql": "INSERT INTO Prj_cost(prj_num) VALUES('20119990');",
+          "negativeSql": "INSERT INTO Prj_cost VALUES('20119990',1);",
+          "errorCodes": [
+            1062
+          ],
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT LOWER(COLUMN_NAME) AS col,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='prj_cost' AND LOWER(COLUMN_NAME) IN ('prj_num','cost') ORDER BY ORDINAL_POSITION;SELECT COLUMN_NAME,ORDINAL_POSITION FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='prj_cost' AND CONSTRAINT_NAME='PRIMARY' ORDER BY ORDINAL_POSITION; SELECT * FROM Prj_cost ORDER BY prj_num;"
+        }
+      ],
+      "id": "exam-lab-01-r3-q22",
+      "setupSql": "DROP TABLE Prj_cost;"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "向 course 录入两门课程。课号 981 的课程名为“关系数据库”，总学时 48、学分 3。课号 982 的课程名为“数据管理”，总学时 32、学分 2。保留已有课程。\n\n### 涉及数据表：course（课程表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `Cno` | CHAR(3) | PRIMARY KEY | 课程号 |\n| `Cname` | VARCHAR(30) | NOT NULL | 课程名 |\n| `Total_perior` | SMALLINT | NULL; DEFAULT NULL; CHECK (Total_perior > 0) | 总学时 |\n| `Credit` | TINYINT | NULL; DEFAULT NULL; CHECK (Credit between 1 and 6) | 学分 |\n\n**数据预览（前 2 行）**\n| Cno | Cname | Total_perior | Credit |\n| :--- | :--- | :--- | :--- |\n| 001 | 高数 | 96 | 6 |\n| 002 | C语言程序设计 | 80 | 5 |",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "插入元组"
+      ],
+      "explanation": "明确列清单并用多行 VALUES 插入。",
+      "referenceSql": "INSERT INTO course(Cno,Cname,Total_perior,Credit) VALUES('981','关系数据库',48,3),('982','数据管理',32,2);",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "SQL 脚本完整执行",
+          "points": 2
+        },
+        {
+          "kind": "post_query",
+          "label": "基础数据与对象状态",
+          "points": 5,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT * FROM course ORDER BY Cno;"
+        },
+        {
+          "kind": "post_query",
+          "label": "变式数据校验",
+          "points": 3,
+          "variantSql": "INSERT INTO course VALUES('990','数据库设计',48,3);",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "sql": "SELECT * FROM course ORDER BY Cno;"
+        }
+      ],
+      "id": "exam-lab-01-r3-q23"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "从 Stock 读取库存清单，只返回物资编号 mat_num 和名称，将名称列命名为 display_name。按物资编号升序输出。\n\n### 涉及数据表：Stock（配电物资库存记录表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `mat_num` | CHAR(4) | PRIMARY KEY; CHECK (mat_num REGEXP '^m[0-9]{3}$') | 物资编号 |\n| `mat_name` | VARCHAR(50) | NOT NULL | 物资名称 |\n| `speci` | VARCHAR(20) | NOT NULL | 规格型号 |\n| `warehouse` | VARCHAR(20) | NULL; DEFAULT NULL | 存放仓库 |\n| `amount` | INT | NULL; DEFAULT NULL; CHECK (amount > 0) | 数量 |\n| `unit` | DECIMAL(18,2) | NULL; DEFAULT NULL; CHECK (unit >= 0) | 单价（元） |\n| `total` | DECIMAL(18,2) | NULL; GENERATED ALWAYS AS (amount * unit) STORED | 库存总额（元） |\n\n**数据预览（前 2 行）**\n| mat_num | mat_name | speci | warehouse | amount | unit | total |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n| m001 | 电力电缆 | YJV-35 | 供电局 1# 仓库 | 80 | 45.50 | 3640.00 |\n| m002 | 绝缘护套 | BVV-35 | 供电局 1# 仓库 | 40 | 27.00 | 1080.00 |",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "SELECT",
+        "列别名"
+      ],
+      "explanation": "显式列出需要的列，列别名仅改变结果标题。",
+      "referenceSql": "SELECT mat_num,mat_name AS display_name FROM Stock ORDER BY mat_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Stock(mat_num,mat_name,speci,warehouse,amount,unit) VALUES ('m008','应急电缆','YJV-35','供电局 1# 仓库',65,18);"
+        }
+      ],
+      "id": "exam-lab-01-r3-q24"
+    },
+    {
+      "kind": "sql",
+      "points": 10,
+      "prompt": "查询 Salvaging 中未填写结束日期的工程，返回编号 prj_num 和名称 prj_name，按工程号升序。\n\n### 涉及数据表：Salvaging（电力抢修工程表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | PRIMARY KEY | 工程编号 |\n| `prj_name` | VARCHAR(50) | NOT NULL | 工程名称 |\n| `start_date` | DATETIME | NOT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 开始日期 |\n| `end_date` | DATETIME | NULL; DEFAULT NULL; CHECK ((end_date is null) or (end_date >= start_date)) | 结束日期 |\n| `prj_status` | BIT(1) | NOT NULL; DEFAULT b'0' | 工程状态（0 为未结算，1 为已结算） |\n\n**数据预览（前 2 行）**\n| prj_num | prj_name | start_date | end_date | prj_status |\n| :--- | :--- | :--- | :--- | :--- |\n| 20110001 | 南桥站配电抢修 | 2011-03-01 00:00:00 | 2011-03-04 00:00:00 | 1 |\n| 20110002 | 海湾站电缆抢修 | 2011-03-02 00:00:00 | 2011-03-08 00:00:00 | 0 |",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "SELECT",
+        "WHERE"
+      ],
+      "explanation": "NULL 表示未知。IS NULL 能准确找出尚未填写结束日期的记录。",
+      "referenceSql": "SELECT prj_num,prj_name FROM Salvaging WHERE end_date IS NULL ORDER BY prj_num;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "完整执行 SQL",
+          "points": 2
+        },
+        {
+          "kind": "result_set",
+          "points": 5,
+          "label": "核对结果集",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "points": 3,
+          "label": "变式数据与边界验证",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO Salvaging VALUES ('20110006','东海电缆抢修','2011-03-02',NULL,b'0');"
+        }
+      ],
+      "id": "exam-lab-01-r3-q25"
+    }
+  ],
+  "revision": 3
+}

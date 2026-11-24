@@ -1,0 +1,561 @@
+{
+  "id": "exam-lab-04",
+  "title": "实验四专项卷 · 多表连接、子查询与集合运算",
+  "group": "specialty",
+  "labId": "lab-04-complex-query",
+  "questions": [
+    {
+      "id": "exam-lab-04-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "要保留没选任何课的学生，首选什么连接？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "外连接"
+      ],
+      "options": {
+        "A": "student LEFT JOIN sc ON student.Sno=sc.Sno",
+        "B": "student INNER JOIN sc ON student.Sno=sc.Sno",
+        "C": "student CROSS JOIN sc",
+        "D": "sc LEFT JOIN student ON student.Sno=sc.Sno"
+      },
+      "answer": "A",
+      "explanation": "student 在 LEFT JOIN 左侧，无匹配也会保留一行。"
+    },
+    {
+      "id": "exam-lab-04-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "查课名为数据库原理的学生与分数，需要通过哪张表关联 student 与 course？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "连接"
+      ],
+      "options": {
+        "A": "仅 student",
+        "B": "information_schema.COLUMNS",
+        "C": "仅 course",
+        "D": "sc"
+      },
+      "answer": "D",
+      "explanation": "sc 记录 Sno、Cno 与 Grade，构成两张实体表之间的桥。"
+    },
+    {
+      "id": "exam-lab-04-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "LEFT JOIN 后在 WHERE 写 sc.Grade >= 60 会怎样处理无匹配学生？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "外连接"
+      ],
+      "options": {
+        "A": "将连接改成 CROSS JOIN",
+        "B": "把无匹配行变成 Grade 60",
+        "C": "移除无匹配行",
+        "D": "保留无匹配行并默认填 0"
+      },
+      "answer": "C",
+      "explanation": "补出的 NULL 不满足 WHERE，想保留左侧行可将右侧条件移进 ON。"
+    },
+    {
+      "id": "exam-lab-04-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "查从未选过 002 的学生最稳妥的表达？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "子查询"
+      ],
+      "options": {
+        "A": "仅 courses 中筛选 Cno<>'002'",
+        "B": "相关 NOT EXISTS 限定 Sno 和 Cno='002'",
+        "C": "Grade IS NULL",
+        "D": "LEFT JOIN 后写 sc.Cno<>'002'"
+      },
+      "answer": "B",
+      "explanation": "NOT EXISTS 测试对应学生的指定选课记录是否真的不存在。"
+    },
+    {
+      "id": "exam-lab-04-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "UNION ALL 与 UNION 的关键区别是什么？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "集合"
+      ],
+      "options": {
+        "A": "UNION ALL 保留重复行",
+        "B": "UNION ALL 强制排序",
+        "C": "UNION ALL 要求列名一致",
+        "D": "UNION ALL 自动添加主键"
+      },
+      "answer": "A",
+      "explanation": "UNION 默认去重，UNION ALL 拼接全部行。"
+    },
+    {
+      "id": "exam-lab-04-q06",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "对保留全部课程的 LEFT JOIN 统计选课人数应计数什么？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "分组"
+      ],
+      "options": {
+        "A": "COUNT(*)",
+        "B": "COUNT(course.Cno)",
+        "C": "SUM(sc.Grade)",
+        "D": "COUNT(sc.Sno)"
+      },
+      "answer": "D",
+      "explanation": "匹配不到时 sc.Sno 为 NULL，因此课程可得到 0。"
+    },
+    {
+      "id": "exam-lab-04-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "查高于其课程平均成绩的选课记录时，平均值子查询必须关联什么？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "相关子查询"
+      ],
+      "options": {
+        "A": "外层 Grade 的前两位",
+        "B": "固定课号 001",
+        "C": "外层 sc.Cno",
+        "D": "外层 student.Sex"
+      },
+      "answer": "C",
+      "explanation": "通过课号相关才比较当前课程的均值。"
+    },
+    {
+      "id": "exam-lab-04-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "要同时满足选了 001 与选了 006，MySQL 8.4 可以对两组学号使用什么？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "集合"
+      ],
+      "options": {
+        "A": "LIMIT 2",
+        "B": "INTERSECT",
+        "C": "UNION ALL",
+        "D": "CROSS JOIN"
+      },
+      "answer": "B",
+      "explanation": "INTERSECT 取两个结果集的交集。"
+    },
+    {
+      "id": "exam-lab-04-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "标量子查询返回两行时，常规比较 Grade > (子查询) 会怎样？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "子查询"
+      ],
+      "options": {
+        "A": "报错",
+        "B": "自动取第一行",
+        "C": "自动计算最大值",
+        "D": "自动按成绩排序"
+      },
+      "answer": "A",
+      "explanation": "标量位置至多允许一行，多行需要明确聚合或更换谓词。"
+    },
+    {
+      "id": "exam-lab-04-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "找和张虹同班但不是张虹的学生，哪种匹配更可靠？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "自连接"
+      ],
+      "options": {
+        "A": "匹配 Sname 并排除同班",
+        "B": "按 Sex 相等查找",
+        "C": "按 Sdept 相等且排除同院系",
+        "D": "匹配 Classno，再按 Sno 排除她的学号"
+      },
+      "answer": "D",
+      "explanation": "Classno 定义同班，Sno 区分个人，姓名可能重复。"
+    },
+    {
+      "id": "exam-lab-04-q11",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "表达“学生选修所有课程”时，双层 NOT EXISTS 中寻找的反例是什么？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "关系除法"
+      ],
+      "options": {
+        "A": "存在其他学生选过的课程",
+        "B": "存在 Grade 为 NULL 的记录",
+        "C": "存在该生未选的一门课程",
+        "D": "存在学分大于六的课程"
+      },
+      "answer": "C",
+      "explanation": "全称谓词等价于不存在漏选课程。"
+    },
+    {
+      "id": "exam-lab-04-q12",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "每人并列的最高分都保留时，哪个窗口函数可对最高成绩返回相同名次？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "排名"
+      ],
+      "options": {
+        "A": "NTILE(2)",
+        "B": "DENSE_RANK()",
+        "C": "ROW_NUMBER()",
+        "D": "COUNT(*) OVER ()"
+      },
+      "answer": "B",
+      "explanation": "DENSE_RANK 给同分相同名次，ROW_NUMBER 每行名次唯一。"
+    },
+    {
+      "id": "exam-lab-04-q13",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "把 sc 同时连接 student、course 时，单条选课记录正常匹配多少个父表组合？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "连接"
+      ],
+      "options": {
+        "A": "一个",
+        "B": "两个",
+        "C": "每学生所选课程数个",
+        "D": "所有学生与课程的笛卡尔积"
+      },
+      "answer": "A",
+      "explanation": "父表主键保证每侧最多一个匹配，外键保证均存在。"
+    },
+    {
+      "id": "exam-lab-04-q14",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "NOT IN 子查询结果若包含 NULL，最可能导致什么？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "空值"
+      ],
+      "options": {
+        "A": "自动忽略 NULL",
+        "B": "把 NULL 当成 0",
+        "C": "强制结果去重",
+        "D": "本该保留的未匹配行因 UNKNOWN 被过滤"
+      },
+      "answer": "D",
+      "explanation": "NOT IN 基于相等比较，NULL 使没有命中其他值的比较变成 UNKNOWN。"
+    },
+    {
+      "id": "exam-lab-04-q15",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "若 EXPLAIN 某表 type=ALL，代表什么？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "执行计划"
+      ],
+      "options": {
+        "A": "索引必定更快",
+        "B": "查询没有连接",
+        "C": "对该表做全表扫描",
+        "D": "已通过主键只读取一行"
+      },
+      "answer": "C",
+      "explanation": "ALL 描述访问类型，实际代价还要结合表大小与过滤比例。"
+    },
+    {
+      "id": "exam-lab-04-q16",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "将 sc.Cno='006' 放到 LEFT JOIN 的 ON 中，会限制右表匹配但保留所有左表学生。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "外连接"
+      ],
+      "answer": "true",
+      "explanation": "条件不满足时右侧补 NULL，左侧仍保留。"
+    },
+    {
+      "id": "exam-lab-04-q17",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "没有连接条件的 CROSS JOIN 会产生两个数据集的所有组合。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "连接"
+      ],
+      "answer": "true",
+      "explanation": "结果行数是两个输入行数之积。"
+    },
+    {
+      "id": "exam-lab-04-q18",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "EXISTS 要检查子查询 SELECT 的值是否为真。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "子查询"
+      ],
+      "answer": "false",
+      "explanation": "EXISTS 仅判断子查询是否返回行，SELECT NULL 也可返回一行。"
+    },
+    {
+      "id": "exam-lab-04-q19",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "UNION 两侧可返回不同数量的列。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "集合"
+      ],
+      "answer": "false",
+      "explanation": "集合运算要求投影列数一致，对应列需要可转换。"
+    },
+    {
+      "id": "exam-lab-04-q20",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "UNION 结果的顺序由两条 SELECT 在查询中的书写顺序保证。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "集合"
+      ],
+      "answer": "false",
+      "explanation": "需要对整体写 ORDER BY，默认顺序不可依赖。"
+    },
+    {
+      "id": "exam-lab-04-q21",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "相关子查询可以引用外层表别名。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "相关子查询"
+      ],
+      "answer": "true",
+      "explanation": "例如 inner_sc.Cno=outer_sc.Cno 按外层课程计算局部均值。"
+    },
+    {
+      "id": "exam-lab-04-q22",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "COUNT(sc.Grade) 与 COUNT(sc.Sno) 在有缺考的课程组中一定相同。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "分组"
+      ],
+      "answer": "false",
+      "explanation": "前者跳过无成绩行，后者计入全部真实选课行。"
+    },
+    {
+      "id": "exam-lab-04-q23",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "ROW_NUMBER 可以用于每人严格取前两条，但应给并列成绩指定键。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "排名"
+      ],
+      "answer": "true",
+      "explanation": "为行号排序添加 Cno 等并列键能保证重复运行次序可判定。"
+    },
+    {
+      "id": "exam-lab-04-q24",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "查找左表无匹配的行可使用右侧非空主键 IS NULL。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "外连接"
+      ],
+      "answer": "true",
+      "explanation": "真实匹配的主键不可能是 NULL。"
+    },
+    {
+      "id": "exam-lab-04-q25",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "对空集合用 NOT EXISTS，结果为真。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "子查询"
+      ],
+      "answer": "true",
+      "explanation": "子查询没有任何行，EXISTS 为假，取反为真。"
+    },
+    {
+      "id": "exam-lab-04-q26",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全连接条件，显示学生与选课。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "连接"
+      ],
+      "template": "SELECT s.Sname,x.Cno FROM student s JOIN sc x {{1}} s.Sno=x.Sno;",
+      "blanks": [
+        [
+          "ON"
+        ]
+      ],
+      "explanation": "ON 指定学生主键与选课外键的对应。"
+    },
+    {
+      "id": "exam-lab-04-q27",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全查找从未选课的学生。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "外连接"
+      ],
+      "template": "SELECT s.Sno FROM student s {{1}} sc x ON x.Sno=s.Sno WHERE x.Sno {{2}};",
+      "blanks": [
+        [
+          "LEFT JOIN",
+          "LEFT OUTER JOIN"
+        ],
+        [
+          "IS NULL"
+        ]
+      ],
+      "explanation": "无真实匹配时右侧主键补 NULL。"
+    },
+    {
+      "id": "exam-lab-04-q28",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "拼接两个结果，保留跨来源重复行。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "集合"
+      ],
+      "template": "SELECT Sno FROM sc WHERE Cno='001' {{1}} SELECT Sno FROM sc WHERE Cno='002';",
+      "blanks": [
+        [
+          "UNION ALL"
+        ]
+      ],
+      "explanation": "UNION ALL 拼接全部投影行。"
+    },
+    {
+      "id": "exam-lab-04-q29",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全课程相关谓词。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "相关子查询"
+      ],
+      "template": "SELECT a.Sno,a.Cno FROM sc a WHERE a.Grade>(SELECT AVG(b.Grade) FROM sc b WHERE {{1}});",
+      "blanks": [
+        [
+          "b.Cno=a.Cno",
+          "a.Cno=b.Cno"
+        ]
+      ],
+      "explanation": "内外以课号关联。"
+    },
+    {
+      "id": "exam-lab-04-q30",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "保留所有课程，统计真实选课行。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "分组"
+      ],
+      "template": "SELECT c.Cno,COUNT({{1}}) FROM course c LEFT JOIN sc x ON c.Cno=x.Cno {{2}} c.Cno;",
+      "blanks": [
+        [
+          "x.Sno",
+          "x.Cno"
+        ],
+        [
+          "GROUP BY"
+        ]
+      ],
+      "explanation": "真实选课行的两个主键列都非空。"
+    },
+    {
+      "id": "exam-lab-04-q31",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-04-complex-query",
+      "prompt": "列出每个学生及其 006 的成绩。输出 Sno、Sname、Grade；未选课的学生也要显示，按 Sno 升序。",
+      "referenceSql": "SELECT s.Sno,s.Sname,x.Grade FROM student s LEFT JOIN sc x ON x.Sno=s.Sno AND x.Cno='006' ORDER BY s.Sno;",
+      "tags": [
+        "外连接"
+      ],
+      "explanation": "课程条件必须属于 ON，以保留未匹配学生。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "result_set",
+          "label": "种子数据结果",
+          "points": 8,
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "label": "变更数据后仍符合题意",
+          "points": 4,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO sc VALUES ('20110008','006',88);"
+        }
+      ]
+    },
+    {
+      "id": "exam-lab-04-q32",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-04-complex-query",
+      "prompt": "列出高于所属课程平均分的记录。输出 Sno、Cno、Grade，按 Cno、Sno 升序，NULL 不参与均值。",
+      "referenceSql": "SELECT a.Sno,a.Cno,a.Grade FROM sc a WHERE a.Grade>(SELECT AVG(b.Grade) FROM sc b WHERE b.Cno=a.Cno) ORDER BY a.Cno,a.Sno;",
+      "tags": [
+        "相关子查询"
+      ],
+      "explanation": "用 Cno 把子查询关联到当前记录所在课程，严格比较大于。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "result_set",
+          "label": "种子数据结果",
+          "points": 8,
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "label": "变更数据后仍符合题意",
+          "points": 4,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO sc VALUES ('20110008','006',100);INSERT INTO sc VALUES ('20110008','003',98);"
+        }
+      ]
+    }
+  ]
+}
+

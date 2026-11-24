@@ -1,10 +1,10 @@
 # 码起步 公网部署
 
-公网账户模式使用Spring Boot 4 和 SQLite V22。前端与 API 走同一 HTTPS 域名。Compose 默认将入口绑定到回环地址。生产实例须由实际运维方提供专用 Linux 主机、DNS 和受信任的 TLS 证书。
+公网账户模式使用 Spring Boot 4 和 SQLite V23。前端与 API 走同一 HTTPS 域名。Compose 默认将入口绑定到回环地址。生产实例须由实际运维方提供专用 Linux 主机、DNS 和受信任的 TLS 证书。
 
 ## Instabox 主站
 
-2026年11月22日启用免费机器 `codesomething`，当前前端0.30.5、后端0.6.2和SQLite V22。对外统一使用 [try.maqibu.online 主站](https://try.maqibu.online)。悉尼网关使用现有域名证书，并通过校验证书的 HTTPS 到达 Instabox 公开端口17680。Compose 使用生产文件和 `docker-compose.instabox.yml`，后端和MySQL由专用rootless Docker运行。
+2026年11月22日启用免费机器 `codesomething`，当前前端 0.31.1、后端 0.7.1 和 SQLite V23。对外统一使用 [try.maqibu.online 主站](https://try.maqibu.online)。悉尼网关使用现有域名证书，并通过校验证书的 HTTPS 到达 Instabox 公开端口17680。Compose 使用生产文件和 `docker-compose.instabox.yml`，后端和MySQL由专用rootless Docker运行。
 
 - 悉尼 `codesomething-https.socket` 通过 `20-instabox-primary.conf` 把443交给本机8444的 `codesomething-domain-gateway`。8443上的悉尼应用仍使用自己的数据库，上海应用通过原SSH隧道访问。此拓扑下自定义域名入口依赖悉尼 HTTPS 网关。
 - 网关使用 `instabox/domain-gateway.conf`。私有网关凭据分别在悉尼网关环境文件和 Instabox `site.env` 保存。域名续签后，同时重载悉尼公开网关与备用应用网关。
@@ -15,6 +15,8 @@
 - 使用 `instabox/worker.mjs` 部署Cloudflare Worker `codesomething-instabox-health`，将 `HEALTH_URL` 配为主站 `/api/v1/health`，Cron为 `*/10 * * * *`。Worker由Cron调用，使用方访问Instabox站点。免费档的单次运行上限和冷却期按[Instabox官方规则](https://instabox.sh/docs/idle-suspend.md)执行。
 - 悉尼快照保存在 `backups/sydney-20261122T060017Z.tar.gz`。主站登录使用快照中的账号和密码，已有会话需要重新登录。悉尼应用留在8443，上海 `learn.maqibu.online` 通过SSH隧道私用。两处均可手动接管。需要接续主站最新数据时，恢复同一批次的主库和学员库并撤销旧会话。悉尼接管时先切到支持本站注册的备用网关镜像，再将443的转发目标改回8443。
 - 两台备用网关使用 `standby-registration-map.conf` 和 `standby-registration.conf` 将注册入口指向主站并阻断注册、发码写入。启用备用站接管前恢复同批次数据，再切换到支持本站注册的网关镜像。
+
+Instabox 主站的常驻 MySQL 练习池上限为 6。悉尼与上海使用各自的容量配置。
 
 生产应用更新同期发布到 Instabox、悉尼和上海。使用同一前端构建产物及后端版本，保留各站入口配置和独立数据库。先验主站域名、注册及登录，再分别核对备用端口、发布版本与注册限制。
 
@@ -63,7 +65,7 @@ docker compose --env-file production.env -f docker-compose.prod.yml up -d --buil
 - `codesomething.db` 保存账号、审计、邀请码、会话及初始管理员学习数据。新增用户首次使用学习功能时，创建 `learners/<用户 UUID>.db`。分库沿用原业务表及唯一约束，V17 用文件内 `learning_data_owner` 标记归属。所有库采用 WAL 与 5 秒写锁等待。
 - 生产注册默认要求邀请码。访问令牌有效期 2 小时，刷新 Cookie 有效期 14 天并轮换，冻结、退出和密码重置会撤销对应会话。公网禁用本机 IDE、目录配对和宿主机评测。
 - 公网 HTTP、Boot、项目 A/B 及独立作品使用隔离评测。全部公开 Java 作业显式使用 `--network=none`。数据库型评测的专用 MySQL 只加入当前 Java 作业的回环命名空间。Maven 离线使用固定镜像。编译和每次启动 Java 应用分别计时，公共期限最多 30 秒，超过期限进入强制容器清理。
-- MySQL 练习按账户隔离，常驻池通过 `CS_PUBLIC_MYSQL_POOL_LIMIT` 调整，最大 8 个运行实例。目前由后端按账户按需调度独立 MySQL 容器。数据库文件在限容临时盘中，容器停止或回收后从课程初始数据重建。SQL 草稿、检查报告和通关记录在 SQLite 保留。
+- MySQL 练习按账户隔离，常驻池通过 `CS_PUBLIC_MYSQL_POOL_LIMIT` 调整，最大 8 个运行实例。后端按账户按需调度独立 MySQL 容器。SQL 执行、调试与判分期间保护对应实例，浏览器内的答题操作会刷新活跃时间，前台限时模考在倒计时期间也会续期。连续 30 分钟无活动的实例可由后台检查或新请求按最久未用顺序回收。保存到数据目录下的 `mysql-idle/` 的快照可恢复练习数据库及其中的表、视图和存储程序。快照失败时保留实例。所有实例都活跃时，新请求会提示稍后重试。草稿、判分报告和学习进度存储在 SQLite。
 - V18 题库在管理端创建、发布、编辑和归档补充选择题。学员从复习页查看已发布内容，提交后展示解析。
 - 公网 AI 默认关闭。真实启用需要能运行已授权 App Server 的服务镜像、凭据隔离和受控出站网络。配置完成后设置 `CS_PUBLIC_TUTOR_ENABLED=true`，再从管理端测试连接与学员 SSE。默认 Compose 的 API 网络为内部网络，启用开关本身不会提供出站连接。
 

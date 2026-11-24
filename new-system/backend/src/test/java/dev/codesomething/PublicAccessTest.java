@@ -45,6 +45,134 @@ class PublicAccessTest {
         assertTrue(failure.getMessage().contains("CS_JWT_SECRET"), failure::toString);
     }
 
+    @Test void labGradingPreservesDraftWhenMysqlIsUnavailableAndDoesNotExposeRules() throws Exception {
+        try (var app = start()) {
+            String admin = token(login(app, "admin", "Initial-Admin-Password-92"));
+            String first = token(register(app, "lab-grade-one", invite(app, admin)));
+            String second = token(register(app, "lab-grade-two", invite(app, admin)));
+            String lab = "/api/school/courses/database-systems/labs/lab-03-single-query";
+            String input = """
+                {"revision":0,"questionId":"q02","drafts":{"q02":"SELECT Sno FROM student;"}}
+                """;
+            var details = json.readTree(request(app, "GET", lab, null, first, null).body());
+            assertTrue(details.path("grading").asBoolean());
+            assertFalse(details.path("lab").path("questions").get(1).has("checks"));
+            var response = request(app, "POST", lab + "/grade", input, first, null);
+            assertEquals(200, response.statusCode(), response.body());
+            var execution = json.readTree(response.body()).path("work").path("executions").path("q02");
+            assertEquals("unavailable", execution.path("grade").path("status").asText());
+            assertEquals("SELECT Sno FROM student;", execution.path("sql").asText());
+            assertTrue(execution.path("grade").path("referenceSql").isNull());
+            assertEquals(409, request(app, "POST", lab + "/grade", input, first, null).statusCode());
+            assertEquals(0, json.readTree(request(app, "GET", lab, null, second, null).body()).path("work").path("revision").asInt());
+        }
+    }
+
+    @Test void schoolExamKeepsDraftsReportsAndMistakesInsideTheLearnerScope() throws Exception {
+        try (var app = start()) {
+            String admin = token(login(app, "admin", "Initial-Admin-Password-92"));
+            String first = token(register(app, "exam-student-one", invite(app, admin)));
+            String second = token(register(app, "exam-student-two", invite(app, admin)));
+            String root = "/api/school/courses/database-systems/exams";
+            String paper = root + "/exam-lab-01";
+            assertEquals(401, request(app, "GET", root, null, null, null).statusCode());
+            String activity = "/api/school/courses/database-systems/environment/activity";
+            assertEquals(401, request(app, "POST", activity, null, null, null).statusCode());
+            assertEquals(204, request(app, "POST", activity, null, first, null).statusCode());
+            assertEquals(403, request(app, "GET", root, null, admin, null).statusCode());
+            var start = request(app, "POST", paper + "/start", """
+                {"mode":"exam","minutes":90,"shuffle":true}
+                """, first, null);
+            assertEquals(200, start.statusCode(), start.body());
+            var draft = json.readTree(start.body());
+            String id = draft.path("draft").path("id").asText();
+            String work = paper + "/drafts/" + id;
+            String report = paper + "/attempts/" + id;
+            String choice = "exam-lab-01-r3-q01", fill = "exam-lab-01-r3-q20", sql = "exam-lab-01-r3-q21";
+            assertEquals(4, draft.path("draft").path("order").path(choice).size());
+            assertFalse(draft.path("questions").get(0).has("answer"));
+            assertFalse(draft.path("questions").get(20).has("referenceSql"));
+            assertEquals(404, request(app, "GET", work, null, second, null).statusCode());
+            assertEquals(400, request(app, "POST", work + "/questions/" + choice + "/check",
+                "{\"answer\":[\"A\"],\"mode\":\"check\",\"offset\":0}", first, null).statusCode());
+            var values = java.util.Map.of(choice, java.util.List.of("A"), fill, java.util.List.of("mat_num", "oops"),
+                sql, java.util.List.of("SELECT 1;"));
+            String save = json.writeValueAsString(java.util.Map.of("revision", 0, "answers", values, "stars", java.util.List.of(choice)));
+            var saved = request(app, "POST", work + "/save", save, first, null);
+            assertEquals(200, saved.statusCode(), saved.body());
+            assertEquals(409, request(app, "POST", work + "/save", save, first, null).statusCode());
+            var restored = json.readTree(request(app, "GET", work, null, first, null).body());
+            assertEquals(choice, restored.path("draft").path("stars").get(0).asText());
+            String submit = json.writeValueAsString(java.util.Map.of("revision", 1, "answers", values, "stars", java.util.List.of(choice)));
+            var submitted = request(app, "POST", work + "/submit", submit, first, null);
+            assertEquals(200, submitted.statusCode(), submitted.body());
+            var snapshot = json.readTree(submitted.body());
+            assertEquals(2, snapshot.path("summary").path("scores").path("blank").asInt());
+            assertFalse(snapshot.path("summary").path("completeGrading").asBoolean());
+            assertEquals("unavailable", snapshot.path("items").get(20).path("status").asText());
+            assertEquals(draft.path("questions").get(0).path("options"), snapshot.path("items").get(0).path("question").path("options"));
+            assertEquals(404, request(app, "GET", report, null, second, null).statusCode());
+            assertEquals(snapshot, json.readTree(request(app, "POST", work + "/submit", submit, first, null).body()));
+            assertEquals(0, json.readTree(request(app, "GET", root + "/mistakes", null, second, null).body()).size());
+            String mistake = root + "/mistakes/" + fill;
+            var corrected = request(app, "POST", mistake + "/check",
+                "{\"answer\":[\"mat_num\",\"Stock(mat_num)\"],\"mode\":\"check\",\"offset\":0}", first, null);
+            assertEquals(200, corrected.statusCode(), corrected.body());
+            assertEquals(4, json.readTree(corrected.body()).path("score").asInt());
+            assertTrue(json.readTree(request(app, "GET", root + "/mistakes", null, first, null).body()).valueStream()
+                .filter(node -> fill.equals(node.path("item").path("question").path("id").asText())).findFirst().orElseThrow().path("mastered").asBoolean());
+            var subset = request(app, "POST", paper + "/start",
+                json.writeValueAsString(java.util.Map.of("mode","practice","minutes",0,"shuffle",false,"fromAttempt",id)), first, null);
+            assertEquals(200, subset.statusCode(), subset.body());
+            String retryId = json.readTree(subset.body()).path("draft").path("id").asText();
+            assertNotEquals(id, retryId);
+            assertEquals(200, request(app, "GET", report, null, first, null).statusCode());
+            assertEquals(200, request(app, "POST", paper + "/drafts/" + retryId + "/submit", """
+                {"revision":0,"answers":{"exam-lab-01-r3-q01":["B"]},"stars":[]}
+                """, first, null).statusCode());
+            var blankRetry = request(app, "POST", paper + "/start", """
+                {"mode":"practice","minutes":0,"shuffle":false}
+                """, first, null);
+            assertEquals(200, blankRetry.statusCode(), blankRetry.body());
+            String blankId = json.readTree(blankRetry.body()).path("draft").path("id").asText();
+            assertEquals(200, request(app, "POST", paper + "/drafts/" + blankId + "/submit", """
+                {"revision":0,"answers":{},"stars":[]}
+                """, first, null).statusCode());
+            var overview = json.readTree(request(app, "GET", root, null, first, null).body());
+            assertEquals("实验一 · MySQL 环境与数据库管理", overview.path("labTitles").path("lab-01-workbench").asText());
+            var workbench = overview.path("topics").valueStream()
+                .filter(node -> node.path("tag").asText().equals("数据独立性")).findFirst().orElseThrow();
+            assertEquals(2, workbench.path("points").asInt());
+            assertEquals(2, workbench.path("score").asInt());
+            assertEquals(100, workbench.path("percent").asInt());
+            String debug = work + "/questions/" + sql + "/debug";
+            for (int n = 0; n < 20; n++)
+                assertEquals(404, request(app, "POST", debug, "{\"answer\":[\"SELECT 1\"],\"mode\":\"run\",\"offset\":0}", first, null).statusCode());
+            assertEquals(429, request(app, "POST", debug, "{\"answer\":[\"SELECT 1\"],\"mode\":\"run\",\"offset\":0}", first, null).statusCode());
+
+            String timed = root + "/exam-lab-02";
+            var running = request(app, "POST", timed + "/start", "{\"mode\":\"exam\",\"minutes\":60,\"shuffle\":false}", first, null);
+            assertEquals(200, running.statusCode(), running.body());
+            String timerId = json.readTree(running.body()).path("draft").path("id").asText();
+            String timedWork = timed + "/drafts/" + timerId;
+            String timerSave = "{\"revision\":0,\"answers\":{\"exam-lab-02-r3-q01\":[\"A\"]},\"stars\":[]}";
+            assertEquals(200, request(app, "POST", timedWork + "/save", timerSave, first, null).statusCode());
+            String owner = json.readTree(request(app, "GET", "/auth/me", null, first, null).body()).path("userId").asText();
+            var sources = app.getBean(dev.codesomething.storage.LearningDataSource.class);
+            sources.inLearningTransaction(owner, tx -> tx.update("""
+                UPDATE school_exam_drafts SET payload=json_set(payload,'$.startedAt',?)
+                WHERE course_id='database-systems' AND id=?
+                """, System.currentTimeMillis() - 61 * 60_000L, timerId));
+            String late = "{\"revision\":1,\"answers\":{\"exam-lab-02-r3-q01\":[\"B\"]},\"stars\":[]}";
+            assertEquals(400, request(app, "POST", timedWork + "/save", late, first, null).statusCode());
+            var timedResult = request(app, "POST", timedWork + "/submit", late, first, null);
+            assertEquals(200, timedResult.statusCode(), timedResult.body());
+            var expired = json.readTree(timedResult.body());
+            assertEquals("A", expired.path("items").get(0).path("answer").get(0).asText());
+            assertEquals(3600, expired.path("summary").path("elapsedSeconds").asInt());
+        }
+    }
+
     @Test void publicLimitsLoginByAddressAndJudgeRequestsByAccount() throws Exception {
         try (var app = start()) {
             String admin = token(login(app, "admin", "Initial-Admin-Password-92"));
@@ -62,6 +190,118 @@ class PublicAccessTest {
             var deniedJob = request(app, "POST", "/check-jobs", job, student, null, workspaceKey);
             assertEquals(429, deniedJob.statusCode(), deniedJob.body());
             assertEquals("RATE_LIMIT", json.readTree(deniedJob.body()).path("code").asText());
+        }
+    }
+
+    @Test void schoolExamCanAbandonDraftsReopenAndReviewObjectiveQuestionsWithoutUsingSqlQuota() throws Exception {
+        try (var app = start()) {
+            String admin = token(login(app, "admin", "Initial-Admin-Password-92"));
+            String learner = token(register(app, "exam-draft-owner", invite(app, admin)));
+            String other = token(register(app, "exam-draft-neighbor", invite(app, admin)));
+            String course = "/api/school/courses/database-systems";
+            String exams = course + "/exams";
+            String paper = exams + "/exam-lab-01";
+            String practice = """
+                {"mode":"practice","minutes":0,"shuffle":false}
+                """;
+            String exam = """
+                {"mode":"exam","minutes":60,"shuffle":false}
+                """;
+            String id = json.readTree(request(app, "POST", paper + "/start", exam, learner, null).body())
+                .path("draft").path("id").asText();
+            assertFalse(id.isBlank());
+            String work = paper + "/drafts/" + id;
+            assertEquals(200, request(app, "POST", work + "/save", """
+                {"revision":0,"answers":{},"stars":[]}
+                """, learner, null).statusCode());
+            assertEquals(404, request(app, "DELETE", work + "?revision=1", null, other, null).statusCode());
+            assertEquals(409, request(app, "DELETE", work + "?revision=0", null, learner, null).statusCode());
+            assertEquals(204, request(app, "DELETE", work + "?revision=1", null, learner, null).statusCode());
+            assertEquals(404, request(app, "GET", work, null, learner, null).statusCode());
+            assertEquals(11, json.readTree(request(app, "GET", course, null, learner, null).body()).path("examCount").asInt());
+            var fresh = json.readTree(request(app, "POST", paper + "/start", practice, learner, null).body()).path("draft");
+            assertNotEquals(id, fresh.path("id").asText());
+            assertEquals("practice", fresh.path("mode").asText());
+            work = paper + "/drafts/" + fresh.path("id").asText();
+            String choiceCheck = work + "/questions/exam-lab-01-r3-q01/check";
+            String fillCheck = work + "/questions/exam-lab-01-r3-q20/check";
+            for (int n = 0; n < 12; n++) {
+                assertEquals(200, request(app, "POST", choiceCheck, """
+                    {"answer":["B"],"mode":"check","offset":0}
+                    """, learner, null).statusCode());
+                assertEquals(200, request(app, "POST", fillCheck, """
+                    {"answer":["mat_num","Stock(mat_num)"],"mode":"check","offset":0}
+                    """, learner, null).statusCode());
+            }
+            String sqlCheck = work + "/questions/exam-lab-01-r3-q21/check";
+            for (int n = 0; n < 10; n++) {
+                assertEquals(200, request(app, "POST", sqlCheck, """
+                    {"answer":["SELECT 1"],"mode":"check","offset":0}
+                    """, learner, null).statusCode());
+            }
+            assertEquals(429, request(app, "POST", sqlCheck, """
+                {"answer":["SELECT 1"],"mode":"check","offset":0}
+                """, learner, null).statusCode());
+            assertEquals(200, request(app, "POST", choiceCheck, """
+                {"answer":["B"],"mode":"check","offset":0}
+                """, learner, null).statusCode());
+        }
+    }
+
+    @Test void schoolExamPreservesAnswersFromAnOlderMockRevisionForExplicitDiscard() throws Exception {
+        try (var app = start()) {
+            String admin = token(login(app, "admin", "Initial-Admin-Password-92"));
+            String learner = token(register(app, "exam-legacy-draft", invite(app, admin)));
+            String course = "/api/school/courses/database-systems/exams";
+            String paper = course + "/exam-mock-01";
+            String start = """
+                {"mode":"practice","minutes":0,"shuffle":false}
+                """;
+            var creation = request(app, "POST", paper + "/start", start, learner, null);
+            assertEquals(200, creation.statusCode(), creation.body());
+            var draft = json.readTree(creation.body()).path("draft");
+            String id = draft.path("id").asText();
+            String work = paper + "/drafts/" + id;
+            assertEquals(4, draft.path("paperRevisions").path("exam-mock-01").asInt());
+            String first = draft.path("questionIds").get(0).asText();
+            String answer = """
+                {"revision":0,"answers":{"%s":["A"]},"stars":[]}
+                """.formatted(first);
+            assertEquals(200, request(app, "POST", work + "/save", answer, learner, null).statusCode());
+            String owner = json.readTree(request(app, "GET", "/auth/me", null, learner, null).body()).path("userId").asText();
+            app.getBean(dev.codesomething.storage.LearningDataSource.class).inLearningTransaction(owner, tx -> tx.update("""
+                UPDATE school_exam_drafts SET payload=json_remove(payload,'$.paperRevisions')
+                WHERE course_id='database-systems' AND id=?
+                """, id));
+            var outdated = json.readTree(request(app, "GET", work, null, learner, null).body());
+            assertTrue(outdated.path("outdated").asBoolean());
+            assertEquals(0, outdated.path("questions").size());
+            assertEquals("A", outdated.path("draft").path("answers").path(first).get(0).asText());
+            assertEquals(409, request(app, "POST", work + "/submit", """
+                {"revision":1,"answers":{},"stars":[]}
+                """, learner, null).statusCode());
+            assertEquals(204, request(app, "DELETE", work + "?revision=1", null, learner, null).statusCode());
+            var restarted = json.readTree(request(app, "POST", paper + "/start", start, learner, null).body());
+            assertFalse(restarted.path("outdated").asBoolean());
+            assertEquals(25, restarted.path("questions").size());
+            String freshId = restarted.path("draft").path("id").asText();
+            assertNotEquals(id, freshId);
+            assertEquals(200, request(app, "POST", paper + "/drafts/" + freshId + "/submit", """
+                {"revision":0,"answers":{},"stars":[]}
+                """, learner, null).statusCode());
+            app.getBean(dev.codesomething.storage.LearningDataSource.class).inLearningTransaction(owner, tx -> tx.update("""
+                UPDATE school_exam_mistakes SET payload=json_set(payload,'$.item.question.prompt',?,
+                    '$.item.question.options[3].text',?,'$.item.correct',json('["D"]'))
+                WHERE course_id='database-systems' AND question_id=?
+                """, "旧版题干", "旧版正确选项", first));
+            var checked = request(app, "POST", course + "/mistakes/" + first + "/check", """
+                {"answer":["D"],"mode":"check","offset":0}
+                """, learner, null);
+            assertEquals(200, checked.statusCode(), checked.body());
+            var result = json.readTree(checked.body());
+            assertEquals(2, result.path("score").asInt());
+            assertEquals("旧版题干", result.path("question").path("prompt").asText());
+            assertEquals("旧版正确选项", result.path("question").path("options").get(3).path("text").asText());
         }
     }
 
@@ -192,7 +432,7 @@ class PublicAccessTest {
     HttpResponse<String> request(ConfigurableApplicationContext app, String method, String path,
                                   String body, String token, String cookie, String workspaceKey) throws Exception {
         var builder = HttpRequest.newBuilder(URI.create("http://127.0.0.1:"
-            + app.getEnvironment().getProperty("local.server.port") + "/api/v1" + path))
+            + app.getEnvironment().getProperty("local.server.port") + (path.startsWith("/api/") ? path : "/api/v1" + path)))
             .header("Content-Type", "application/json");
         if (token != null) builder.header("Authorization", "Bearer " + token);
         if (cookie != null) builder.header("Cookie", cookie);

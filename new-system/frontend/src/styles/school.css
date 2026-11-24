@@ -53,7 +53,6 @@
 .school-future {padding: var(--space-4); margin-top: var(--space-6);}
 .school-future p {margin-bottom: 0; color: var(--text-secondary);}
 .school-workspace {max-width: 1536px;}
-.school-workspace.workspace-wide {max-width: 1780px;}
 .school-workspace .back-link {display: inline-flex; align-items: center; gap: var(--space-2);}
 .school-lab-heading, .school-question-header {
   display: flex;
@@ -64,31 +63,10 @@
 }
 .school-lab-heading {margin: var(--space-3) 0 var(--space-5);}
 .school-workspace .school-lab-heading h1 {font-size: clamp(22px, 3vw, 29px); margin: 0; text-wrap: balance;}
-.school-grid {
-  display: grid;
-  grid-template-columns: minmax(235px, .65fr) minmax(0, 1.65fr);
-  align-items: start;
-  gap: var(--space-4);
-}
-@media (min-width: 1180px) {
-  .school-grid.has-inspector {
-    grid-template-columns: minmax(210px, 250px) minmax(0, 1fr) minmax(300px, 31%);
-  }
-}
-@media (min-width: 821px) and (max-width: 1179px) {
-  .school-grid.has-inspector {
-    grid-template-columns: minmax(210px, 250px) minmax(0, 1fr);
-  }
-  .school-grid.has-inspector .school-inspector-panel {
-    grid-column: 1 / -1;
-  }
-}
 .school-pane {min-width: 0; padding: var(--space-4);}
 .school-pane p {color: var(--text-secondary); line-height: 1.65;}
 .school-pane h2 {font-size: 17px;}
 .school-pane summary, .school-future summary {cursor: pointer; font-weight: 650; padding-block: var(--space-2);}
-.school-question-menu {margin-top: var(--space-3); border-top: 1px solid var(--border);}
-.school-question-menu h2 {display: inline; font-size: inherit;}
 .school-questions button {
   width: 100%;
   border: 0;
@@ -109,8 +87,7 @@
 .school-question-status {display: inline-flex; align-items: center; gap: 3px;}
 .school-question-status svg {color: var(--success);}
 .school-hint code {overflow-wrap: anywhere;}
-.school-editor-column {display: grid; gap: var(--space-4); min-width: 0;}
-.school-editor-pane > p, .school-hint p {margin: var(--space-2) 0;}
+.school-hint p {margin: var(--space-2) 0;}
 .school-question-requirement {font-size: 14px; line-height: 1.7; color: var(--text);}
 .school-hint {padding: 0 var(--space-3); background: var(--surface-muted); border-radius: var(--radius-sm); margin: var(--space-2) 0;}
 
@@ -128,40 +105,6 @@
 }
 .school-link-btn:hover {opacity: .8;}
 
-/* Right Data Inspector Panel */
-.school-inspector-panel {
-  position: sticky;
-  top: var(--space-4);
-  max-height: calc(100dvh - 120px);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-}
-.school-inspector-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  border-bottom: 1px solid var(--border);
-  padding-bottom: var(--space-2);
-}
-.school-inspector-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.school-inspector-title h2 {margin: 0; font-size: 15px;}
-.school-inspector-title svg {color: var(--primary-ink);}
-.school-inspector-close {
-  min-height: 30px;
-  min-width: 30px;
-  padding: 0;
-}
 .school-inspector-body {
   display: flex;
   flex-direction: column;
@@ -271,22 +214,20 @@
   font-weight: 600;
 }
 
-.school-actions, .school-snippets, .school-editor-foot {
+.school-actions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2);
 }
 .school-tools {margin: var(--space-4) 0 var(--space-3);}
-.school-actions .button, .school-editor-foot .button {min-height: 40px;}
+.school-actions .button {min-height: 40px;}
 .school-actions .button[aria-pressed=true] {background: var(--primary-soft); color: var(--primary-ink);}
 .school-actions .button.active {background: var(--primary-soft); color: var(--primary-ink); border-color: var(--primary-border, var(--border));}
 .school-monaco .code-editor-shell:not([open]) {height: clamp(235px, 31vh, 410px);}
 .school-notes {width: 100%; min-height: 240px; resize: vertical; font: inherit;}
-.school-editor-foot {justify-content: space-between; margin-top: var(--space-3);}
-.school-snippets {font-size: 13px;}
 .school-report-fields label {display: flex; align-items: center; gap: var(--space-2);}
-.school-snippets select, .school-report-fields input, .school-notes {
+.school-report-fields input, .school-notes {
   color: var(--text);
   background: var(--surface-muted);
   border: 1px solid var(--border);
@@ -377,26 +318,6 @@
 .school-report-fields input {min-width: 0; width: min(190px, 54vw);}
 .school-report-modal iframe {display: block; width: 100%; height: min(52dvh, 620px); border: 1px solid var(--border); border-radius: var(--radius-sm); background: white; margin: var(--space-3) 0;}
 .school-report-modal {overscroll-behavior: contain;}
-.school-workbench-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: var(--space-3);
-}
-.school-workbench-tabs button {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 8px;
-  min-height: 36px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 12px;
-}
-.school-workbench-tabs button[data-state=active] {color: var(--primary-ink); border-bottom-color: var(--primary-ink);}
 .school-workbench-controls {
   display: flex;
   align-items: center;
@@ -493,35 +414,8 @@
     flex-direction: column;
     padding-block: var(--space-4);
   }
-  .school-workspace > .back-link {align-self: flex-start; margin-block-end: 0;}
-  .school-grid {
-    flex: 1;
-    min-height: 0;
-    align-items: stretch;
-    grid-template-rows: minmax(0, 1fr);
-  }
-  .school-grid > :is(.school-brief, .school-editor-column, .school-inspector-panel) {
-    min-height: 0;
-    overflow: auto;
-    scrollbar-width: thin;
-  }
-  .school-grid .school-inspector-panel {position: static; max-height: none;}
-  .school-editor-column, .school-editor-pane, .school-monaco {
-    display: flex;
-    flex-direction: column;
-  }
-  .school-editor-pane {flex: 1 0 auto;}
-  .school-monaco {flex: 1;}
-  .school-monaco .code-editor-shell:not([open]) {flex: 1; height: auto;}
-  .school-monaco .code-editor-shell:not([open]) .code-editor-area {
-    flex: 1;
-    height: 240px;
-    max-height: none;
-    resize: none;
-  }
 }
 @media (max-width: 820px) {
-  .school-grid {grid-template-columns: minmax(0, 1fr);}
   .school-questions {max-height: 200px; overflow: auto;}
 }
 @media (max-width: 480px) {
@@ -531,22 +425,52 @@
   .school-pane {padding: var(--space-3);}
 }
 
-.school-extra-tools {display:contents}
-.school-tools .school-tool-toggle {display:none}
-.school-tools .school-run-current:disabled {
- opacity:1;color:var(--text-secondary);background:var(--surface-muted);border-color:var(--border-strong);
+.school-questions li[data-passed="true"] .school-question-status {color:var(--success);}
+
+.page.school-practice-workspace {width: min(1760px, 100%); max-width: none; margin-inline: auto; padding: 12px 16px 16px;}
+.school-practice-workspace .school-lab-heading {justify-content: flex-start; align-items: center; gap: 12px; margin: 0 0 10px;}
+.school-practice-workspace .school-lab-heading h1 {font-size: clamp(18px, 1.55vw, 24px); text-wrap: pretty;}
+.school-practice-workspace .school-lab-heading .back-link {margin: 0; font-size: 13px;}
+.school-practice-grid, .school-practice-sql {display: grid; min-width: 0; gap: 10px;}
+.school-practice-sql {gap: 0;}
+.school-practice-grid > aside {padding: 12px 10px;}
+.school-outline-title {display: flex; align-items: center; justify-content: space-between; gap: 6px;}
+.school-outline-title h2 {margin: 0; font-size: 15px;}
+.school-lab-objective summary {font-size: 12px; color: var(--text-secondary);}
+.school-practice-grid .school-outline-progress {margin-block: 2px 7px;}
+.school-practice-grid .school-questions button {
+  display: grid; grid-template-columns: 2ch minmax(0, 1fr) auto; gap: 6px;
+  min-height: 37px; padding: 6px 4px; font-size: 12px;
 }
-@media (width <= 640px) {
- .page.school-workspace {padding-block-start:12px}
- .school-workspace .school-lab-heading {margin-block:4px 8px;gap:4px}
- .school-workspace .school-grid {gap:10px}
- .school-workbench-tabs {margin-bottom:0}
- .school-brief details>summary {padding-block:5px}
- .school-question-menu {margin-top:3px}
- .school-tools {display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:5px;margin-block:8px}
- .school-tools .button {min-width:0;padding-inline:7px;gap:4px;min-height:44px;font-size:12px}
- .school-tools .school-tool-toggle {display:inline-flex}
- .school-tool-toggle[aria-expanded=true]>svg {transform:rotate(90deg)}
- .school-extra-tools {grid-column:1/-1;display:none}
- .school-extra-tools[data-open=true] {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.school-question-index {font-variant-numeric: tabular-nums; text-align: end; color: var(--text-secondary);}
+.school-question-header .button {min-height: 34px; padding-block: 4px;}
+.school-lab-data {margin-block: 16px; display: grid; gap: 8px; min-width: 0;}
+.school-lab-data h3 {margin: 0; font-size: 14px;}
+.school-lab-data .school-table-tabs {margin: 0; padding-bottom: 3px;}
+.school-lab-data .school-table-tab {text-transform: none; font: 12px Consolas, monospace; padding: 4px 8px; min-height: 26px; height: auto;}
+.school-lab-data .school-table-tab[aria-pressed=true] {background: var(--primary-soft); color: var(--primary-ink); border-color: var(--primary-border);}
+.school-lab-data .table td {white-space: nowrap;}
+.school-lab-data [data-table-kind=lab-schema] :is(th,td) {padding-inline: 5px;}
+.school-lab-data [data-table-kind=lab-schema] th {white-space: nowrap;}
+.school-lab-data [data-table-kind=lab-schema] td:last-child {white-space: normal;}
+.school-practice-prompt .school-question-requirement code {
+  padding: .1em .24em; border: 1px solid var(--border); border-radius: 4px;
+  font-size: .9em; color: var(--text); background: var(--surface-muted);
+}
+.school-objects-modal {max-height: 85dvh; overflow: auto;}
+.school-practice-workspace .school-results {margin: 0;}
+.school-practice-workspace .school-results h2 {margin: 0 0 8px;}
+.school-practice-workspace .school-actions.sql-practice-tools {margin: 0; gap: 6px;}
+.school-practice-workspace .school-completion {margin-top: 12px;}
+.school-practice-workspace .school-notes {min-height: 180px; width: 100%;}
+@media (min-width: 821px) {
+  .school-practice-grid {grid-template-columns: minmax(138px, .95fr) minmax(0, 2.65fr) minmax(0, 6.4fr);}
+}
+@media (min-width: 1180px) and (min-height: 650px) {
+  .page.school-practice-workspace {height: calc(100dvh - var(--workspace-header-height) - 8px);}
+  .school-practice-grid {flex: 1; min-height: 0;}
+  .school-practice-grid > aside {min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin;}
+  .school-practice-sql {grid-template-rows: minmax(0, 55fr) auto minmax(0, 45fr); min-height: 0;}
+  .school-practice-sql .school-monaco .code-editor-shell:not([open]) {height: 100%;}
+  .school-practice-sql .school-monaco .code-editor-shell:not([open]) .code-editor-area {height: auto; min-height: 0;}
 }

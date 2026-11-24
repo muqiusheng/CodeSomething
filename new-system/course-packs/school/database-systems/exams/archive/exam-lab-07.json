@@ -1,0 +1,572 @@
+{
+  "id": "exam-lab-07",
+  "title": "实验七专项卷 · 触发器、完整性约束与事务回滚",
+  "group": "specialty",
+  "labId": "lab-07-triggers",
+  "questions": [
+    {
+      "id": "exam-lab-07-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "在写入 sc 前验证输入并拒绝违规成绩，选择什么？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "触发时机"
+      ],
+      "options": {
+        "A": "AFTER DELETE ON sc",
+        "B": "BEFORE UPDATE ON course",
+        "C": "AFTER UPDATE ON student",
+        "D": "BEFORE INSERT ON sc"
+      },
+      "answer": "D",
+      "explanation": "BEFORE INSERT 可在新行落表前校验 NEW 数据。"
+    },
+    {
+      "id": "exam-lab-07-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "AFTER UPDATE 中比较更新前后的 Grade，应该用什么？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "options": {
+        "A": "NEW.Grade 与 current.Grade",
+        "B": "pre.Grade 与 post.Grade",
+        "C": "OLD.Grade 与 NEW.Grade",
+        "D": "OLD.Grade 与 OLD.Cno"
+      },
+      "answer": "C",
+      "explanation": "更新触发器同时具有 OLD 与 NEW 两套行镜像。"
+    },
+    {
+      "id": "exam-lab-07-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "DELETE 触发器访问被删掉的学号使用什么？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "options": {
+        "A": "DELETED.Sno",
+        "B": "OLD.Sno",
+        "C": "NEW.Sno",
+        "D": "ROW.Sno"
+      },
+      "answer": "B",
+      "explanation": "删除只存在旧行镜像。"
+    },
+    {
+      "id": "exam-lab-07-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "显式抛出常见用户自定义业务错误用什么？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "SIGNAL"
+      ],
+      "options": {
+        "A": "SIGNAL SQLSTATE '45000'",
+        "B": "SELECT '45000'",
+        "C": "SET SQLSTATE=45000",
+        "D": "RAISE MESSAGE '45000'"
+      },
+      "answer": "A",
+      "explanation": "SIGNAL 产生可让调用语句失败的 SQL 异常。"
+    },
+    {
+      "id": "exam-lab-07-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "仅在 Grade 发生真实变化时记日志，如何兼顾 NULL？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "NULL"
+      ],
+      "options": {
+        "A": "OLD.Grade <> NEW.Grade",
+        "B": "OLD.Grade IS NOT NULL",
+        "C": "OLD.Grade = NEW.Grade",
+        "D": "NOT (OLD.Grade <=> NEW.Grade)"
+      },
+      "answer": "D",
+      "explanation": "<=> 是 NULL 安全等于，取反可靠覆盖 NULL 到数值。"
+    },
+    {
+      "id": "exam-lab-07-q06",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "用 InnoDB 记录改分审计后回滚改分，审计行怎样？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "事务"
+      ],
+      "options": {
+        "A": "只有审计行回滚，成绩会提交",
+        "B": "需先 DROP TRIGGER 才可回滚",
+        "C": "同事务内一并回滚",
+        "D": "永久保留"
+      },
+      "answer": "C",
+      "explanation": "触发器 DML 与触发语句在同一事务生命周期中。"
+    },
+    {
+      "id": "exam-lab-07-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "父行被 ON DELETE CASCADE 删除时，子表 DELETE 触发器会怎样？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "外键"
+      ],
+      "options": {
+        "A": "级联动作自动变为 TRUNCATE",
+        "B": "级联外键动作不会激活子表触发器",
+        "C": "每个级联子行都会触发 DELETE 触发器",
+        "D": "只触发一次 INSERT 触发器"
+      },
+      "answer": "B",
+      "explanation": "MySQL 的外键级联动作不激活触发器。"
+    },
+    {
+      "id": "exam-lab-07-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "为保证成绩在 0–100，且简单静态范围需覆盖直接 UPDATE，最简通用规则？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "约束"
+      ],
+      "options": {
+        "A": "给 Grade 增加 CHECK 范围规则",
+        "B": "只加 AFTER INSERT 触发器",
+        "C": "给 Grade 建普通索引",
+        "D": "把 Grade 设为外键"
+      },
+      "answer": "A",
+      "explanation": "CHECK 在写入行时验证常规范围，无需拆分插入和更新。"
+    },
+    {
+      "id": "exam-lab-07-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "sc 触发器中对正在被外层语句修改的 sc 执行 UPDATE 会发生什么？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "触发限制"
+      ],
+      "options": {
+        "A": "自动递归，直到没有匹配行",
+        "B": "更改隐式移至提交之后",
+        "C": "只更新第一条行",
+        "D": "报目标表不能在此触发器中再次修改"
+      },
+      "answer": "D",
+      "explanation": "MySQL 禁止触发器再次修改当前语句正在使用的表。"
+    },
+    {
+      "id": "exam-lab-07-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "希望 INSERT 时修正 NEW.Grade，应在哪个时间点赋值？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "options": {
+        "A": "AFTER DELETE",
+        "B": "BEFORE DELETE",
+        "C": "BEFORE INSERT",
+        "D": "AFTER INSERT"
+      },
+      "answer": "C",
+      "explanation": "BEFORE 可赋给 NEW 允许的列，AFTER 行已写入。"
+    },
+    {
+      "id": "exam-lab-07-q11",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "一条 UPDATE 实际处理五行，行级触发器如何运行？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "触发时机"
+      ],
+      "options": {
+        "A": "只对最后一行触发",
+        "B": "对处理的行逐行触发",
+        "C": "每语句只触发一次",
+        "D": "事务提交时才触发一次"
+      },
+      "answer": "B",
+      "explanation": "FOR EACH ROW 指明按行执行。"
+    },
+    {
+      "id": "exam-lab-07-q12",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "核对触发器绑定表、事件和 BEFORE/AFTER，从哪看？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "元数据"
+      ],
+      "options": {
+        "A": "SHOW TRIGGERS",
+        "B": "SHOW PROCEDURE STATUS",
+        "C": "SHOW OPEN TABLES",
+        "D": "SHOW PROCESSLIST"
+      },
+      "answer": "A",
+      "explanation": "SHOW TRIGGERS 提供事件及表等元数据。"
+    },
+    {
+      "id": "exam-lab-07-q13",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "两条成绩相同而学生不同，可以同时存在的直接原因？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "约束"
+      ],
+      "options": {
+        "A": "Grade 是唯一主键",
+        "B": "同一 Cno 不允许两名学生",
+        "C": "触发器必定重写第二个 Grade",
+        "D": "sc 检查的是 Sno/Cno 组合唯一"
+      },
+      "answer": "D",
+      "explanation": "主键未包含 Grade，成绩可重复。"
+    },
+    {
+      "id": "exam-lab-07-q14",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "父课号仍被引用，希望 RESTRICT 有效，测试至少需什么？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "外键"
+      ],
+      "options": {
+        "A": "只比较 Cname",
+        "B": "关闭 foreign_key_checks 再删除",
+        "C": "先有一条引用该父键的子行",
+        "D": "测试空的 sc"
+      },
+      "answer": "C",
+      "explanation": "只有真实引用存在时，限制删除才能被观察。"
+    },
+    {
+      "id": "exam-lab-07-q15",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "练习触发器时要验证回滚，哪项 DDL 应提前完成？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "事务"
+      ],
+      "options": {
+        "A": "ROLLBACK",
+        "B": "CREATE TRIGGER 和 CREATE TABLE",
+        "C": "SELECT Grade",
+        "D": "UPDATE sc"
+      },
+      "answer": "B",
+      "explanation": "创建对象会隐式提交，先完成定义再测试事务。"
+    },
+    {
+      "id": "exam-lab-07-q16",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "INSERT 触发器可以读取 OLD.Cno。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "answer": "false",
+      "explanation": "插入没有旧行，只能读取 NEW。"
+    },
+    {
+      "id": "exam-lab-07-q17",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "对于常见字段，BEFORE UPDATE 中可以 SET NEW.Grade。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "answer": "true",
+      "explanation": "BEFORE 阶段可修改即将写入的 NEW 列值。"
+    },
+    {
+      "id": "exam-lab-07-q18",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "触发器中允许执行 COMMIT，单独提交审计行。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "事务"
+      ],
+      "answer": "false",
+      "explanation": "MySQL 触发器不能显式提交事务。"
+    },
+    {
+      "id": "exam-lab-07-q19",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "SIGNAL SQLSTATE '45000' 可以让非法操作失败。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "SIGNAL"
+      ],
+      "answer": "true",
+      "explanation": "它是在存储程序中报告用户自定义异常的方式。"
+    },
+    {
+      "id": "exam-lab-07-q20",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "TRUNCATE TABLE 会逐行触发 DELETE 触发器。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "触发时机"
+      ],
+      "answer": "false",
+      "explanation": "TRUNCATE 是 DDL，不是逐行 DELETE。"
+    },
+    {
+      "id": "exam-lab-07-q21",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "OLD.Grade = NEW.Grade 足以让两个 NULL 比较返回 TRUE。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "NULL"
+      ],
+      "answer": "false",
+      "explanation": "普通等号返回 UNKNOWN，NULL 安全等于才会返回真。"
+    },
+    {
+      "id": "exam-lab-07-q22",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "启用 sc 的外键检查后，非法课号通常在执行插入时被拒绝。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "约束"
+      ],
+      "answer": "true",
+      "explanation": "MySQL 对引用键使用即时检查。"
+    },
+    {
+      "id": "exam-lab-07-q23",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "DROP TRIGGER IF EXISTS 可以删除触发器且保留关联表。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "元数据"
+      ],
+      "answer": "true",
+      "explanation": "对象删除与表删除是不同操作。"
+    },
+    {
+      "id": "exam-lab-07-q24",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "对于默认 InnoDB，CHECK 限制可与 BEFORE INSERT 触发器同时存在。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "约束"
+      ],
+      "answer": "true",
+      "explanation": "触发器与声明式约束可以组合，分别承担不同规则。"
+    },
+    {
+      "id": "exam-lab-07-q25",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "使用 InnoDB INSERT 多行时，某一行因触发器 SIGNAL 失败，整个该语句会回滚。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "事务"
+      ],
+      "answer": "true",
+      "explanation": "语句级原子性意味着同一失败语句的写入不能部分保留。"
+    },
+    {
+      "id": "exam-lab-07-q26",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "在插入成绩前执行处理。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "触发时机"
+      ],
+      "template": "CREATE TRIGGER grade_gate {{1}} ON sc {{2}} SET NEW.Grade=COALESCE(NEW.Grade,0);",
+      "blanks": [
+        [
+          "BEFORE INSERT"
+        ],
+        [
+          "FOR EACH ROW"
+        ]
+      ],
+      "explanation": "BEFORE INSERT 可补齐 NEW 值，每条新行触发。"
+    },
+    {
+      "id": "exam-lab-07-q27",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全触发器中的拒绝语句。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "SIGNAL"
+      ],
+      "template": "{{1}} '45000' SET {{2}}='成绩未达要求';",
+      "blanks": [
+        [
+          "SIGNAL SQLSTATE",
+          "SIGNAL SQLSTATE VALUE"
+        ],
+        [
+          "MESSAGE_TEXT"
+        ]
+      ],
+      "explanation": "SQLSTATE 45000 配合 MESSAGE_TEXT 返回业务诊断。"
+    },
+    {
+      "id": "exam-lab-07-q28",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全比较符，确保两个 NULL 视为相同。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "NULL"
+      ],
+      "template": "IF NOT (OLD.Grade {{1}} NEW.Grade) THEN SET @changed=1; END IF;",
+      "blanks": [
+        [
+          "<=>"
+        ]
+      ],
+      "explanation": "NULL 安全相等避免 UNKNOWN 破坏条件判断。"
+    },
+    {
+      "id": "exam-lab-07-q29",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "在删除后写入旧学号、课号。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "行镜像"
+      ],
+      "template": "INSERT INTO delete_audit(Sno,Cno) VALUES ({{1}}, {{2}});",
+      "blanks": [
+        [
+          "OLD.Sno"
+        ],
+        [
+          "OLD.Cno"
+        ]
+      ],
+      "explanation": "DELETE 事件可读 OLD 的两列。"
+    },
+    {
+      "id": "exam-lab-07-q30",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "撤销用于验证触发器的本次事务。",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "事务"
+      ],
+      "template": "START TRANSACTION; UPDATE sc SET Grade=90 WHERE Sno='20110001' AND Cno='001'; {{1}};",
+      "blanks": [
+        [
+          "ROLLBACK",
+          "ROLLBACK WORK",
+          "ROLLBACK AND NO CHAIN",
+          "ROLLBACK WORK AND NO CHAIN"
+        ]
+      ],
+      "explanation": "回滚会同时撤销 InnoDB 审计记录。"
+    },
+    {
+      "id": "exam-lab-07-q31",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-07-triggers",
+      "prompt": "在 sc 建立 BEFORE INSERT 触发器 grade_gate。只拒绝新插入且非空的低于 60 分成绩，用 SIGNAL SQLSTATE '45000'。60 分和 NULL 均可插入。",
+      "referenceSql": "DELIMITER $$\nCREATE TRIGGER grade_gate BEFORE INSERT ON sc FOR EACH ROW\nBEGIN\n IF NEW.Grade<60 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='分数低于登记下限'; END IF;\nEND$$\nDELIMITER ;",
+      "tags": [
+        "触发时机",
+        "SIGNAL"
+      ],
+      "explanation": "BEFORE INSERT 读 NEW，NULL 不会使小于比较为真。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "state_check",
+          "label": "触发器时机和目标表",
+          "points": 8,
+          "sql": "SELECT LOWER(TRIGGER_NAME) AS TRIGGER_NAME,ACTION_TIMING,EVENT_MANIPULATION,LOWER(EVENT_OBJECT_TABLE) AS EVENT_OBJECT_TABLE FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=DATABASE() AND LOWER(TRIGGER_NAME)='grade_gate';",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "negative_check",
+          "label": "保留合法边界并拦截低分",
+          "points": 4,
+          "sql": "SELECT Sno,Cno,Grade FROM sc WHERE Sno='20110008' ORDER BY Cno;",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "positiveSql": "INSERT INTO sc VALUES ('20110008','001',60);INSERT INTO sc VALUES ('20110008','002',null);",
+          "negativeSql": "INSERT INTO sc VALUES ('20110008','003',59);",
+          "errorCode": 1644
+        }
+      ]
+    },
+    {
+      "id": "exam-lab-07-q32",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-07-triggers",
+      "prompt": "已建 grade_audit(Sno,Cno,old_grade,new_grade)。建 AFTER UPDATE 触发器记录 sc 中真正变化的成绩，包含从 NULL 改为具体分数。保持同事务审计。",
+      "referenceSql": "DELIMITER $$\nCREATE TRIGGER grade_audit_update AFTER UPDATE ON sc FOR EACH ROW\nBEGIN\n IF NOT (OLD.Grade <=> NEW.Grade) THEN INSERT INTO grade_audit VALUES (NEW.Sno,NEW.Cno,OLD.Grade,NEW.Grade); END IF;\nEND$$\nDELIMITER ;",
+      "tags": [
+        "NULL",
+        "事务"
+      ],
+      "explanation": "NULL 安全等号识别真实改变，InnoDB 的审计插入随事务回滚。",
+      "setupSql": "CREATE TABLE grade_audit (Sno CHAR(8), Cno CHAR(3), old_grade TINYINT, new_grade TINYINT) ENGINE=InnoDB;",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "post_query",
+          "label": "只记录变化，包括 NULL 转数值",
+          "points": 8,
+          "sql": "UPDATE sc SET Grade=90 WHERE Sno='20110001' AND Cno='001';UPDATE sc SET Grade=90 WHERE Sno='20110001' AND Cno='001';UPDATE sc SET Grade=60 WHERE Sno='20110005' AND Cno='002';SELECT Sno,Cno,old_grade,new_grade FROM grade_audit ORDER BY Sno,Cno;",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "post_query",
+          "label": "审计记录随事务回滚",
+          "points": 4,
+          "sql": "START TRANSACTION; UPDATE sc SET Grade=91 WHERE Sno='20110001' AND Cno='001'; ROLLBACK; SELECT Sno,Cno,old_grade,new_grade FROM grade_audit ORDER BY Sno,Cno;",
+          "orderMatters": true,
+          "checkColumnNames": true
+        }
+      ]
+    }
+  ]
+}

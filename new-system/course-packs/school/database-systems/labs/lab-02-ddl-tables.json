@@ -1,13 +1,13 @@
 {
   "id": "lab-02-ddl-tables",
   "objective": "用 SQL 完成建库、建表、表结构变更和数据维护，能解释完整性约束导致的执行反馈。",
-  "requirements": "使用顶部显示的 student_inf 练习库，在实验一的三表模型上继续。若要从零重建，先显式重置为空库。清空 SC 的操作完成后，恢复选课记录再进入查询实验。",
+  "requirements": "每题独立初始化三表。题目会说明预置定义或本题已移除的列和约束，判分会检查结构、数据与完整性边界。",
   "questions": [
     {
       "id": "q01",
       "title": "创建数据库",
-      "requirement": "用 SQL 创建课程指定的 student_inf 学生练习库，并确认当前库。",
-      "hint": "可以使用 CREATE DATABASE IF NOT EXISTS，库名以工作台为准。",
+      "requirement": "在当前沙箱中用 SQL 把默认字符集与排序规则设为 utf8mb4、utf8mb4_0900_ai_ci。然后可查询元数据核对。",
+      "hint": "ALTER DATABASE 省略库名时修改当前数据库。",
       "optional": false,
       "starterSql": "",
       "originalText": "1、通过SQL语句创建数据库student_inf_XXXXXXXX"
@@ -15,7 +15,7 @@
     {
       "id": "q02",
       "title": "编写建表脚本",
-      "requirement": "创建 Student、Course 和 SC。设置主外键、非空、默认值与 CHECK；使两侧外键列的类型一致。",
+      "requirement": "依次输出 sc 的主键列名和序号，以及 sc 外键的本表列、被引用表与被引用列。两个结果集分别按主键列序号和本表列名升序。",
       "hint": "SC 的 Cno 与 Course.Cno 使用同一类型，主键由 Sno、Cno 共同组成。",
       "optional": false,
       "starterSql": "",
@@ -24,8 +24,8 @@
     {
       "id": "q03",
       "title": "增加与删除列",
-      "requirement": "为 Student 增加 Stature（DECIMAL(4,2)，小于 3）、Sdept（长度 20，非空）、Postcode（6 位数字或空）；随后删除 Stature。",
-      "hint": "用 SHOW CREATE TABLE 验证列与约束。",
+      "requirement": "练习已移除 student 的 Sdept 与 Postcode。补回 Sdept VARCHAR(20) NOT NULL 与 Postcode CHAR(6)，邮编允许 NULL、否则恰为六位数字。将所有原有学生的系别填为“待补录”。",
+      "hint": "可先添加列，再更新现有学生的系别。CHECK 对 NULL 的判断结果为 UNKNOWN。",
       "optional": false,
       "starterSql": "",
       "originalText": "（1）添加和删除列\na. 给Student表增加身高（以米单位）Stature列 ，类型为numeric(4，2）,允许为空值，且身高值需小于3.0米。\nb. 给Student表增加所在系Sdept列，字符型，长度20，不允许为空值。\nc. 给Student表增加邮政编码Postcode列，字符型，长度为6，可以为空，若不为空时，则要求其值只能出现数字，不能是其它字符。\nd.删除Student表中身高Stature列。"
@@ -33,8 +33,8 @@
     {
       "id": "q04",
       "title": "增加与移除约束",
-      "requirement": "要求入学日期晚于出生日期。对 SC.Grade 设置默认值 0，验证后移除默认值。",
-      "hint": "比较 ALTER COLUMN ... SET DEFAULT 与 DROP DEFAULT。",
+      "requirement": "student 的入学日期检查已经移除，补上 Entrance_date 严格晚于 Birth 的 CHECK。sc.Grade 的临时默认值为 0，移除该默认值。",
+      "hint": "题目沙箱已移除日期检查并为 Grade 设值，使用 ADD CHECK 与 DROP DEFAULT 恢复规则。",
       "optional": false,
       "starterSql": "",
       "originalText": "（2）添加和删除约束\na.在Student表添加约束：入学时间必须在出生年月之后\nb.给SC表的成绩Grade列增加默认值约束，默认值为0\nc.删除Grade列的默认值约束"
@@ -42,7 +42,7 @@
     {
       "id": "q05",
       "title": "录入数据及检查负例",
-      "requirement": "参考实验一装载三张表。分别试插缺少必填字段的学生、选修不存在课号的学生，记录真实报错。原题使用 005，若练习库已有 005，改用未被占用的课号。",
+      "requirement": "用 sc 的结构与现有外键做参照完整性练习：录入 20110008 对 001 的记录，成绩用 NULL；查询该生的学号、课号、成绩，按课号升序。",
       "hint": "学生存在只满足一条外键；课号还需要出现在 Course 中。",
       "optional": false,
       "starterSql": "",
@@ -51,7 +51,7 @@
     {
       "id": "q06",
       "title": "修改数据",
-      "requirement": "把 002 课程改为 4 学分、64 学时，将该课程已有成绩乘 0.8，保留更新前后对照。",
+      "requirement": "将 002 改为 4 学分、64 学时，并将该课已有成绩乘 0.8 后四舍五入为整数，保留缺考与其他课。",
       "hint": "用 WHERE Cno 限定影响范围。",
       "optional": false,
       "starterSql": "",
@@ -60,8 +60,8 @@
     {
       "id": "q07",
       "title": "删除选课记录",
-      "requirement": "删除选修 C 语言程序设计的记录，再演示删除全部选课记录。完成后恢复后续查询所需数据。",
-      "hint": "先用相同条件查询。可以在事务中练习删除并回滚。",
+      "requirement": "删除选修 C语言程序设计（002）的全部选课记录，保留课程、学生和其他课程的选课记录。",
+      "hint": "用 WHERE 限制删除范围，提交后系统检查最终数据。",
       "optional": false,
       "starterSql": "",
       "originalText": "（3）删除数据\na. 使用SQL语句，删除选修了“C语言程序设计”的学生的选课记录。\nb. 使用SQL语句，删除所有的学生选课记录。"
@@ -69,42 +69,47 @@
     {
       "id": "q08",
       "title": "用临时副本验证列默认值",
-      "requirement": "创建一个临时课程表，设定一个总学时默认值。分别插入省略总学时和显式写 NULL 的两行，查询两行的实际值。",
-      "hint": "使用 CREATE TEMPORARY TABLE，并把建表、插入和查询写在同一题里。省略列使用默认值，显式 NULL 取决于可空定义。",
+      "requirement": "为 course.Total_perior 设置默认值 48。插入测试课程 981、982（课程名分别为“缺省学时”“未知学时”，均为 3 学分），前者省略学时，后者明确传 NULL。",
+      "hint": "省略列使用默认值，显式 NULL 取决于可空定义。",
       "optional": true,
-      "starterSql": ""
+      "starterSql": "",
+      "originalText": "创建一个临时课程表，设定一个总学时默认值。分别插入省略总学时和显式写 NULL 的两行，查询两行的实际值。"
     },
     {
       "id": "q09",
       "title": "对比 CHECK 边界和错误数据",
-      "requirement": "在独立临时表定义成绩范围 0—100，验证 0 和 100 可以写入，再单独运行 101 的反例。记录约束名或错误类别。",
-      "hint": "每次反例要在自己的脚本中准备临时表，因为运行会开启新会话。可先保存成功用例，再替换末条语句观察失败。",
+      "requirement": "sc 的原成绩检查已移除。为 Grade 增加 0 至 100 的 CHECK（包含边界），保留可空属性。",
+      "hint": "用 ADD CHECK 定义范围，系统会分别测试合法与非法成绩。",
       "optional": true,
-      "starterSql": ""
+      "starterSql": "",
+      "originalText": "在独立临时表定义成绩范围 0—100，验证 0 和 100 可以写入，再单独运行 101 的反例。记录约束名或错误类别。"
     },
     {
       "id": "q10",
       "title": "用事务预演课程调学分",
-      "requirement": "选择已有课程，开启事务后修改它的学分，分别输出修改前、事务内和回滚后的值。核对其余课程没有受到影响。",
+      "requirement": "依次输出 001 的课号和学分。开启事务将其改为 5 学分，再次输出；回滚后第三次输出同样两列。",
       "hint": "把 SELECT、START TRANSACTION、UPDATE 和 ROLLBACK 放在同一题里。本题只修改数据。",
       "optional": true,
-      "starterSql": ""
+      "starterSql": "",
+      "originalText": "选择已有课程，开启事务后修改它的学分，分别输出修改前、事务内和回滚后的值。核对其余课程没有受到影响。"
     },
     {
       "id": "q11",
       "title": "复制表结构并比较保留的约束",
-      "requirement": "为 SC 创建一个专用结构副本，比较原表和副本的定义。分别核对复合主键、成绩检查和外键是否随结构复制，完成后删除副本。",
-      "hint": "可用 CREATE TABLE … LIKE 和 SHOW CREATE TABLE。为副本使用独立名称，避免覆盖 SC。",
+      "requirement": "从 information_schema 查询 sc 的主键列名及位置，然后查询它的外键数，输出两个结果集。",
+      "hint": "主键列顺序来自 KEY_COLUMN_USAGE，外键总数可查 REFERENTIAL_CONSTRAINTS。",
       "optional": true,
-      "starterSql": ""
+      "starterSql": "",
+      "originalText": "为 SC 创建一个专用结构副本，比较原表和副本的定义。分别核对复合主键、成绩检查和外键是否随结构复制，完成后删除副本。"
     },
     {
       "id": "q12",
       "title": "给选课副本补一个查询索引",
-      "requirement": "用专用 SC 结构副本练习新增和删除 (Cno, Grade) 复合索引。分别列出新增后和移除后的索引定义，最后清理副本。",
+      "requirement": "为 sc 添加名为 idx_sc_grade 的 (Cno, Grade) 索引。",
       "hint": "用 ALTER TABLE 或 CREATE INDEX。观察索引列的顺序，以及复合主键是否仍在。",
       "optional": true,
-      "starterSql": ""
+      "starterSql": "",
+      "originalText": "用专用 SC 结构副本练习新增和删除 (Cno, Grade) 复合索引。分别列出新增后和移除后的索引定义，最后清理副本。"
     }
   ],
   "originalObjective": "（1）掌握查询分析器的使用。\n（2）掌握通过SQL语句创建表的方法。\n（3）掌握通过SQL语句修改表结构的方法。\n（4）掌握通过SQL语句添加、修改、删除表数据的方法。",

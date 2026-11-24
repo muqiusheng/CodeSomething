@@ -1,0 +1,576 @@
+{
+  "id": "exam-mock-02",
+  "title": "综合模拟卷（二）· 复杂查询与视图强化卷",
+  "group": "mock",
+  "revision": 2,
+  "questions": [
+    {
+      "id": "exam-mock-02-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "核对班级名册时，每个班内任意两名学生只列一对，且不能与自己成对。连接 student a 与 student b 时，哪项 ON 条件满足要求？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "自连接"
+      ],
+      "options": {
+        "A": "a.Classno=b.Classno AND a.Sno<b.Sno",
+        "B": "a.Sno=b.Sno AND a.Classno=b.Classno",
+        "C": "a.Classno<>b.Classno AND a.Sno<b.Sno",
+        "D": "a.Classno=b.Classno AND a.Sno<>b.Sno"
+      },
+      "answer": "A",
+      "explanation": "严格小于同时排除自己和镜像重复，只在班号相同的行间配对。"
+    },
+    {
+      "id": "exam-mock-02-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "某报表视图必须让报表员读取公开列，但报表员没有底表权限。假定定义者具备所需权限，哪种配置可达到目标？",
+      "labId": "lab-05-views",
+      "tags": [
+        "权限"
+      ],
+      "options": {
+        "A": "视图使用 SQL SECURITY INVOKER，向报表员只授予视图的 SELECT 权限",
+        "B": "视图使用 SQL SECURITY DEFINER，向报表员只授予视图的 SELECT 权限",
+        "C": "给报表员底表的 UPDATE 权限",
+        "D": "撤销定义者的底表权限并只给报表员视图权限"
+      },
+      "answer": "B",
+      "explanation": "DEFINER 按定义者权限访问底表，报表员只需对视图有相应权限。"
+    },
+    {
+      "id": "exam-mock-02-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "某班待阅成绩为 0、0、78、NULL、NULL。需要统计不同的有效分数有多少种，哪种表达式和结果正确？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "options": {
+        "A": "COUNT(Grade)，结果为 2",
+        "B": "COUNT(DISTINCT Grade)，结果为 3",
+        "C": "COUNT(DISTINCT Grade)，结果为 2",
+        "D": "COUNT(*)，结果为 3"
+      },
+      "answer": "C",
+      "explanation": "DISTINCT 去掉重复的 0，COUNT(expr) 忽略 NULL，所以只计入 0 和 78 两个值。"
+    },
+    {
+      "id": "exam-mock-02-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "查询选全“必修课集合”的学生，使用双层 NOT EXISTS 检验没有漏选。如果必修课集合为空、且没有额外报名条件，哪些学生满足？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "关系除法"
+      ],
+      "options": {
+        "A": "仅无任何选课的学生",
+        "B": "仅至少选了一门课的学生",
+        "C": "没有学生",
+        "D": "student 中的每位学生"
+      },
+      "answer": "D",
+      "explanation": "空的必修集合不可能产生漏选反例，所以每个外层学生都满足条件。"
+    },
+    {
+      "id": "exam-mock-02-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "课程成绩为 50、50、80、NULL。计算 SUM(DISTINCT Grade) 与 SUM(Grade)，结果分别是多少？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "options": {
+        "A": "130 和 180",
+        "B": "180 和 130",
+        "C": "180 和 180",
+        "D": "130 和 130"
+      },
+      "answer": "A",
+      "explanation": "两个 SUM 都跳过 NULL。DISTINCT 只累加一个 50，普通 SUM 累加两个 50。"
+    },
+    {
+      "id": "exam-mock-02-q06",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "希望发布每门课程的选课人数视图 v_count(Cno,N)，再由报表人员修正单个学生的选课，哪种操作合理？",
+      "labId": "lab-05-views",
+      "tags": [
+        "可更新性"
+      ],
+      "options": {
+        "A": "将 v_count 中的 N 改为 NULL",
+        "B": "UPDATE v_count SET N=N-1 WHERE Cno='001'",
+        "C": "修改 sc 的选课行，再重查 v_count",
+        "D": "用 DELETE FROM v_count 删除指定学生"
+      },
+      "answer": "C",
+      "explanation": "聚合列 N 并不对应可写的单个基表字段。需要改基表，视图重新计算计数。"
+    },
+    {
+      "id": "exam-mock-02-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "同一门课有分数 96、96、88、83。按 Grade DESC 用 RANK() 求名次，88 分对应第几名？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "排名"
+      ],
+      "options": {
+        "A": "第 2 名",
+        "B": "第 1 名",
+        "C": "第 3 名",
+        "D": "第 4 名"
+      },
+      "answer": "C",
+      "explanation": "RANK 的两个首名平列，下一行的位置是 3。DENSE_RANK 才会让下一档名次连续。"
+    },
+    {
+      "id": "exam-mock-02-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "在外层学号都非空的情况下，排除名单子查询返回 '20110001'、NULL。对外层 '20110002'，WHERE Sno NOT IN (子查询) 会怎样？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "NULL"
+      ],
+      "options": {
+        "A": "条件为 TRUE，该行保留",
+        "B": "条件为 FALSE，因为 NULL 等同任意学号",
+        "C": "SQL 会因为子查询含 NULL 直接报错",
+        "D": "条件为 UNKNOWN，该行被过滤"
+      },
+      "answer": "D",
+      "explanation": "外层学号与已知值不同，与 NULL 的相等性未知，NOT IN 无法证明它不在集合中。"
+    },
+    {
+      "id": "exam-mock-02-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "视图 v_marks 公开 Sno、Cno、Grade。分页要先按 Grade 由高到低，并让并列记录的位置由学号、课号确定。应使用什么顺序？",
+      "labId": "lab-05-views",
+      "tags": [
+        "视图"
+      ],
+      "options": {
+        "A": "只在视图定义中写 ORDER BY Grade DESC",
+        "B": "外层查询 ORDER BY Grade DESC",
+        "C": "外层查询 ORDER BY Grade DESC,Sno,Cno",
+        "D": "外层查询 ORDER BY Sno,Cno,Grade DESC"
+      },
+      "answer": "C",
+      "explanation": "外层顺序决定分页；Sno、Cno 是唯一组合，用于打破分数相同的情况。"
+    },
+    {
+      "id": "exam-mock-02-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "过程将有记录但所有 Grade 均为 NULL 的课程标为“待登记”。如果局部变量 n 保存 COUNT(*)、g 保存 COUNT(Grade)，哪个条件准确？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "流程控制"
+      ],
+      "options": {
+        "A": "n>0 AND g=0",
+        "B": "n=0 AND g=0",
+        "C": "g>0 AND n=0",
+        "D": "n>0 AND n=g"
+      },
+      "answer": "A",
+      "explanation": "有选课记录使 n 大于 0，没有已录成绩使 g 为 0。没有选课和全待登记应分开。"
+    },
+    {
+      "id": "exam-mock-02-q11",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "同一学生可在多门课有不同成绩。连接两份选课快照以逐条对比旧分与新分时，仅写 a.Sno=b.Sno 会造成什么？",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "连接"
+      ],
+      "options": {
+        "A": "同一学生的不同课程相互错配，应同时连接 Cno",
+        "B": "只能对比 NULL 分，需要再比较 Grade",
+        "C": "自动按主键补齐 Cno",
+        "D": "不会产生错配，Sno 已足够唯一"
+      },
+      "answer": "A",
+      "explanation": "选课身份是复合键 (Sno,Cno)。只匹配学生，会把他的各门课程互相组合。"
+    },
+    {
+      "id": "exam-mock-02-q12",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "如下划分操作：START TRANSACTION；第一次 UPDATE sc；SAVEPOINT s；第二次 UPDATE sc；ROLLBACK TO SAVEPOINT s；COMMIT。两次更新各触发一次审计写入，两个表均用 InnoDB。提交后保留哪次审计？",
+      "labId": "lab-07-triggers",
+      "tags": [
+        "事务"
+      ],
+      "options": {
+        "A": "只保留第二次",
+        "B": "只保留第一次",
+        "C": "两次都保留",
+        "D": "两次都撤销"
+      },
+      "answer": "B",
+      "explanation": "回滚到保存点撤销保存点之后的成绩更新及对应审计。提交剩余事务时保留第一次。"
+    },
+    {
+      "id": "exam-mock-02-q13",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "试验员执行 CREATE TABLE sc_try LIKE sc，未再修改 sc_try。从种子表复制了哪一项？",
+      "labId": "lab-02-ddl-tables",
+      "tags": [
+        "复制表"
+      ],
+      "options": {
+        "A": "原选课数据和外键，但没有主键",
+        "B": "原复合主键及列定义，且 sc_try 初始无行",
+        "C": "只复制列名，所有列均可为 NULL",
+        "D": "原有数据、索引和外键全部复制"
+      },
+      "answer": "B",
+      "explanation": "LIKE 复制列定义与索引，包括主键，但不复制数据和外键定义。"
+    },
+    {
+      "id": "exam-mock-02-q14",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "SELECT Cno, COUNT(*) AS n FROM sc GROUP BY Cno 要只显示人数不少于 5 的课程。在 MySQL 中哪一补充合法且符合条件？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "别名"
+      ],
+      "options": {
+        "A": "LIMIT 5",
+        "B": "WHERE n>=5",
+        "C": "HAVING Grade>=5",
+        "D": "HAVING n>=5"
+      },
+      "answer": "D",
+      "explanation": "MySQL 允许在 HAVING 引用 SELECT 的聚合别名。WHERE 发生在分组之前，LIMIT 只限制总行数。"
+    },
+    {
+      "id": "exam-mock-02-q15",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "对含 NULL 的成绩做分组报告，哪个谓词在 Grade 为 NULL 时直接产生 TRUE？",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "NULL"
+      ],
+      "options": {
+        "A": "Grade = NULL",
+        "B": "Grade BETWEEN NULL AND 100",
+        "C": "NOT (Grade <> NULL)",
+        "D": "Grade <=> NULL"
+      },
+      "answer": "D",
+      "explanation": "<=> 执行空值安全比较。普通比较和区间比较不会把 NULL 当成等值。"
+    },
+    {
+      "id": "exam-mock-02-q16",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "在查未选课学生的 NOT EXISTS 子查询里移除 x.Sno=s.Sno 后，只要 sc 非空，外层所有学生都会被过滤。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "相关子查询"
+      ],
+      "answer": "true",
+      "explanation": "失去相关条件后，子查询对每个学生都返回相同的非空结果。"
+    },
+    {
+      "id": "exam-mock-02-q17",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "若课程统计视图使用 GROUP BY Cno，只要底表的 Cno 是外键，就能直接修改该视图中的平均成绩列。",
+      "labId": "lab-05-views",
+      "tags": [
+        "可更新性"
+      ],
+      "answer": "false",
+      "explanation": "外键不会让聚合结果成为底表的可写字段。视图的分组与聚合已破坏行映射。"
+    },
+    {
+      "id": "exam-mock-02-q18",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "对某个不存在的 Cno，SELECT COUNT(Grade),SUM(Grade) FROM sc WHERE Cno=该值 返回一行，其两列分别为 0 和 NULL。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "answer": "true",
+      "explanation": "无 GROUP BY 的聚合在空输入仍返回一行。COUNT 计数为 0，SUM 无值时返回 NULL。"
+    },
+    {
+      "id": "exam-mock-02-q19",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "对成绩执行 ORDER BY Grade ASC，MySQL 默认会把 NULL 排在所有非空值后面。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "排序"
+      ],
+      "answer": "false",
+      "explanation": "MySQL 的升序默认把 NULL 放在前面。若要放最后，可先按 Grade IS NULL 升序。"
+    },
+    {
+      "id": "exam-mock-02-q20",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "把左连接 ON 中的 x.Grade>=60 移到 WHERE，可能让原先保留的零及格人数课程从结果中消失。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "外连接"
+      ],
+      "answer": "true",
+      "explanation": "WHERE 会剔除 x.Grade 为 NULL 的补空行，也会剔除仅有未达标记录的课程。"
+    },
+    {
+      "id": "exam-mock-02-q21",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "把带 WITH CHECK OPTION 的视图从 SQL SECURITY DEFINER 改为 SQL SECURITY INVOKER，检查选项就会失效。",
+      "labId": "lab-05-views",
+      "tags": [
+        "检查选项"
+      ],
+      "answer": "false",
+      "explanation": "安全模式决定权限检查身份，CHECK OPTION 仍检查通过视图的写入。"
+    },
+    {
+      "id": "exam-mock-02-q22",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "SUM(COALESCE(Grade,0)) 可以把已有行的空成绩算作 0，但 WHERE 匹配不到任何行时该表达式仍返回 NULL。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "聚合"
+      ],
+      "answer": "true",
+      "explanation": "COALESCE 在每行上运行。没有输入行时，仍没有数能参与 SUM。"
+    },
+    {
+      "id": "exam-mock-02-q23",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "给 course CROSS JOIN student 加 WHERE course.Cno='001'，对于恰有一条 001 课程记录的种子数据，所得行数等于学生人数。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "连接"
+      ],
+      "answer": "true",
+      "explanation": "过滤保留每名学生与唯一 001 课程的组合。"
+    },
+    {
+      "id": "exam-mock-02-q24",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "在 course 的表结构上定义 UNIQUE(Cname)，会自动阻止两个 NULL 课名写入，即使该列允许 NULL。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "完整性"
+      ],
+      "answer": "false",
+      "explanation": "MySQL 的 UNIQUE 索引对允许 NULL 的列可存多个 NULL。种子 course.Cname 另外有 NOT NULL 约束。"
+    },
+    {
+      "id": "exam-mock-02-q25",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "某学生只有一门未登记成绩的课。对以 student 为左表的外连接分组，COUNT(sc.Cno)=1 且 COUNT(sc.Grade)=0 可以同时成立。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "外连接"
+      ],
+      "answer": "true",
+      "explanation": "Cno 已由真实选课提供且非空，成绩仍可为空，因此两个计数不同。"
+    },
+    {
+      "id": "exam-mock-02-q26",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "列出每个院系的学生数与已选课行数。学生没有选课也参与学生数统计，同一学生多门课只能算一名学生。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "外连接"
+      ],
+      "template": "SELECT s.Sdept,COUNT({{1}}) AS students,COUNT({{2}}) AS enrollments\nFROM student s LEFT JOIN sc x ON s.Sno=x.Sno GROUP BY s.Sdept;",
+      "blanks": [
+        [
+          "DISTINCT s.Sno"
+        ],
+        [
+          "x.Cno",
+          "x.Sno"
+        ]
+      ],
+      "explanation": "学生数需要按 student 的学号去重，选课行数计右表非空的复合键列。"
+    },
+    {
+      "id": "exam-mock-02-q27",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "已有 v_dept 只公开计算机系学生并启用 CHECK OPTION。在它之上创建一层班级视图，显式要求递归检查两层过滤条件。",
+      "labId": "lab-05-views",
+      "tags": [
+        "检查选项"
+      ],
+      "template": "CREATE VIEW v_class_051 AS SELECT Sno,Sname,Classno,Sdept\nFROM v_dept WHERE Classno='051' {{1}};",
+      "blanks": [
+        [
+          "WITH CASCADED CHECK OPTION"
+        ]
+      ],
+      "explanation": "CASCADED 是显式的递归检查方式，要求写入同时满足当前层和相关下层视图过滤条件。"
+    },
+    {
+      "id": "exam-mock-02-q28",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全排序和分页条款，取成绩非空的第 6 至第 10 条选课记录。先按分数降序，同分按学号、课号升序。",
+      "labId": "lab-03-single-query",
+      "tags": [
+        "排序"
+      ],
+      "template": "SELECT Sno,Cno,Grade FROM sc WHERE Grade IS NOT NULL\n{{1}} Grade {{2}},Sno {{3}},Cno ASC {{4}};",
+      "blanks": [
+        [
+          "ORDER BY"
+        ],
+        [
+          "DESC"
+        ],
+        [
+          "ASC"
+        ],
+        [
+          "LIMIT 5 OFFSET 5",
+          "LIMIT 5,5"
+        ]
+      ],
+      "explanation": "前 5 条通过 OFFSET 跳过，LIMIT 再取 5 条。两个升序键提供确定的同分次序。"
+    },
+    {
+      "id": "exam-mock-02-q29",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "课程报表只输出已登记成绩的选课，补全课程表和选课表的常规等值连接。",
+      "labId": "lab-04-complex-query",
+      "tags": [
+        "连接"
+      ],
+      "template": "SELECT c.Cname,x.Sno,x.Grade FROM course c JOIN sc x\nON {{1}} WHERE {{2}};",
+      "blanks": [
+        [
+          "c.Cno=x.Cno",
+          "x.Cno=c.Cno"
+        ],
+        [
+          "x.Grade IS NOT NULL",
+          "Grade IS NOT NULL"
+        ]
+      ],
+      "explanation": "课号是课程主键与选课外键之间的连接键。过滤非空成绩仍保留 0 分。"
+    },
+    {
+      "id": "exam-mock-02-q30",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补充创建视图时的安全模式子句，明确按查询该视图的用户所拥有的权限访问底表。",
+      "labId": "lab-05-views",
+      "tags": [
+        "权限"
+      ],
+      "template": "CREATE {{1}} VIEW v_classes AS SELECT DISTINCT Classno FROM student;",
+      "blanks": [
+        [
+          "SQL SECURITY INVOKER"
+        ]
+      ],
+      "explanation": "INVOKER 让调用者通过自身权限访问底表。"
+    },
+    {
+      "id": "exam-mock-02-q31",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-04-complex-query",
+      "prompt": "找没有任何不及格或缺考记录、且至少选了一门课的学生。输出 Sno、Sname，按 Sno 升序。",
+      "referenceSql": "SELECT s.Sno,s.Sname FROM student s WHERE EXISTS(SELECT 1 FROM sc x WHERE x.Sno=s.Sno) AND NOT EXISTS(SELECT 1 FROM sc x WHERE x.Sno=s.Sno AND (x.Grade<60 OR x.Grade IS NULL)) ORDER BY s.Sno;",
+      "tags": [
+        "子查询"
+      ],
+      "explanation": "用 EXISTS 保证参加，NOT EXISTS 排查两种违例。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "result_set",
+          "label": "种子数据结果",
+          "points": 8,
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "label": "变更数据后仍符合题意",
+          "points": 4,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO sc VALUES ('20110008','004',77);INSERT INTO sc VALUES ('20110006','005',null);"
+        }
+      ]
+    },
+    {
+      "id": "exam-mock-02-q32",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-05-views",
+      "prompt": "创建 v_credit_hours，列为 Cno、Cname、Total_perior、Credit，只包含 Credit>=4 且 Total_perior>=48 的课程，并限制通过视图的写入仍符合这两个条件。",
+      "referenceSql": "CREATE VIEW v_credit_hours AS SELECT Cno,Cname,Total_perior,Credit FROM course WHERE Credit>=4 AND Total_perior>=48 WITH CHECK OPTION;",
+      "tags": [
+        "视图",
+        "检查选项"
+      ],
+      "explanation": "对单表两个阈值作 AND 过滤，同时约束写入后的值。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "post_query",
+          "label": "筛选条件和列顺序",
+          "points": 8,
+          "sql": "SELECT * FROM v_credit_hours ORDER BY Cno;",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "INSERT INTO course VALUES ('008','边界测试',48,4);INSERT INTO course VALUES ('009','短课',40,4);"
+        },
+        {
+          "kind": "negative_check",
+          "label": "允许合法更新，拒绝越界写入",
+          "points": 4,
+          "sql": "SELECT Cno,Total_perior,Credit FROM course WHERE Cno='005';",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "positiveSql": "UPDATE v_credit_hours SET Total_perior=48 WHERE Cno='005';",
+          "negativeSql": "UPDATE v_credit_hours SET Credit=3 WHERE Cno='005';",
+          "errorCode": 1369
+        }
+      ]
+    }
+  ]
+}

@@ -1,13 +1,13 @@
 {
   "id": "lab-07-triggers",
   "objective": "理解触发时机、行级副作用及数据库完整性约束，能用正反例排查行为。",
-  "requirements": "在同一课程练习库验证。临时调整外键前记录其定义；外键级联和触发器分别验证。保存脚本与运行前后对照。",
+  "requirements": "基于选课库编写触发器与完整性约束。题目会说明预置的对象，系统会用约束反例和变式数据检查实际行为。",
   "questions": [
     {
       "id": "q01",
       "title": "插入前校验 sc_insert",
-      "requirement": "创建 BEFORE INSERT 触发器，区分非法学号与非法课号的提示；分别尝试有效与无效记录。",
-      "hint": "使用 NEW 与 SIGNAL，按实验要求先调整会干扰对比的外键。",
+      "requirement": "建立 sc_insert BEFORE INSERT 触发器。学号不存在时报 SQLSTATE 45000、错误文本“学号不存在”；仅课号不存在时同样报 45000、文本“课号不存在”。",
+      "hint": "使用 NEW 与 SIGNAL，先查学生存在性，再查课程。",
       "optional": false,
       "starterSql": "",
       "originalText": "（1）创建一个BEFORE触发器sc_insert，在插入时触发。当向SC表插入数据时，须确保插入的学号已在Student表中存在，并且还须确保插入的课程号在Course表中存在；若不存在，则给出相应的提示信息，并取消插入操作，提示信息要求指明插入信息是学号不满足条件还是课程号不满足条件。（注：Student表与SC表的外键约束要先取消。）"
@@ -15,8 +15,8 @@
     {
       "id": "q02",
       "title": "删课后清理 Course_del",
-      "requirement": "创建 AFTER DELETE 触发器，让删除课程同时清理 SC 对应选课记录。",
-      "hint": "使用 OLD.Cno；先核对删除时外键是否会阻止执行。",
+      "requirement": "sc 的课程外键已移除。创建 Course_del AFTER DELETE 触发器，删除 course 中课程时同步删除 sc 中对应的记录。",
+      "hint": "题目已移除课程外键，使用 OLD.Cno 确定应清理的子记录。",
       "optional": false,
       "starterSql": "",
       "originalText": "（2）为Course表创建一个AFTER触发器Course_del，当删除了Course表中的一条课程信息时，同时将表SC中相应的学生选课记录也删除。"
@@ -24,8 +24,8 @@
     {
       "id": "q03",
       "title": "改分后更新均分 grade_modify",
-      "requirement": "为 Course 增加 avg_grade，并在 SC 成绩更新后刷新关联课程的均分。",
-      "hint": "修改一个学生的分数，比较课程表与重新查询的均分。",
+      "requirement": "为 course 添加 avg_grade DECIMAL(5,2)，允许 NULL。创建 grade_modify AFTER UPDATE 触发器，在 sc 成绩修改后用该课当前有效成绩重算均分。",
+      "hint": "在触发器里用 NEW.Cno 确定待汇总的课程。AVG 会忽略缺考。",
       "optional": false,
       "starterSql": "",
       "originalText": "（3）在Course表中添加一个平均成绩avg_grade字段（记录每门课程的平均成绩），创建一个AFTER触发器grade_modify，当SC表中的某学生的成绩发生变化时，则Course表中的平均成绩也能及时相应发生改变。"
@@ -33,8 +33,8 @@
     {
       "id": "q04",
       "title": "插入成绩后更新所得学分",
-      "requirement": "为 Student 增加 getcredit，创建 ins_credit，成绩达到 60 时累计该课程学分。",
-      "hint": "在 59 与 60 处验证边界，同时测试 NULL。",
+      "requirement": "为 student 增加 getcredit INT NOT NULL DEFAULT 0。创建 ins_credit AFTER INSERT 触发器，仅新成绩达到 60 才累加该课程学分，NULL 学分按 0 处理。",
+      "hint": "先为 Student 增加 getcredit 列，再创建触发器。用尚未选过的学生与课程组合试验，避免复合主键冲突。",
       "optional": false,
       "starterSql": "",
       "originalText": "（4）在Student表中插入一个getcredit字段（记录学生所获学分的情况），创建一个触发器ins_credit，当插入SC表中的学生成绩时，如果新成绩大于等于60分，则该生可获得这门课的学分，如果新成绩小于60分，则该生未能获得这门课的学分。"
@@ -42,7 +42,7 @@
     {
       "id": "q05",
       "title": "查看与移除触发器",
-      "requirement": "用 SHOW TRIGGERS、SHOW CREATE TRIGGER 和 information_schema.TRIGGERS 查看定义，删除 sc_insert。",
+      "requirement": "删除预置触发器 sc_insert，保留其他触发器。",
       "hint": "核对定义的表、事件和 BEFORE/AFTER。",
       "optional": false,
       "starterSql": "",
@@ -51,8 +51,8 @@
     {
       "id": "q06",
       "title": "用 Workbench 管理约束",
-      "requirement": "按实验要求处理 Birth、系别默认值、姓名唯一及两条级联外键；记录数据库对动态日期表达式的实际反馈。",
-      "hint": "如果服务器拒绝在 CHECK 中使用动态时间，记录报错并说明可用的替代校验位置。",
+      "requirement": "给 student.Sdept 设置默认“待分系”，添加 Sname 唯一约束，并把 sc 的两条外键替换为更新和删除均级联。",
+      "hint": "在 sc 上替换两条外键时，每条都要指定 ON UPDATE CASCADE 与 ON DELETE CASCADE。",
       "optional": false,
       "starterSql": "",
       "originalText": "（1）使用MySQL Workbench实施约束。\na．为表Student的Birth字段创建检查约束，使输入的生日日期小于系统日期。\nb．为表Student的Sdept字段，设置默认值约束，默认值取'计算机系'。\nc．为Student表的Sname字段添加唯一性约束。\nd．为SC表的Sno,Cno字段设置外键约束，约束名自己取，并允许级联删除与级联更新。若已存在外键约束，请先删除。"
@@ -60,8 +60,8 @@
     {
       "id": "q07",
       "title": "用 SQL 验证约束变更",
-      "requirement": "验证 2011 开头的八位学号检查及其移除，要求出生早于入学，使班号可空，配置级联更新/删除与课程名唯一。",
-      "hint": "对不兼容的已有数据先做独立用例。用重复课名、非法编号及级联修改验证。",
+      "requirement": "将 student.Classno 改为可空 CHAR(3)；课程名 Cname 必须唯一；给 student.Sno 添加 2011 开头、后接 4 位数字的 CHECK。保留其他约束。",
+      "hint": "分别检查列可空性、Sno 格式和课程名唯一性。",
       "optional": false,
       "starterSql": "",
       "originalText": "（2）使用SQL语句实施约束。\na．为student表的Sno字段添加一个check约束，使学号满足如下条件：学号前四位为2011，学号后四位为数字字符。\nb．为student表中的Birth字段添加一个约束，规定生日应小于入学时间。\ne．删除（a）所设置的check约束。\nf．将Student表中的Classno字段设置为允许空。\ng．为SC表中的Sno，Cno添加外键约束，约束名自取；并允许级联删除与级联更新。若已存在外键约束，请先删除。\nh．为Course表中的Cname字段添加唯一性约束。"
@@ -69,42 +69,47 @@
     {
       "id": "q08",
       "title": "记录改分前后的审计快照",
-      "requirement": "用专用选课副本和审核表创建 AFTER UPDATE 触发器，记录学号、课号、旧分和新分。更新一条复制来的选课记录并读取审计表。",
-      "hint": "在 AFTER UPDATE 中比较 OLD 和 NEW。用练习副本验证，避免与已有成绩维护触发器重叠。",
+      "requirement": "已有 grade_audit(Sno,Cno,old_grade,new_grade)。创建 sc 的 AFTER UPDATE 触发器，每次更新后写入新行学号、课号及旧分、新分。",
+      "hint": "用 NEW 取得本次选课键，用 OLD 与 NEW 取得新旧成绩。",
       "optional": true,
-      "starterSql": ""
+      "starterSql": "",
+      "originalText": "用专用选课副本和审核表创建 AFTER UPDATE 触发器，记录学号、课号、旧分和新分。更新一条复制来的选课记录并读取审计表。"
     },
     {
       "id": "q09",
       "title": "只记录实际发生变化的成绩",
-      "requirement": "延续上一题的审计副本，使成绩未改时不写日志，NULL 改为数值或数值改为 NULL 时仍留下日志。验证三种情况。",
+      "requirement": "为 sc 建立 AFTER UPDATE 审计触发器。采用 NULL 安全比较，仅在成绩实际变化时写入 grade_audit(Sno,Cno,old_grade,new_grade)。",
       "hint": "MySQL 的 NULL 安全比较符 <=> 可区分相等和发生变化。只在条件满足时插入审计行。",
       "optional": true,
-      "starterSql": ""
+      "starterSql": "",
+      "originalText": "延续上一题的审计副本，使成绩未改时不写日志，NULL 改为数值或数值改为 NULL 时仍留下日志。验证三种情况。"
     },
     {
       "id": "q10",
       "title": "验证唯一约束对重复选课的行为",
-      "requirement": "使用 SC 结构副本，先写入一条选课记录，再比较相同学号不同课号、相同课号不同学号、完全相同键这三种插入。",
-      "hint": "复合主键比较两列的组合。可在各个用例单独复现，避免一个预期错误挡住后续语句。",
+      "requirement": "sc 起初缺少主键。补回 (Sno,Cno) 复合主键，允许同一学号选不同课及不同学号选同一课。",
+      "hint": "复合主键比较学号与课号的组合。系统执行重复键反例。",
       "optional": true,
-      "starterSql": ""
+      "starterSql": "",
+      "originalText": "使用 SC 结构副本，先写入一条选课记录，再比较相同学号不同课号、相同课号不同学号、完全相同键这三种插入。"
     },
     {
       "id": "q11",
       "title": "观察触发器写入的数据如何随事务回滚",
-      "requirement": "沿用审计练习副本。事务内更新成绩并读取审计行，再回滚，核对分数和本次新增的审计行。",
-      "hint": "两张表使用 InnoDB。在开启事务前完成建表和建触发器，观察回滚前后的对照。",
+      "requirement": "已预置改分审计触发器。开启事务，把 20110001 的 001 成绩改为 77，输出该条选课的全部列并查询审计表全部列；回滚，再依次查询该条选课与审计表。",
+      "hint": "题目已经准备好审计触发器，把四次查询和事务语句放在同一脚本内。",
       "optional": true,
-      "starterSql": ""
+      "starterSql": "",
+      "originalText": "沿用审计练习副本。事务内更新成绩并读取审计行，再回滚，核对分数和本次新增的审计行。"
     },
     {
       "id": "q12",
       "title": "实测受限删除与级联删除的区别",
-      "requirement": "用两个专用练习表建立课程与选课关系，先验证存在子记录时父记录删除失败，再改为级联删除并验证父子记录同步减少。",
-      "hint": "在练习表上设置两种外键策略。分别确认删除反馈和子表行数，完成后按先子表后父表的顺序清理。",
+      "requirement": "将 sc 指向 course 的外键替换为 ON DELETE CASCADE，更新规则保持默认。保留指向 student 的外键。",
+      "hint": "先删除旧的课程外键，再新增带删除级联的外键。",
       "optional": true,
-      "starterSql": ""
+      "starterSql": "",
+      "originalText": "用两个专用练习表建立课程与选课关系，先验证存在子记录时父记录删除失败，再改为级联删除并验证父子记录同步减少。"
     }
   ],
   "originalObjective": "（1）理解触发器的用途、类型和工作原理。\n（2）掌握利用SQL语句创建和维护触发器的方法。\n（3）了解实现数据完整性的概念及实施数据完整性的重要性。\n（4）掌握完整性约束的添加、删除方法。"

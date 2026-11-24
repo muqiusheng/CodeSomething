@@ -3,6 +3,8 @@ package dev.codesomething.sql;
 import dev.codesomething.api.ApiException;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.time.Duration;
 import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.*;
@@ -21,28 +23,200 @@ public class MysqlEnvironment {
     private final boolean publicMode;
     private final String scope;
     private final int poolLimit;
+    private final Path snapshots;
+    private final MysqlPoolActivity poolActivity;
+    private final Map<String, MysqlEnvironment> sandboxes;
+    private static final long MAX_SNAPSHOT_BYTES = 32L * 1024 * 1024;
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(MysqlEnvironment.class);
+    private static final Set<String> SYSTEM_DATABASES = Set.of("mysql", "sys", "information_schema", "performance_schema");
     private static final Object PUBLIC_START_LOCK = new Object();
     private final SqlCourse course;
+    private String ownedContainerId;
     private volatile String state="not_checked",message="请启动或连接教学环境。",version="";
     @Autowired
     public MysqlEnvironment(SqlCourse course,@Value("${cs.runner.docker}") String docker,@Value("${cs.sql.container:cs-sql-learning}") String container,
                             @Value("${cs.public:false}") boolean publicMode,@Value("${cs.data-directory}") String data,
                             @Value("${cs.sql.public-pool-limit:8}") int poolLimit){
-        this(course,docker,container,false,publicMode,dev.codesomething.admin.RunnerInventory.scopeLabel(java.nio.file.Path.of(data)),poolLimit);
+        this(course,docker,container,publicMode,data,poolLimit,
+            new MysqlPoolActivity(() -> TimeUnit.NANOSECONDS.toMillis(System.nanoTime()), Duration.ofMinutes(30)));
     }
-    private MysqlEnvironment(SqlCourse course,String docker,String container,boolean school,boolean publicMode,String scope,int poolLimit){
+
+    MysqlEnvironment(SqlCourse course,String docker,String container,boolean publicMode,String data,int poolLimit,
+                     MysqlPoolActivity poolActivity) {
+        this(course,docker,container,false,publicMode,dev.codesomething.admin.RunnerInventory.scopeLabel(Path.of(data)),poolLimit,
+            Path.of(data).resolve("mysql-idle"), poolActivity, new ConcurrentHashMap<>());
+    }
+    private MysqlEnvironment(SqlCourse course,String docker,String container,boolean school,boolean publicMode,String scope,int poolLimit,
+                             Path snapshots,MysqlPoolActivity poolActivity,Map<String,MysqlEnvironment> sandboxes){
         if(!container.matches("cs-sql-[a-z0-9-]{1,70}"))throw new IllegalArgumentException("Invalid SQL container name");
         this.course=course;this.docker=docker;this.container=container;this.school=school;this.publicMode=publicMode;this.scope=scope;
         this.poolLimit=Math.clamp(poolLimit,0,8);
+        this.snapshots=snapshots;this.poolActivity=poolActivity;this.sandboxes=sandboxes;
     }
     public MysqlEnvironment schoolInstance(String key) {
         if(!key.matches("[a-f0-9]{24}"))throw new IllegalArgumentException("Invalid school instance");
-        return new MysqlEnvironment(course,docker,"cs-sql-school-"+key,true,publicMode,scope,poolLimit);
+        return sandbox("cs-sql-school-"+key, true, publicMode);
     }
     public MysqlEnvironment learnerInstance(String key) {
         if(!key.matches("[a-f0-9]{24}"))throw new IllegalArgumentException("Invalid learner instance");
-        return new MysqlEnvironment(course,docker,"cs-sql-learner-"+key,false,true,scope,poolLimit);
+        return sandbox("cs-sql-learner-"+key, false, true);
     }
+    private MysqlEnvironment sandbox(String name, boolean school, boolean publicSandbox) {
+        return sandboxes.computeIfAbsent(name, value -> new MysqlEnvironment(course,docker,value,school,publicSandbox,
+            scope,poolLimit,snapshots,poolActivity,sandboxes));
+    }
+
+    public interface Activity extends AutoCloseable {
+        @Override void close();
+    }
+
+    public Activity activity() {
+        if (!publicMode) return () -> {};
+        return poolActivity.hold(container)::close;
+    }
+
+    public void touch() {
+        if (publicMode) poolActivity.touch(container);
+    }
+
+    private List<String> publicRunning() {
+        var result = require(command(null, 5, () -> false, "ps", "--filter", "label=codesomething.public-mysql=1",
+            "--filter", "label="+scope, "--format", "{{.Names}}"));
+        return result.lines().filter(name -> !name.isBlank()).toList();
+    }
+
+    @org.springframework.context.annotation.Bean(defaultCandidate=false)
+    public org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler mysqlIdleScheduler() {
+        var scheduler = new org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler();
+        scheduler.setThreadNamePrefix("mysql-idle-");
+        return scheduler;
+    }
+
+    @org.springframework.scheduling.annotation.Scheduled(scheduler="mysqlIdleScheduler", fixedDelay=60_000, initialDelay=30_000)
+    void recycleIdle() {
+        if (!publicMode || poolLimit == 0) return;
+        try { reclaimOldest(publicRunning()); }
+        catch (Failure failure) { LOG.warn("Could not inspect the public MySQL pool: {}", failure.getMessage()); }
+    }
+
+    private boolean reclaimOldest(List<String> running) {
+        for (var name : running.stream().filter(v -> v.matches("cs-sql-(school|learner)-[a-f0-9]{24}"))
+                .sorted(Comparator.comparingLong(poolActivity::lastActivity)).toList()) {
+            try {
+                if (poolActivity.reclaim(name, () -> sandbox(name, name.startsWith("cs-sql-school-"), true).hibernate()))
+                    return true;
+            } catch (Failure failure) {
+                LOG.warn("Idle MySQL sandbox retained after snapshot error: {}", failure.getMessage());
+            }
+        }
+        return false;
+    }
+
+    private Path snapshotPath() { return snapshots.resolve(container + ".sql"); }
+
+    private Path restoreMarker() { return snapshots.resolve(container + ".restoring"); }
+
+    private void markRestore() {
+        try { Files.writeString(restoreMarker(), ""); }
+        catch (IOException failure) { throw new Failure("environment_error", "无法记录快照恢复状态。"); }
+    }
+
+    private void clearRestoreMarker() {
+        try { Files.deleteIfExists(restoreMarker()); }
+        catch (IOException failure) { throw new Failure("environment_error", "无法完成快照恢复。"); }
+    }
+
+    private List<String> snapshotSchemas() {
+        return root("SHOW DATABASES;").lines().skip(1)
+            .filter(db -> !SYSTEM_DATABASES.contains(db) && !db.startsWith("cs_exam_") && !db.startsWith("cs_check_"))
+            .map(db -> {
+                if (!schoolDatabaseName(db)) throw new Failure("environment_error", "练习库中有无法安全备份的数据库名。");
+                return db;
+            }).toList();
+    }
+
+    private void hibernate() {
+        owned();
+        var databases = snapshotSchemas();
+        try {
+            Files.createDirectories(snapshots);
+            var temp = Files.createTempFile(snapshots, "dump-", ".partial");
+            try {
+                if (!databases.isEmpty()) {
+                    var args = new ArrayList<>(List.of("exec", ownedContainerId, "mysqldump", "--protocol=socket",
+                        "-uroot", "--default-character-set=utf8mb4", "--set-gtid-purged=OFF", "--no-tablespaces",
+                        "--routines", "--events", "--triggers", "--hex-blob", "--single-transaction", "--databases"));
+                    args.addAll(databases);
+                    snapshotProcess(args, temp, false);
+                }
+                Files.move(temp, snapshotPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } finally {
+                try { Files.deleteIfExists(temp); }
+                catch (IOException failure) { LOG.warn("Could not remove partial MySQL snapshot", failure); }
+            }
+            require(command(null, 20, () -> false, "stop", "-t", "10", ownedContainerId));
+            state = "hibernated";
+            message = "练习库已保存。下次使用时会自动恢复。";
+        } catch (IOException failure) {
+            LOG.warn("Could not write MySQL snapshot", failure);
+            throw new Failure("environment_error", "无法保存练习库快照，已保留运行环境。");
+        }
+    }
+
+    private void restoreSnapshot() {
+        if (!Files.isRegularFile(snapshotPath())) return;
+        try {
+            if (Files.size(snapshotPath()) == 0) return;
+        } catch (IOException failure) {
+            throw new Failure("environment_error", "无法读取练习库快照。");
+        }
+        if (school) root("CREATE USER IF NOT EXISTS 'school_student'@'localhost';");
+        snapshotProcess(List.of("exec", "-i", ownedContainerId, "mysql", "--protocol=socket", "-uroot",
+            "--default-character-set=utf8mb4", "--binary-mode=1"), snapshotPath(), true);
+        if (school) for (var schema : snapshotSchemas()) grantSchoolSchema(schema);
+    }
+
+    private void snapshotProcess(List<String> args, Path path, boolean restore) {
+        var command = new ArrayList<String>();
+        command.add(docker);
+        command.addAll(args);
+        Process process = null;
+        try {
+            var builder = new ProcessBuilder(command).redirectError(ProcessBuilder.Redirect.DISCARD);
+            if (restore) builder.redirectInput(path.toFile()).redirectOutput(ProcessBuilder.Redirect.DISCARD);
+            process = builder.start();
+            var running = process;
+            FutureTask<Long> dump = null;
+            if (!restore) {
+                process.getOutputStream().close();
+                dump = new FutureTask<>(() -> {
+                    try (var input = running.getInputStream(); var output = Files.newOutputStream(path)) {
+                        var buffer = new byte[8192];
+                        long total = 0;
+                        for (int size; (size = input.read(buffer)) != -1; ) {
+                            total += size;
+                            if (total > MAX_SNAPSHOT_BYTES) throw new IOException("Snapshot exceeds 32 MiB");
+                            output.write(buffer, 0, size);
+                        }
+                        return total;
+                    }
+                });
+                Thread.ofVirtual().start(dump);
+            }
+            if (!process.waitFor(40, TimeUnit.SECONDS))
+                throw new Failure("environment_error", "练习库快照处理超时。");
+            if (process.exitValue() != 0 || dump != null && dump.get(5, TimeUnit.SECONDS) == 0)
+                throw new Failure("environment_error", restore ? "练习库快照恢复失败。" : "练习库快照保存失败。");
+        } catch (InterruptedException failure) {
+            Thread.currentThread().interrupt();
+            throw new Failure("environment_error", "练习库快照操作已中断。");
+        } catch (IOException | ExecutionException | TimeoutException failure) {
+            throw new Failure("environment_error", "无法处理练习库快照文件。");
+        } finally {
+            if (process != null && process.isAlive()) process.destroyForcibly();
+        }
+    }
+
     public int publicPoolLimit() { return poolLimit; }
     public record Environment(String status,String message,String version,String image,String container,String database) {}
     public Environment status(){return new Environment(state,message,version,IMAGE,container,PRACTICE);}
@@ -51,26 +225,58 @@ public class MysqlEnvironment {
         public final String status;
         public Failure(String status,String message){super(message);this.status=status;}
     }
-    record ProcessResult(int code,String output) {}
+    record ProcessResult(int code,String output,String error) {}
     private ProcessResult command(String input,int seconds,BooleanSupplier cancelled,String... args) {
+        return command(input, seconds, cancelled, false, args);
+    }
+
+    private ProcessResult command(String input,int seconds,BooleanSupplier cancelled,boolean separateError,String... args) {
         var command=new ArrayList<String>();command.add(docker);command.addAll(List.of(args));
         Process p=null;
         try {
-            p=new ProcessBuilder(command).redirectErrorStream(true).start();
+            p=new ProcessBuilder(command).redirectErrorStream(!separateError).start();
             var process=p;
-            var output=CompletableFuture.supplyAsync(()->{try(var in=process.getInputStream();var b=new ByteArrayOutputStream()){
-                byte[] buffer=new byte[2048];int count;while((count=in.read(buffer))!=-1){if(b.size()+count>65536){process.destroyForcibly();throw new Failure("output_limit","输出超过64KB，请减少返回数据。");}b.write(buffer,0,count);}return b.toString(StandardCharsets.UTF_8);
-            }catch(IOException e){throw new Failure("environment_error","容器输出读取失败。");}});
-            try(var writer=p.getOutputStream()){if(input!=null)writer.write(input.getBytes(StandardCharsets.UTF_8));}
             long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(seconds);
+            var bytes = new java.util.concurrent.atomic.AtomicInteger();
+            var output = readOutput(process.getInputStream(), process, bytes);
+            var error = separateError ? readOutput(process.getErrorStream(), process, bytes) : CompletableFuture.completedFuture("");
+            var written = CompletableFuture.runAsync(() -> {
+                try (var writer = process.getOutputStream()) {
+                    if (input != null) writer.write(input.getBytes(StandardCharsets.UTF_8));
+                } catch (IOException e) { throw new UncheckedIOException(e); }
+            });
             while(!p.waitFor(50,TimeUnit.MILLISECONDS)) {
                 if(cancelled.getAsBoolean())throw new Failure("cancelled","已停止本次SQL检查。");
                 if(System.nanoTime()>deadline)throw new Failure("timeout","SQL执行超时，请缩小查询或重试。");
             }
-            try{return new ProcessResult(p.exitValue(),output.get(2,TimeUnit.SECONDS));}catch(ExecutionException e){if(e.getCause() instanceof Failure f)throw f;throw e;}
+            try {
+                String response = output.get(2, TimeUnit.SECONDS);
+                if (p.exitValue() == 0) written.get(2, TimeUnit.SECONDS);
+                return new ProcessResult(p.exitValue(), response, error.get(2, TimeUnit.SECONDS));
+            } catch (ExecutionException e){if(e.getCause() instanceof Failure f)throw f;throw e;}
         }catch(Failure e){throw e;}catch(Exception e){throw new Failure("environment_error","无法调用Docker或MySQL，请检查教学环境后重试。");}
         finally {if(p!=null&&p.isAlive())p.destroyForcibly();}
     }
+    private static CompletableFuture<String> readOutput(InputStream stream, Process process, java.util.concurrent.atomic.AtomicInteger bytes) {
+        return CompletableFuture.supplyAsync(() -> {
+            try (var input = stream; var output = new ByteArrayOutputStream()) {
+                var buffer = new byte[2048];
+                int count;
+                while ((count = input.read(buffer)) != -1) {
+                    if (bytes.addAndGet(count) > 65536) {
+                        process.destroyForcibly();
+                        throw new Failure("output_limit", "输出超过64KB，请减少返回数据。");
+                    }
+                    output.write(buffer, 0, count);
+                }
+                return output.toString(StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                if (bytes.get() > 65536) throw new Failure("output_limit", "输出超过64KB，请减少返回数据。");
+                throw new Failure("environment_error", "容器输出读取失败。");
+            }
+        });
+    }
+
     private String require(ProcessResult r){if(r.code()!=0)throw new Failure("environment_error","教学MySQL未就绪，请启动环境后重试。");return r.output();}
     private void owned() {
         var r=command(null,5,()->false,"inspect",container);
@@ -82,7 +288,10 @@ public class MysqlEnvironment {
                 info.path("HostConfig").path("ReadonlyRootfs").asBoolean() &&
                 info.path("HostConfig").path("Memory").asLong() == 512L * 1024 * 1024 &&
                 info.path("HostConfig").path("PidsLimit").asInt() == 64;
-            if((!publicMode || publicSandbox)&&"1".equals(labels.path("codesomething.sql").asText())&&IMAGE.equals(info.path("Config").path("Image").asText())&&"none".equals(info.path("HostConfig").path("NetworkMode").asText())&&info.path("HostConfig").path("PortBindings").size()==0)return;
+            if((!publicMode || publicSandbox)&&"1".equals(labels.path("codesomething.sql").asText())&&IMAGE.equals(info.path("Config").path("Image").asText())&&"none".equals(info.path("HostConfig").path("NetworkMode").asText())&&info.path("HostConfig").path("PortBindings").size()==0) {
+                String id = info.path("Id").asText();
+                if (id.matches("[a-f0-9]{64}")) { ownedContainerId = id; return; }
+            }
         }catch(Exception ignored){}
         throw new Failure("environment_error","目标容器的标签、镜像或网络不匹配，已拒绝操作。");
     }
@@ -95,11 +304,19 @@ public class MysqlEnvironment {
         state="starting";message="正在启动MySQL并准备示例数据…";
         try {
             var found=command(null,5,()->false,"inspect","--format","{{.State.Running}}",container);
-            if (publicMode && !"true".equals(found.output().strip())) {
-                if(poolLimit==0) throw new Failure("environment_error","当前部署未启用常驻 MySQL 练习池。");
-                var running = command(null, 5, ()->false, "ps", "--filter", "label=codesomething.public-mysql=1","--filter","label="+scope, "--format", "{{.ID}}");
-                if (require(running).lines().filter(line -> !line.isBlank()).count() >= poolLimit)
-                    throw new Failure("environment_error", "公网 MySQL 练习池已满，请稍后重试。");
+            boolean running = "true".equals(found.output().strip());
+            if (publicMode && running && Files.exists(restoreMarker())) {
+                owned();
+                require(command(null, 20, () -> false, "stop", "-t", "10", ownedContainerId));
+                running = false;
+            }
+            if (publicMode && !running) {
+                if (poolLimit == 0) throw new Failure("environment_error", "当前部署未启用常驻 MySQL 练习池。");
+                for (var active = publicRunning(); active.size() >= poolLimit; active = publicRunning()) {
+                    if (!reclaimOldest(active))
+                        throw new Failure("environment_error", "公网 MySQL 练习池已满，暂时没有可回收的闲置实例。");
+                }
+                if (Files.exists(snapshotPath())) markRestore();
             }
             if(found.code()!=0) {
                 var arguments=new ArrayList<>(List.of("run","-d","--pull=never","--name",container,"--label","codesomething.sql=1","--network","none","--memory","640m","--cpus","1","--pids-limit","256","--cap-drop","ALL","--cap-add","SETUID","--cap-add","SETGID","--cap-add","DAC_OVERRIDE","--security-opt","no-new-privileges","--mount","type=volume,source="+container+"-data,target=/var/lib/mysql","-e","MYSQL_ALLOW_EMPTY_PASSWORD=yes",IMAGE,"--skip-networking","--local-infile=0","--max-connections=20","--innodb-buffer-pool-size=64M","--performance-schema=OFF","--character-set-server=utf8mb4","--collation-server=utf8mb4_0900_ai_ci"));
@@ -117,7 +334,7 @@ public class MysqlEnvironment {
                 }
                 if(school || publicMode)arguments.add("--skip-log-bin");
                 require(command(null,20,()->false,arguments.toArray(String[]::new)));
-            } else {owned();if(!found.output().trim().equals("true"))require(command(null,10,()->false,"start",container));}
+            } else {owned();if(!running)require(command(null,10,()->false,"start",container));}
             owned();
             boolean ready=false;
             for(int i=0;i<90;i++) {try{
@@ -126,7 +343,20 @@ public class MysqlEnvironment {
                 version=root("SELECT VERSION();").strip().replace("VERSION()\n","");ready=true;break;
             }catch(Failure e){try{Thread.sleep(500);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new Failure("environment_error","环境启动被中断。");}}}
             if(!ready)throw new Failure("environment_error","MySQL启动超时，请检查Docker后重试。");
-            if(school) {state="ready";message="课内练习库已就绪。";return;}
+            if (publicMode && !running && Files.exists(restoreMarker())) {
+                try {
+                    restoreSnapshot();
+                    clearRestoreMarker();
+                }
+                catch (Failure failure) {
+                    command(null, 20, () -> false, "stop", "-t", "10", ownedContainerId);
+                    throw failure;
+                }
+            }
+            if(school) {
+                clearAbandonedExams();
+                state="ready";message="课内练习库已就绪。";return;
+            }
             root("CREATE DATABASE IF NOT EXISTS cs_practice CHARACTER SET utf8mb4; CREATE USER IF NOT EXISTS 'cs_practice'@'localhost'; GRANT SELECT,INSERT,UPDATE,DELETE,CREATE ON cs_practice.* TO 'cs_practice'@'localhost';");
             String tables=root("SELECT COUNT(*) AS n FROM information_schema.tables WHERE table_schema='cs_practice' AND table_name='tasks';");
             if(tables.strip().endsWith("\n0"))root("USE cs_practice;"+course.seed(false));
@@ -136,7 +366,7 @@ public class MysqlEnvironment {
             state="ready";message="教学MySQL已就绪；试运行使用cs_practice，正式检查使用独立临时库。";
         }catch(Failure e){state="environment_error";message=e.getMessage();}
     }
-    private void ready(){if(!state.equals("ready"))throw new Failure("environment_error","教学MySQL尚未就绪，请先启动环境。");owned();}
+    private void ready(){if(!state.equals("ready"))throw new Failure("environment_error",message);owned();}
 
     public synchronized void prepareSchool(List<String> schemas,String seed,boolean reset) {
         if(!school||schemas.isEmpty()||schemas.stream().anyMatch(s->!s.matches("[a-z][a-z0-9_]{0,47}")||s.equals("mysql")||s.equals("sys")||s.endsWith("_schema")))
@@ -153,9 +383,13 @@ public class MysqlEnvironment {
 
     public synchronized void grantSchoolDatabase(String schema) {
         if(!school || !schoolDatabaseName(schema) || Set.of("mysql","sys","information_schema","performance_schema")
-                .contains(schema.toLowerCase(Locale.ROOT)))
+                .contains(schema.toLowerCase(Locale.ROOT)) || schema.toLowerCase(Locale.ROOT).startsWith("cs_exam_"))
             throw new ApiException(HttpStatus.BAD_REQUEST,"SCHOOL_DATABASE_NAME","请输入以英文字母开头的库名，可包含数字和下划线，最多 64 个字符。MySQL 系统库保留。",Map.of());
         ready();
+        grantSchoolSchema(schema);
+    }
+
+    private void grantSchoolSchema(String schema) {
         // Escape underscores because MySQL interprets them as wildcards in database grants.
         root("GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,DROP,ALTER,INDEX,REFERENCES,CREATE VIEW,SHOW VIEW,CREATE ROUTINE,ALTER ROUTINE,EXECUTE,TRIGGER,CREATE TEMPORARY TABLES ON `"
             +schema.replace("_","\\_")+"`.* TO 'school_student'@'localhost';");
@@ -165,11 +399,139 @@ public class MysqlEnvironment {
         return name != null && name.matches("[A-Za-z][A-Za-z0-9_]{0,63}");
     }
 
+    private void clearAbandonedExams() {
+        var names = root("""
+            SELECT LEFT(schema_name,31) FROM information_schema.schemata WHERE schema_name REGEXP '^cs_exam_[a-f0-9]{23}(_practice)?$'
+            UNION SELECT user FROM mysql.user WHERE host='localhost' AND user REGEXP '^cs_exam_[a-f0-9]{23}$';
+            """);
+        for (String name : names.lines().skip(1).toList())
+            if (name.matches("cs_exam_[a-f0-9]{23}")) {
+                killExamConnections(name);
+                dropExam(name);
+            }
+    }
+
+    private String examRoot(String sql) {
+        var result = command(sql, 8, () -> false, "exec", "-i", ownedContainerId, "mysql",
+            "--protocol=socket", "-uroot", "--batch", "--default-character-set=utf8mb4", "--binary-mode=1");
+        if (result.code() == 0) return result.output();
+        var error = EXAM_ERROR.matcher(result.output());
+        if (error.find() && !error.group().matches("ERROR (1045|2002|2003|2006|2013).*"))
+            throw new Failure("result_error", "隔离 MySQL 无法准备或清理考题数据。");
+        return require(result);
+    }
+
+    private void killExamConnections(String name) {
+        var connections = examRoot("SELECT ID FROM information_schema.PROCESSLIST WHERE USER='" + name + "';");
+        for (String id : connections.lines().skip(1).toList()) {
+            if (!id.matches("[0-9]+")) continue;
+            try { examRoot("KILL " + id + ";"); }
+            catch (Failure ignored) { /* The client may have already disconnected. */ }
+        }
+    }
+
+    private void dropExam(String name) { examRoot(examDrop(name)); }
+
+    private static String examDrop(String name) {
+        return "DROP DATABASE IF EXISTS " + name + "_practice; DROP DATABASE IF EXISTS " + name + "; DROP USER IF EXISTS '" + name + "'@'localhost';";
+    }
+
+    public record ExamOutput(String transcript, List<String> errors) {}
+    private static final java.util.regex.Pattern EXAM_ERROR = java.util.regex.Pattern.compile("(?m)^ERROR [0-9]+[^\r\n]*");
+
+    public final class ExamSession {
+        private final String name;
+        private boolean interrupted;
+        private ExamSession(String name) { this.name = name; }
+
+        public ExamOutput query(String sql, boolean force, boolean columnMetadata, boolean verbose) {
+            var arguments = new ArrayList<>(List.of("exec", "-i", "--user=mysql", ownedContainerId, "mysql",
+                "--no-defaults", "--protocol=socket", "-u" + name, "--database=" + name,
+                "--default-character-set=utf8mb4", "--binary-mode=1", "--local-infile=0", "--skip-reconnect"));
+            if (verbose) arguments.addAll(List.of("--comments", "-vvv"));
+            // The XML client otherwise emits BIT values as raw control bytes.
+            arguments.add("--binary-as-hex");
+            arguments.add(columnMetadata ? "--column-type-info" : "--xml");
+            if (force) arguments.add("--force");
+            ProcessResult result;
+            try {
+                result = command(sql, 6, () -> false, true, arguments.toArray(String[]::new));
+            } catch (Failure e) {
+                interrupted = Set.of("timeout", "output_limit", "cancelled").contains(e.status);
+                throw e;
+            }
+            var errors = EXAM_ERROR.matcher(result.error()).results().map(java.util.regex.MatchResult::group).toList();
+            if (errors.stream().anyMatch(error -> error.matches("ERROR (1045|2002|2003|2006|2013).*"))
+                    || result.code() != 0 && errors.isEmpty())
+                throw new Failure("environment_error", "隔离 MySQL 不可用。");
+            return new ExamOutput(result.output(), errors);
+        }
+    }
+
+    public <T> T withSchoolExam(String seed, java.util.function.Function<ExamSession, T> operation) {
+        return withSchoolExams(List.of(seed), sessions -> operation.apply(sessions.getFirst()));
+    }
+
+    public synchronized <T> T withSchoolExams(List<String> seeds, java.util.function.Function<List<ExamSession>, T> operation) {
+        if (!school || seeds.isEmpty() || seeds.size() > 8) throw new IllegalArgumentException("Invalid school exam request");
+        if (!state.equals("ready")) start();
+        for (int attempt = 0; ; attempt++) {
+            if (!state.equals("ready")) throw new Failure("environment_error", message);
+            try {
+                return runSchoolExams(seeds, operation);
+            } catch (Failure e) {
+                if (attempt != 0 || !e.status.equals("environment_error")) throw e;
+                start();
+            }
+        }
+    }
+
+    private <T> T runSchoolExams(List<String> seeds, java.util.function.Function<List<ExamSession>, T> operation) {
+        var sessions = new ArrayList<ExamSession>();
+        var setup = new StringBuilder();
+        for (String seed : seeds) {
+            String name = "cs_exam_" + UUID.randomUUID().toString().replace("-", "").substring(0, 23);
+            sessions.add(new ExamSession(name));
+            setup.append("CREATE DATABASE ").append(name).append(" CHARACTER SET utf8mb4; CREATE USER '")
+                .append(name).append("'@'localhost';")
+                .append(" GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,DROP,ALTER,INDEX,REFERENCES,CREATE VIEW,SHOW VIEW,")
+                .append("CREATE ROUTINE,ALTER ROUTINE,EXECUTE,TRIGGER,CREATE TEMPORARY TABLES ON `")
+                .append(name.replace("_", "\\_")).append("`.* TO '").append(name).append("'@'localhost';")
+                .append(" GRANT CREATE ON `").append((name + "_practice").replace("_", "\\_"))
+                .append("`.* TO '").append(name).append("'@'localhost'; USE ")
+                .append(name).append(";\n")
+                // Trusted fixtures can give the temporary learner ownership of a precreated routine or view.
+                .append(seed.replace("{{sandboxUser}}", "'" + name + "'@'localhost'"))
+                .append("\nDELIMITER ;\n;\n");
+        }
+        Throwable failure = null;
+        try {
+            examRoot(setup.toString());
+            return operation.apply(List.copyOf(sessions));
+        } catch (RuntimeException | Error e) {
+            failure = e;
+            throw e;
+        } finally {
+            try {
+                try {
+                    for (var session : sessions) if (session.interrupted) killExamConnections(session.name);
+                } finally {
+                    var cleanup = new StringBuilder();
+                    for (var session : sessions) cleanup.append(examDrop(session.name));
+                    examRoot(cleanup.toString());
+                }
+            } catch (Failure e) {
+                if (failure == null) throw e;
+                failure.addSuppressed(e);
+            }
+        }
+    }
+
     public synchronized String schoolQuery(String schema,String sql) {
         if(!school||schema!=null&&!schoolDatabaseName(schema))throw new IllegalArgumentException("Invalid school query");
         ready();
         var args=new ArrayList<>(List.of("exec","-i","--user=mysql",container,"mysql","--no-defaults","--protocol=socket",
-            "-uschool_student","--xml","--default-character-set=utf8mb4","--binary-mode=1","--local-infile=0","--skip-reconnect"));
+            "-uschool_student","--xml","--binary-as-hex","--default-character-set=utf8mb4","--binary-mode=1","--local-infile=0","--skip-reconnect"));
         if(schema!=null)args.add("--database="+schema);
         ProcessResult result;
         try {

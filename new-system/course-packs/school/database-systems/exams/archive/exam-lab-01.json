@@ -1,0 +1,564 @@
+{
+  "id": "exam-lab-01",
+  "title": "实验一专项卷 · MySQL 环境、关系模型与表结构设计",
+  "group": "specialty",
+  "labId": "lab-01-workbench",
+  "questions": [
+    {
+      "id": "exam-lab-01-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "在查询标签页执行 SELECT DATABASE() 得到 NULL，首先能断定什么？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "Workbench"
+      ],
+      "options": {
+        "A": "当前没有事务",
+        "B": "当前会话未选中默认数据库",
+        "C": "服务器未启动",
+        "D": "没有任何数据库"
+      },
+      "answer": "B",
+      "explanation": "函数只返回会话的默认数据库，连接成功的会话也可以未执行 USE。"
+    },
+    {
+      "id": "exam-lab-01-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "核对 student 表完整建表语句应执行哪条？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "元数据"
+      ],
+      "options": {
+        "A": "SHOW CREATE TABLE student",
+        "B": "SHOW TABLES",
+        "C": "SELECT DATABASE()",
+        "D": "SELECT * FROM student"
+      },
+      "answer": "A",
+      "explanation": "SHOW CREATE TABLE 给出列、主键、约束等 DDL，SHOW TABLES 只列名称。"
+    },
+    {
+      "id": "exam-lab-01-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "选课库中学生与课程的多对多关系如何落地？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "关系模型"
+      ],
+      "options": {
+        "A": "在 student 中放一个 Cno",
+        "B": "在 course 中放一个 Sno",
+        "C": "把学生姓名作为课程主键",
+        "D": "用 sc 记录 Sno 和 Cno 组合"
+      },
+      "answer": "D",
+      "explanation": "sc 每行记录一个关联，两侧均能对应多行。"
+    },
+    {
+      "id": "exam-lab-01-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "同一学生同时选了 001 和 002，sc 主键应如何设计？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "主键"
+      ],
+      "options": {
+        "A": "Cno",
+        "B": "Grade",
+        "C": "(Sno,Cno)",
+        "D": "Sno"
+      },
+      "answer": "C",
+      "explanation": "只约束组合唯一可保留同一学生选多门课，Grade 可以重复或空。"
+    },
+    {
+      "id": "exam-lab-01-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "课号 001、002 需保留前导零，适合哪个类型？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "字段类型"
+      ],
+      "options": {
+        "A": "FLOAT",
+        "B": "CHAR(3)",
+        "C": "SMALLINT",
+        "D": "DECIMAL(3,0)"
+      },
+      "answer": "B",
+      "explanation": "固定长度字符编码保留前导零，数值列不会保存原数字串格式。"
+    },
+    {
+      "id": "exam-lab-01-q06",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "sc.Cno 外键应引用哪列？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "外键"
+      ],
+      "options": {
+        "A": "course.Cno",
+        "B": "student.Sno",
+        "C": "course.Credit",
+        "D": "sc.Grade"
+      },
+      "answer": "A",
+      "explanation": "外键连接对应的课程身份，Cno 是 course 的主键。"
+    },
+    {
+      "id": "exam-lab-01-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "在课程表存储中文及四字节 Unicode 字符应选什么？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "字符集"
+      ],
+      "options": {
+        "A": "ascii",
+        "B": "latin1",
+        "C": "utf8mb3",
+        "D": "utf8mb4"
+      },
+      "answer": "D",
+      "explanation": "utf8mb4 可表示完整 Unicode，utf8mb3 只支持最多三个字节。"
+    },
+    {
+      "id": "exam-lab-01-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "为没有邮编的学生保留未知状态应使用什么？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "空值"
+      ],
+      "options": {
+        "A": "字符串 'NULL'",
+        "B": "字符串 '000000'",
+        "C": "NULL",
+        "D": "0"
+      },
+      "answer": "C",
+      "explanation": "NULL 表示缺失，假邮编与字符串都会成为实际存储值。"
+    },
+    {
+      "id": "exam-lab-01-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "INSERT 显式列名且省略 Sex，使用种子库定义会得到什么？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "默认值"
+      ],
+      "options": {
+        "A": "固定报错",
+        "B": "男",
+        "C": "NULL",
+        "D": "空字符串"
+      },
+      "answer": "B",
+      "explanation": "Sex 的 DEFAULT 为男，省略列触发默认值。"
+    },
+    {
+      "id": "exam-lab-01-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "判断 server 连接版本的 SQL 是什么？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "元数据"
+      ],
+      "options": {
+        "A": "SELECT VERSION()",
+        "B": "SELECT DATABASE()",
+        "C": "SHOW TABLES",
+        "D": "SELECT CURRENT_DATE"
+      },
+      "answer": "A",
+      "explanation": "VERSION 返回服务器版本，其他语句分别查询库、表及日期。"
+    },
+    {
+      "id": "exam-lab-01-q11",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "关系中的属性通常映射为 SQL 的什么？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "关系模型"
+      ],
+      "options": {
+        "A": "行",
+        "B": "库",
+        "C": "事务",
+        "D": "列"
+      },
+      "answer": "D",
+      "explanation": "关系模式的属性定义各列，元组是行。"
+    },
+    {
+      "id": "exam-lab-01-q12",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "函数依赖在 student 当前设计中可由哪个属性唯一确定 Sname？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "关系模型"
+      ],
+      "options": {
+        "A": "Sdept",
+        "B": "Classno",
+        "C": "Sno",
+        "D": "Sex"
+      },
+      "answer": "C",
+      "explanation": "Sno 是主键，每个 Sno 至多映射到一个姓名。"
+    },
+    {
+      "id": "exam-lab-01-q13",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "在完整空库恢复三表，哪种顺序满足外键？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "建表"
+      ],
+      "options": {
+        "A": "先 course 和 sc，最后 student",
+        "B": "先 student 和 course，后 sc",
+        "C": "先 sc，再创建两个父表",
+        "D": "按表信息创建顺序无关"
+      },
+      "answer": "B",
+      "explanation": "启用外键检查时，两张父表都应在引用表之前存在。"
+    },
+    {
+      "id": "exam-lab-01-q14",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "查询 course 的课时要使用哪个实际字段？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "标识符"
+      ],
+      "options": {
+        "A": "Total_perior",
+        "B": "Total_period",
+        "C": "Period",
+        "D": "Total_hour"
+      },
+      "answer": "A",
+      "explanation": "课程包定义保留 Total_perior 的拼写，列名不同会报 1054。"
+    },
+    {
+      "id": "exam-lab-01-q15",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "Birth 和 Entrance_date 之间应如何表达当前规则？",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "完整性"
+      ],
+      "options": {
+        "A": "UNIQUE (Entrance_date,Birth)",
+        "B": "FOREIGN KEY (Entrance_date) REFERENCES student(Birth)",
+        "C": "DEFAULT Birth",
+        "D": "CHECK (Entrance_date > Birth)"
+      },
+      "answer": "D",
+      "explanation": "CHECK 可在同一行比较两个日期；UNIQUE 只控制重复。"
+    },
+    {
+      "id": "exam-lab-01-q16",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "完全相同的 Sno 和 Cno 可以在 sc 录入两次。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "主键"
+      ],
+      "answer": "false",
+      "explanation": "复合主键拒绝重复组合，即使 Grade 不同。"
+    },
+    {
+      "id": "exam-lab-01-q17",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "可以先插入 sc 子行，再补两个缺失父行，MySQL 会自动延迟到提交检查。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "外键"
+      ],
+      "answer": "false",
+      "explanation": "InnoDB 外键在语句执行时检查，先创建父行。"
+    },
+    {
+      "id": "exam-lab-01-q18",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "student 的 Sname 可重名，不能用姓名替代主键。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "关系模型"
+      ],
+      "answer": "true",
+      "explanation": "姓名不是稳定唯一标识，Sno 负责实体完整性。"
+    },
+    {
+      "id": "exam-lab-01-q19",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "USE 只改变当前会话默认库。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "Workbench"
+      ],
+      "answer": "true",
+      "explanation": "其他连接的默认库不受此会话切换影响。"
+    },
+    {
+      "id": "exam-lab-01-q20",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "DESC student 能完整显示 student 的建表 SQL。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "元数据"
+      ],
+      "answer": "false",
+      "explanation": "DESC 展示列摘要，完整 DDL 应使用 SHOW CREATE TABLE。"
+    },
+    {
+      "id": "exam-lab-01-q21",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "sc.Grade 允许 NULL，并保留该学生已选这门课程的事实。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "空值"
+      ],
+      "answer": "true",
+      "explanation": "选课记录由 Sno/Cno 标识，NULL 只代表成绩未知。"
+    },
+    {
+      "id": "exam-lab-01-q22",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "把中文课名存进 utf8mb4 不需要将每个字符限制为单字节。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "字符集"
+      ],
+      "answer": "true",
+      "explanation": "utf8mb4 是变长编码，可用 1 到 4 字节表示一个字符。"
+    },
+    {
+      "id": "exam-lab-01-q23",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "定义 PRIMARY KEY 后，主键列仍允许存 NULL。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "主键"
+      ],
+      "answer": "false",
+      "explanation": "主键列均隐含 NOT NULL。"
+    },
+    {
+      "id": "exam-lab-01-q24",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "切换默认库不会自动把原库里的三张表复制到新库。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "练习库"
+      ],
+      "answer": "true",
+      "explanation": "USE 只更改名字解析上下文，复制数据需要独立 SQL。"
+    },
+    {
+      "id": "exam-lab-01-q25",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "删除未被 sc 引用的 course 行不受 fk_sc_course 的引用阻止。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "外键"
+      ],
+      "answer": "true",
+      "explanation": "外键约束保护仍有子记录引用的父行。"
+    },
+    {
+      "id": "exam-lab-01-q26",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全命令，输出 student 的建表 DDL。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "元数据"
+      ],
+      "template": "SHOW {{1}} student;",
+      "blanks": [
+        [
+          "CREATE TABLE"
+        ]
+      ],
+      "explanation": "SHOW CREATE TABLE 输出表结构与约束。"
+    },
+    {
+      "id": "exam-lab-01-q27",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全查询，显示本会话默认数据库。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "Workbench"
+      ],
+      "template": "SELECT {{1}} AS current_db;",
+      "blanks": [
+        [
+          "DATABASE()",
+          "SCHEMA()"
+        ]
+      ],
+      "explanation": "DATABASE 与 SCHEMA 函数均返回当前默认库。"
+    },
+    {
+      "id": "exam-lab-01-q28",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "为选课关系声明复合主键，列顺序与 seed 一致。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "主键"
+      ],
+      "template": "{{1}} ({{2}})",
+      "blanks": [
+        [
+          "PRIMARY KEY"
+        ],
+        [
+          "Sno, Cno"
+        ]
+      ],
+      "explanation": "键顺序是 Sno 在前、Cno 在后，组合唯一即可表示一次选课。"
+    },
+    {
+      "id": "exam-lab-01-q29",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全 sc 的课程外键。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "外键"
+      ],
+      "template": "FOREIGN KEY ({{1}}) REFERENCES {{2}}",
+      "blanks": [
+        [
+          "Cno"
+        ],
+        [
+          "course(Cno)"
+        ]
+      ],
+      "explanation": "课程号引用 course 主键，而非 student 的学号。"
+    },
+    {
+      "id": "exam-lab-01-q30",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "选择与种子库一致的课程号类型。",
+      "labId": "lab-01-workbench",
+      "tags": [
+        "字段类型"
+      ],
+      "template": "Cno {{1}} PRIMARY KEY",
+      "blanks": [
+        [
+          "CHAR(3)"
+        ]
+      ],
+      "explanation": "固定宽度字符列保留 001 的前导零。"
+    },
+    {
+      "id": "exam-lab-01-q31",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-01-workbench",
+      "prompt": "显示当前库 student、course、sc 的元数据。返回 TABLE_NAME、TABLE_TYPE 两列，只包含当前数据库中的这三个对象，按 TABLE_NAME 升序。",
+      "referenceSql": "SELECT TABLE_NAME,TABLE_TYPE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('student','course','sc') ORDER BY TABLE_NAME;",
+      "tags": [
+        "元数据"
+      ],
+      "explanation": "用 DATABASE() 绑定当前会话，在 TABLES 中筛选对象并显式排序。变体中 sc 可能是视图。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "result_set",
+          "label": "种子数据结果",
+          "points": 8,
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "result_set",
+          "label": "变更数据后仍符合题意",
+          "points": 4,
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "variantSql": "DROP TABLE sc; CREATE VIEW sc AS SELECT Sno FROM student;"
+        }
+      ]
+    },
+    {
+      "id": "exam-lab-01-q32",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-01-workbench",
+      "prompt": "为选课备注建表 enrollment_note。列为 Sno CHAR(8)、Cno CHAR(3)、Note VARCHAR(50)；(Sno,Cno) 是复合主键，并引用 sc 的复合键。不要写入记录。",
+      "referenceSql": "CREATE TABLE enrollment_note (Sno CHAR(8),Cno CHAR(3),Note VARCHAR(50),PRIMARY KEY(Sno,Cno),FOREIGN KEY(Sno,Cno) REFERENCES sc(Sno,Cno));",
+      "tags": [
+        "主键",
+        "外键"
+      ],
+      "explanation": "备注依附整条选课记录，两列必须成对引用。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "state_check",
+          "label": "列、类型与复合主键",
+          "points": 8,
+          "sql": "SELECT LOWER(COLUMN_NAME) AS COLUMN_NAME,LOWER(COLUMN_TYPE) AS COLUMN_TYPE,COLUMN_KEY FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='enrollment_note' ORDER BY ORDINAL_POSITION;",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "negative_check",
+          "label": "拒绝不存在的选课组合",
+          "points": 4,
+          "sql": "SELECT Sno,Cno,Note FROM enrollment_note ORDER BY Sno,Cno;",
+          "orderMatters": true,
+          "checkColumnNames": true,
+          "positiveSql": "INSERT INTO enrollment_note VALUES ('20110001','001','复查');",
+          "negativeSql": "INSERT INTO enrollment_note VALUES ('20110001','004','无效');",
+          "errorCode": 1452
+        }
+      ]
+    }
+  ]
+}
+

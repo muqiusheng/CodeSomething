@@ -1,12 +1,14 @@
 package dev.codesomething.auth;
 
 import dev.codesomething.api.*;
+import dev.codesomething.school.ExamCatalog;
 import dev.codesomething.storage.LearningDataSource;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
+import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -22,7 +24,10 @@ class PublicAccessFilter extends OncePerRequestFilter {
     private static final String AUTH = AUTH_ROOT + "/";
     private static final String ADMIN = "/api/v1/admin";
     private static final String WORKSPACE_HEADER = "X-CS-Workspace-Authorization";
+    private static final Pattern EXAM_CHECK = Pattern.compile("/api/school/courses/([^/]+)/exams/(?:"
+        + "[^/]+/(?:drafts|attempts)/[^/]+/questions|mistakes)/([^/]+)/check");
     private final AuthService auth;
+    private final ExamCatalog exams;
     private final boolean enabled;
     private final boolean dockerOnly;
     private final boolean tutorEnabled;
@@ -30,14 +35,16 @@ class PublicAccessFilter extends OncePerRequestFilter {
     private final SlidingWindow registrations = new SlidingWindow(5, Duration.ofMinutes(1));
     private final SlidingWindow refreshes = new SlidingWindow(30, Duration.ofMinutes(1));
     private final SlidingWindow judgments = new SlidingWindow(10, Duration.ofMinutes(1));
+    private final SlidingWindow objectiveChecks = new SlidingWindow(120, Duration.ofMinutes(1));
     private final SlidingWindow tutor = new SlidingWindow(15, Duration.ofHours(1));
     private final SlidingWindow environments = new SlidingWindow(20, Duration.ofMinutes(1));
     private final SlidingWindow blockedAudit = new SlidingWindow(5, Duration.ofMinutes(1));
     private final JsonMapper json = JsonMapper.builder().build();
 
-    PublicAccessFilter(AuthService auth, @Value("${cs.public}") boolean enabled, @Value("${cs.runner.mode}") String runnerMode,
+    PublicAccessFilter(AuthService auth, ExamCatalog exams, @Value("${cs.public}") boolean enabled, @Value("${cs.runner.mode}") String runnerMode,
                        @Value("${cs.tutor.public-enabled:false}") boolean tutorEnabled) {
         this.auth = auth;
+        this.exams = exams;
         this.enabled = enabled;
         dockerOnly = "docker_only".equals(runnerMode);
         this.tutorEnabled = tutorEnabled;
@@ -90,17 +97,27 @@ class PublicAccessFilter extends OncePerRequestFilter {
                 throw denied("LOCAL_RUNNER_DISABLED", "隔离运行模式已停用服务端本机文件与IDE操作。");
             }
             if (principal == null) {
+                if (enabled && (under(path, "/api/v1/interactive") || path.matches("/api/school/courses/[^/]+/(?:exams(?:/.*)?|environment/activity|labs/[^/]+/questions/[^/]+/tables)")
+                    || path.equals("/api/v1/sql/environment/activity")))
+                    throw new ApiException(HttpStatus.UNAUTHORIZED, "AUTH_REQUIRED", "请登录学员账号后继续。", Map.of());
                 chain.doFilter(request, response);
                 return;
             }
             String id = principal.user().userId();
             if ((post && path.startsWith("/api/v1/sql/environment/")) ||
-                path.matches("/api/school/courses/[^/]+/(databases|schema|labs/[^/]+/reset)")) limit(environments,id);
+                path.matches("/api/school/courses/[^/]+/(databases|schema|labs/[^/]+/(?:reset|questions/[^/]+/tables))")
+                || post && path.matches("/api/school/courses/[^/]+/exams/.+/debug")) limit(environments,id);
             if (post && (path.equals("/api/v1/check-jobs") || path.equals("/api/v1/sql/attempts")
                 || path.matches("/api/v1/portfolio/[^/]+/checks")
                 || path.matches("/api/v1/projects/courses/[^/]+/checks")
                 || path.matches("/api/v1/projects/drafts/[^/]+/validate")
-                || path.matches("/api/school/courses/[^/]+/labs/[^/]+/run"))) limit(judgments, id);
+                || path.matches("/api/school/courses/[^/]+/labs/[^/]+/(?:run|grade)")
+                || path.matches("/api/school/courses/[^/]+/exams/.+/submit"))) limit(judgments, id);
+            if (post) {
+                var check = EXAM_CHECK.matcher(path);
+                if (check.matches())
+                    limit(exams.requiresSqlCheck(check.group(1), check.group(2)) ? judgments : objectiveChecks, id);
+            }
             if (post && (path.equals("/api/v1/tutor/requests") || path.equals("/api/v1/projects/drafts")
                 || path.matches("/api/v1/projects/drafts/[^/]+/retry"))) {
                 if (!tutorEnabled) throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE,"TUTOR_UNAVAILABLE","公网 AI 辅导尚未配置。",Map.of());

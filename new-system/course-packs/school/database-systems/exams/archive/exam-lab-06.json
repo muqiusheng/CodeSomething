@@ -1,0 +1,565 @@
+{
+  "id": "exam-lab-06",
+  "title": "实验六专项卷 · 存储过程、参数传递与流程控制",
+  "group": "specialty",
+  "labId": "lab-06-procedures",
+  "questions": [
+    {
+      "id": "exam-lab-06-q01",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "执行已建立的 p_course('006') 应使用什么？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "过程"
+      ],
+      "options": {
+        "A": "RUN p_course '006'",
+        "B": "EXECUTE FUNCTION p_course('006')",
+        "C": "CALL p_course('006')",
+        "D": "SELECT p_course('006')"
+      },
+      "answer": "C",
+      "explanation": "MySQL 用 CALL 调用存储过程，SELECT 函数调用是不同的语法。"
+    },
+    {
+      "id": "exam-lab-06-q02",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "过程参数用来接收课号输入且不回传修改应声明什么？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "options": {
+        "A": "RETURN",
+        "B": "IN",
+        "C": "OUT",
+        "D": "INOUT"
+      },
+      "answer": "B",
+      "explanation": "IN 从调用者接收值，不把参数赋值带回。"
+    },
+    {
+      "id": "exam-lab-06-q03",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "需要返回均分与人数两个值，要声明什么？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "options": {
+        "A": "两个 OUT 参数",
+        "B": "两个 RETURN 语句",
+        "C": "两个事务",
+        "D": "只能拼接成一个字符串返回"
+      },
+      "answer": "A",
+      "explanation": "过程有多个 OUT 参数，通过调用变量取回各自的结果。"
+    },
+    {
+      "id": "exam-lab-06-q04",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "将已有值传入过程再让过程修改，应选哪种参数？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "options": {
+        "A": "OUT",
+        "B": "IN",
+        "C": "DECLARE",
+        "D": "INOUT"
+      },
+      "answer": "D",
+      "explanation": "INOUT 同时完成输入与输出。"
+    },
+    {
+      "id": "exam-lab-06-q05",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "客户端使用 DELIMITER $$ 主要解决什么？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "DELIMITER"
+      ],
+      "options": {
+        "A": "避免返回 SQL 结果集",
+        "B": "把 SQL 关键字改成大小写敏感",
+        "C": "避免在 BEGIN...END 内部遇到分号就发送未完成定义",
+        "D": "更改服务器事务隔离级别"
+      },
+      "answer": "C",
+      "explanation": "DELIMITER 是客户端指令，改变何时把完整语句发给服务器。"
+    },
+    {
+      "id": "exam-lab-06-q06",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "DECLARE v_total INT 应放在过程 BEGIN...END 内什么位置？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "局部变量"
+      ],
+      "options": {
+        "A": "END 后的客户端指令中",
+        "B": "块开头，在可执行语句前",
+        "C": "任意 SELECT 后",
+        "D": "CALL 参数表的最后"
+      },
+      "answer": "B",
+      "explanation": "DECLARE 局部变量需要位于块的声明区。"
+    },
+    {
+      "id": "exam-lab-06-q07",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "过程 IF 语句结束需要什么？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "流程控制"
+      ],
+      "options": {
+        "A": "END IF;",
+        "B": "END WHERE;",
+        "C": "ENDIF ELSE;",
+        "D": "单独 END CASE;"
+      },
+      "answer": "A",
+      "explanation": "IF 条件 THEN ... ELSE ... END IF 是过程语句写法。"
+    },
+    {
+      "id": "exam-lab-06-q08",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "调用带 OUT 参数的过程，应该传什么作为接收者？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "options": {
+        "A": "常量 0",
+        "B": "函数 NOW()",
+        "C": "条件 NULL IS NULL",
+        "D": "会话变量 @n"
+      },
+      "answer": "D",
+      "explanation": "OUT 需要可写变量，调用者随后 SELECT @n 查看。"
+    },
+    {
+      "id": "exam-lab-06-q09",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "希望把 COUNT(*) 赋给局部变量 v_n，正确写法是？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "过程"
+      ],
+      "options": {
+        "A": "COUNT(*) AS INTO v_n FROM sc",
+        "B": "INSERT COUNT(*) INTO v_n",
+        "C": "SELECT COUNT(*) INTO v_n FROM sc",
+        "D": "SELECT v_n INTO COUNT(*) FROM sc"
+      },
+      "answer": "C",
+      "explanation": "SELECT ... INTO 给局部变量赋单行查询值。"
+    },
+    {
+      "id": "exam-lab-06-q10",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "需要至少执行一次循环体再判断退出，应选什么？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "循环"
+      ],
+      "options": {
+        "A": "SELECT ... GROUP BY",
+        "B": "REPEAT ... UNTIL ... END REPEAT",
+        "C": "WHILE ... DO ... END WHILE",
+        "D": "IF ... THEN ... END IF"
+      },
+      "answer": "B",
+      "explanation": "REPEAT 先执行循环体，WHILE 先判断进入条件。"
+    },
+    {
+      "id": "exam-lab-06-q11",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "请求不存在课号的 AVG(Grade)，应如何判断没有有效成绩？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "options": {
+        "A": "IF v_avg IS NULL THEN",
+        "B": "IF v_avg = NULL THEN",
+        "C": "IF v_avg = 0 THEN",
+        "D": "IF COUNT(v_avg) THEN"
+      },
+      "answer": "A",
+      "explanation": "AVG 无非空输入返回 NULL，0 可是实际平均分。"
+    },
+    {
+      "id": "exam-lab-06-q12",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "如何查看当前库的过程名称与类型？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "环境"
+      ],
+      "options": {
+        "A": "查 information_schema.COLUMNS 中列顺序",
+        "B": "SHOW TRIGGERS",
+        "C": "SELECT * FROM sc",
+        "D": "查 information_schema.ROUTINES 并筛选 ROUTINE_SCHEMA 和 ROUTINE_TYPE"
+      },
+      "answer": "D",
+      "explanation": "ROUTINES 提供过程与函数元数据。"
+    },
+    {
+      "id": "exam-lab-06-q13",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "在带标签的 LOOP 内提前离开这个循环，使用什么？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "流程控制"
+      ],
+      "options": {
+        "A": "BREAK 标签",
+        "B": "ITERATE 标签",
+        "C": "LEAVE 标签",
+        "D": "RETURN TABLE"
+      },
+      "answer": "C",
+      "explanation": "LEAVE 退出标签标记的块，ITERATE 开始下一轮。"
+    },
+    {
+      "id": "exam-lab-06-q14",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "过程形参取名 p_cno 而非 Cno 的好处是？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "命名"
+      ],
+      "options": {
+        "A": "保证参数不接受 NULL",
+        "B": "避免列名与形参引用混淆",
+        "C": "让 MySQL 自动建立外键",
+        "D": "使 GROUP BY 省略课号"
+      },
+      "answer": "B",
+      "explanation": "清晰的 p_ 前缀与表别名让谓词能明确引用两侧。"
+    },
+    {
+      "id": "exam-lab-06-q15",
+      "kind": "choice",
+      "points": 2,
+      "prompt": "只删除过程 p_course 应写什么？",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "过程"
+      ],
+      "options": {
+        "A": "DROP PROCEDURE IF EXISTS p_course",
+        "B": "DROP TABLE p_course",
+        "C": "DELETE PROCEDURE p_course",
+        "D": "ALTER PROCEDURE p_course REMOVE"
+      },
+      "answer": "A",
+      "explanation": "DROP PROCEDURE 删除过程对象，不操作底层表。"
+    },
+    {
+      "id": "exam-lab-06-q16",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "同一连接 CALL 后可以用 SELECT @n 读取 OUT 值。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "answer": "true",
+      "explanation": "@n 存在当前会话，换连接后不共享。"
+    },
+    {
+      "id": "exam-lab-06-q17",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "向服务器协议直接发送 DELIMITER 是运行时 SQL 语法。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "DELIMITER"
+      ],
+      "answer": "false",
+      "explanation": "它由支持指令的客户端消化，服务器接收分隔好的 CREATE 语句。"
+    },
+    {
+      "id": "exam-lab-06-q18",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "BEGIN...END 中的 DECLARE 局部变量可以在块外 SELECT。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "局部变量"
+      ],
+      "answer": "false",
+      "explanation": "局部变量作用域限于声明块及其内层。"
+    },
+    {
+      "id": "exam-lab-06-q19",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "存储程序的 IF 语句和 SELECT 中的 IF() 函数语法不同。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "流程控制"
+      ],
+      "answer": "true",
+      "explanation": "一个控制语句执行，另一个计算表达式值。"
+    },
+    {
+      "id": "exam-lab-06-q20",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "一个过程可以通过多个 SELECT 返回多个结果集。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "过程"
+      ],
+      "answer": "true",
+      "explanation": "调用者应能读取多个结果集。"
+    },
+    {
+      "id": "exam-lab-06-q21",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "过程执行过 UPDATE 后一定会自动 COMMIT，即使它在调用者的显式事务中。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "事务"
+      ],
+      "answer": "false",
+      "explanation": "事务边界由实际事务语句与隐式提交规则决定。"
+    },
+    {
+      "id": "exam-lab-06-q22",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "INOUT 形参可以影响调用者传入的用户变量。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "answer": "true",
+      "explanation": "调用结束时参数最终赋值回传。"
+    },
+    {
+      "id": "exam-lab-06-q23",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "CREATE PROCEDURE 不能用 ALTER PROCEDURE 直接替换过程体。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "过程"
+      ],
+      "answer": "true",
+      "explanation": "ALTER PROCEDURE 可调整特性，修改过程体通常先删除再重新创建。"
+    },
+    {
+      "id": "exam-lab-06-q24",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "WHILE 循环条件在第一次进入前求值。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "流程控制"
+      ],
+      "answer": "true",
+      "explanation": "若一开始条件为假，循环体不执行。"
+    },
+    {
+      "id": "exam-lab-06-q25",
+      "kind": "boolean",
+      "points": 2,
+      "prompt": "用无 GROUP BY 的 COUNT(*) 查询没有匹配行，会返回一行数值 0，可赋给 OUT。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "聚合"
+      ],
+      "answer": "true",
+      "explanation": "纯聚合查询仍返回全局统计的一行。"
+    },
+    {
+      "id": "exam-lab-06-q26",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全过程定义，接收课号并回传人数。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "template": "CREATE PROCEDURE p_count({{1}} p_cno CHAR(3), {{2}} p_n INT) SELECT COUNT(*) INTO p_n FROM sc WHERE Cno=p_cno;",
+      "blanks": [
+        [
+          "IN"
+        ],
+        [
+          "OUT"
+        ]
+      ],
+      "explanation": "IN 传课号，OUT 回传统计。"
+    },
+    {
+      "id": "exam-lab-06-q27",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "执行过程并读取同会话的返回值。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "过程"
+      ],
+      "template": "{{1}} p_count('006', {{2}}); SELECT @n;",
+      "blanks": [
+        [
+          "CALL"
+        ],
+        [
+          "@n"
+        ]
+      ],
+      "explanation": "用户变量可作为 OUT 的实参。"
+    },
+    {
+      "id": "exam-lab-06-q28",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "补全过程 IF 分支。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "流程控制"
+      ],
+      "template": "IF p_grade>=60 {{1}} SET p_state='及格'; {{2}};",
+      "blanks": [
+        [
+          "THEN"
+        ],
+        [
+          "END IF"
+        ]
+      ],
+      "explanation": "IF 语句从 THEN 开始执行分支，由 END IF 闭合。"
+    },
+    {
+      "id": "exam-lab-06-q29",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "向过程局部变量取平均值。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "局部变量"
+      ],
+      "template": "SELECT AVG(Grade) {{1}} v_avg FROM sc WHERE Cno=p_cno;",
+      "blanks": [
+        [
+          "INTO"
+        ]
+      ],
+      "explanation": "INTO 把单行聚合值赋给变量。"
+    },
+    {
+      "id": "exam-lab-06-q30",
+      "kind": "blank",
+      "points": 4,
+      "prompt": "允许从调用者接收基础学分并更新它。",
+      "labId": "lab-06-procedures",
+      "tags": [
+        "参数"
+      ],
+      "template": "CREATE PROCEDURE p_bonus({{1}} p_credit INT) SET p_credit=p_credit+1;",
+      "blanks": [
+        [
+          "INOUT"
+        ]
+      ],
+      "explanation": "双向参数先读初值再回传新值。"
+    },
+    {
+      "id": "exam-lab-06-q31",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-06-procedures",
+      "prompt": "定义过程 p_course_counts，接收 IN p_cno CHAR(3)，通过 OUT p_chosen INT 和 OUT p_graded INT 返回选课数和有成绩数。不存储中间结果。",
+      "referenceSql": "DELIMITER $$\nCREATE PROCEDURE p_course_counts(IN p_cno CHAR(3), OUT p_chosen INT, OUT p_graded INT)\nBEGIN\n SELECT COUNT(*),COUNT(Grade) INTO p_chosen,p_graded FROM sc WHERE Cno=p_cno;\nEND$$\nDELIMITER ;",
+      "tags": [
+        "参数",
+        "聚合"
+      ],
+      "explanation": "一个聚合 SELECT INTO 将两种计数绑定两个 OUT。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "post_query",
+          "label": "同一会话获取两个 OUT",
+          "points": 8,
+          "sql": "CALL p_course_counts('002',@chosen,@graded); SELECT @chosen AS Chosen,@graded AS Graded;",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "post_query",
+          "label": "空课程返回两个零",
+          "points": 4,
+          "sql": "CALL p_course_counts('999',@chosen,@graded); SELECT @chosen AS Chosen,@graded AS Graded;",
+          "orderMatters": true,
+          "checkColumnNames": true
+        }
+      ]
+    },
+    {
+      "id": "exam-lab-06-q32",
+      "kind": "sql",
+      "points": 15,
+      "labId": "lab-06-procedures",
+      "prompt": "创建过程 p_grade_label，IN p_grade INT，OUT p_label VARCHAR(10)。NULL 返回“缺考”，60 及以上返回“及格”，其他返回“不及格”。",
+      "referenceSql": "DELIMITER $$\nCREATE PROCEDURE p_grade_label(IN p_grade INT, OUT p_label VARCHAR(10))\nBEGIN\n IF p_grade IS NULL THEN SET p_label='缺考'; ELSEIF p_grade>=60 THEN SET p_label='及格'; ELSE SET p_label='不及格'; END IF;\nEND$$\nDELIMITER ;",
+      "tags": [
+        "流程控制",
+        "NULL"
+      ],
+      "explanation": "先分流 NULL，再按闭区间边界处理。",
+      "checks": [
+        {
+          "kind": "execution",
+          "label": "脚本执行成功",
+          "points": 3
+        },
+        {
+          "kind": "post_query",
+          "label": "及格与不及格边界",
+          "points": 8,
+          "sql": "CALL p_grade_label(60,@a); CALL p_grade_label(59,@b); SELECT @a AS AtLine,@b AS BelowLine;",
+          "orderMatters": true,
+          "checkColumnNames": true
+        },
+        {
+          "kind": "post_query",
+          "label": "NULL 分支",
+          "points": 4,
+          "sql": "CALL p_grade_label(NULL,@a); SELECT @a AS Missing;",
+          "orderMatters": true,
+          "checkColumnNames": true
+        }
+      ]
+    }
+  ]
+}
+

@@ -11,7 +11,12 @@ import tools.jackson.databind.json.JsonMapper;
 
 @Component
 class SchoolDraftStore {
-    record Execution(String sql, SchoolLabRunner.RunResult result) {}
+    record Execution(String sql, SchoolLabRunner.RunResult result, ExamStore.Item grade) {
+        Execution(String sql, SchoolLabRunner.RunResult result) { this(sql, result, null); }
+        boolean completed(boolean grading) {
+            return grading ? grade != null && grade.status().equals("correct") : result.status().equals("ok");
+        }
+    }
     record Draft(long revision, Map<String, String> drafts, Map<String, Execution> executions) {}
 
     private final JdbcTemplate jdbc;

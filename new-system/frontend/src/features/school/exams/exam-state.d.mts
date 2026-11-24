@@ -1,0 +1,10 @@
+import type {Check,Draft,Item,Question,SqlDiagnostic} from './exam-api';
+export function answerState(question:Question, answer?:string[]):string;
+export function remainingTime(startedAt:number, minutes:number, now:number):number|null;
+export function restoreDraft(draft:Draft, encoded:string|null):Draft;
+export function screenPosition(questions:Question[],current:number,predicate:(question:Question)=>boolean):number;
+export function debugRunMode(selection?:string):'selection'|'run';
+export function sqlItemDiagnostic(item?:Item|null):SqlDiagnostic|null;
+export function sqlErrorLine(item?:Item|null):number|undefined;
+export function isDuplicateSqlErrorCheck(check:Check,diagnostic:SqlDiagnostic|null):boolean;
+export function primaryQueryPreview(item?:Item|null):Check|null;
