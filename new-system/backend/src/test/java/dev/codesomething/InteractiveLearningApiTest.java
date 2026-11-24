@@ -51,7 +51,7 @@ class InteractiveLearningApiTest {
             assertEquals(100,state().at("/profile/xp").asInt());
             assertEquals(4,state().at("/profile/bestCombo").asInt());
             assertEquals(100,state().at("/progress/http-01-request-lifecycle/bestAccuracy").asInt());
-            assertEquals(0,app.getBean(org.springframework.jdbc.core.JdbcTemplate.class).queryForObject("SELECT count(*) FROM completions",Integer.class));
+            assertEquals(0,app.getBean(org.springframework.jdbc.core.JdbcTemplate.class).queryForObject("SELECT count(*) FROM stage_completions",Integer.class));
         }
         try (var ignored = start(false)) {
             assertEquals(100,state().at("/profile/xp").asInt());
@@ -103,7 +103,7 @@ class InteractiveLearningApiTest {
         new java.security.SecureRandom().nextBytes(secret);
         var app = new SpringApplicationBuilder(CodeSomethingApplication.class).run("--server.port=0",
             "--cs.data-directory="+directory,"--cs.course-directory="+Path.of("../course-packs").toAbsolutePath(),
-            "--cs.public="+publicMode,"--cs.runner.enabled=false","--cs.auth.require-invite=false",
+            "--cs.public="+publicMode,"--cs.runner.mode="+(publicMode ? "docker_only" : "local_first"),"--cs.runner.enabled=false","--cs.auth.require-invite=false",
             "--cs.auth.initial-password="+PASSWORD,"--cs.auth.jwt-secret="+Base64.getEncoder().encodeToString(secret));
         base=URI.create("http://127.0.0.1:"+app.getEnvironment().getProperty("local.server.port"));
         return app;
