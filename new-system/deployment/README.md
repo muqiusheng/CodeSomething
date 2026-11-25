@@ -4,31 +4,31 @@
 
 ## Instabox 主站
 
-2026年11月22日启用免费机器 `codesomething`，当前前端 0.31.1、后端 0.7.1 和 SQLite V23。对外统一使用 [try.maqibu.online 主站](https://try.maqibu.online)。悉尼网关使用现有域名证书，并通过校验证书的 HTTPS 到达 Instabox 公开端口17680。Compose 使用生产文件和 `docker-compose.instabox.yml`，后端和MySQL由专用rootless Docker运行。
+2026年11月22日启用免费机器 `codesomething`，当前前端 0.32.0、后端 0.7.3 和 SQLite V23。对外统一使用 [try.maqibu.online 主站](https://try.maqibu.online)。Cloudflare Worker 为公网 HTTPS 入口，直接通过 HTTPS 访问 Instabox 私有端口 17680。Compose 使用生产文件和 `docker-compose.instabox.yml`，后端和MySQL由专用rootless Docker运行。
 
-- 悉尼 `codesomething-https.socket` 通过 `20-instabox-primary.conf` 把443交给本机8444的 `codesomething-domain-gateway`。8443上的悉尼应用仍使用自己的数据库，上海应用通过原SSH隧道访问。此拓扑下自定义域名入口依赖悉尼 HTTPS 网关。
-- 网关使用 `instabox/domain-gateway.conf`。私有网关凭据分别在悉尼网关环境文件和 Instabox `site.env` 保存。域名续签后，同时重载悉尼公开网关与备用应用网关。
-- Instabox 的原公开 URL 将页面导航跳到 `try.maqibu.online`，保留路径、查询字符串和邀请片段。Cloudflare Worker 继续使用原公开 URL 的健康端点。
+- 悉尼和上海的备用应用已停止，应用数据库与容器保留供人工恢复。悉尼的 `codesomething-https.socket` 已停用并禁用启动，`codesomething-domain-gateway` 已停止。
+- Cloudflare 管理主域名的证书与路由，正式 Worker 的回源凭据位于 Cloudflare Secrets。区域网关配置保留供冷备恢复。
+- Instabox 应用端口 17680 为私有，Cloudflare Worker 使用专用端口凭据并保留应用的 Authorization 头。17682 继续承担私有备份。Cloudflare 状态检查使用平台 API。
 
 - 持久目录为 `/data/codesomething`，部署、数据库、快照分别在 `release`、`database`、`backups`。部署账号为 `csdeploy`，私有环境文件为 `release/deployment/site.env`。
 - `codesomething-rootless-docker.service` 在专用挂载命名空间内为守护进程提供可用于容器嵌套的 `/proc`，然后以 `csdeploy` 启动 rootless Docker。保留宿主挂载及容器的cgroup v2资源限制。
-- 使用 `instabox/worker.mjs` 部署Cloudflare Worker `codesomething-instabox-health`，将 `HEALTH_URL` 配为主站 `/api/v1/health`，Cron为 `*/10 * * * *`。Worker由Cron调用，使用方访问Instabox站点。免费档的单次运行上限和冷却期按[Instabox官方规则](https://instabox.sh/docs/idle-suspend.md)执行。
+- Cloudflare Worker `codesomething-instabox-health` 使用 [Wrangler 配置](instabox/wrangler.jsonc)。`*/10 21-23,0-4 * * *` 覆盖北京时间 05:00–13:00（UTC 前一天 21:00–当天 05:00），`*/10 7-14 * * *` 覆盖北京时间 15:00–23:00（UTC 当天 07:00–15:00）。只向 Instabox 平台 API 查询状态。通过 Worker Secrets 设置只读 `INSTABOX_READ_TOKEN` 和 `INSTABOX_MACHINE_ID`。缺少绑定时仅记录配置缺失。免费档运行上限和冷却以[平台规则](https://instabox.sh/docs/machines/auto-pause)为准。
 - 悉尼快照保存在 `backups/sydney-20261122T060017Z.tar.gz`。主站登录使用快照中的账号和密码，已有会话需要重新登录。悉尼应用留在8443，上海 `learn.maqibu.online` 通过SSH隧道私用。两处均可手动接管。需要接续主站最新数据时，恢复同一批次的主库和学员库并撤销旧会话。悉尼接管时先切到支持本站注册的备用网关镜像，再将443的转发目标改回8443。
 - 两台备用网关使用 `standby-registration-map.conf` 和 `standby-registration.conf` 将注册入口指向主站并阻断注册、发码写入。启用备用站接管前恢复同批次数据，再切换到支持本站注册的网关镜像。
 
 Instabox 主站的常驻 MySQL 练习池上限为 6。悉尼与上海使用各自的容量配置。
 
-生产应用更新同期发布到 Instabox、悉尼和上海。使用同一前端构建产物及后端版本，保留各站入口配置和独立数据库。先验主站域名、注册及登录，再分别核对备用端口、发布版本与注册限制。
+线上常规发布只同步两台 Instabox：`codesomething` 运行生产版本，`maqibu` 保存对应版本的前端、后端、课程包、运行配置和可恢复数据，专用于备份及手动恢复。悉尼、上海应用仅在重大故障时人工启用，退出例行发布、同步和流量接管。公网路由由 Cloudflare Worker 和 Instabox 主节点提供。
 
 公开介绍页使用 `index.html`，工作台和账户路由使用 `app.html`。实例环境的 `CS_ALLOW_INDEXING` 默认为 `0`。仅当前承担 `try.maqibu.online` 的 Instabox 主站设为 `1`，请求还须经过域名网关。悉尼备用应用与上海私用应用保持 `0`。网关更新时随镜像一起使用新版双入口构建产物和提供 `GET /api/v1/auth/session` 的后端。
 
 Instabox 主站的必应站长验证文件保存在部署目录的 `BingSiteAuth.xml`。重建主站网关镜像时，从该目录获取原文件并放进镜像的 `/usr/share/nginx/html/BingSiteAuth.xml`。发布后验证主域名该路径返回 XML 且与原件字节一致。此路径允许抓取并继续返回 `noindex`，sitemap 仍只包含首页。
 
-### 公开首页自动接力
+### 单主站与备份
 
-悉尼公网网关已接入独立的 Instabox 备用机 `maqibu`。仅公开首页、落地页资源、robots、sitemap 和必应验证文件在主站返回 409、502、503 或 504 时转发到备用机。每个请求先尝试主站，因此主站恢复后自动回切。登录、注册、学习工作台与 API 继续走主站。公开首页保留原网址和索引规则，备用源站保持私有端口。
+[边缘入口 Worker](instabox/gateway-worker.mjs) 与 [Wrangler 配置](instabox/wrangler.gateway.jsonc) 用于替换悉尼网关。接入 `try.maqibu.online` 前先激活 Cloudflare DNS 区域、核对所有原记录、配置 Worker Secrets `INSTABOX_PORT_TOKEN` 和 `CS_INGRESS_TOKEN`，再通过同域名验证 TLS、窗口外 503、登录、回源和 SQL 判分。2026年11月25日已启用 `try.maqibu.online/*` Worker 路由及 DNS 代理，失败模式为关闭。`try` 的代理 A 记录已使用 Cloudflare 保留占位地址 192.0.2.0，线上配置无悉尼回源。原悉尼 A 记录值留在迁移备份内。2026年11月25日已验证直连回源、学员登录和实验三第 4 题判分，停用悉尼网关后复验三项均通过。
 
-备用机上的 `maqibu-standby.service` 只提供 `/data/maqibu-standby/site` 内的静态文件，并随系统启动。发布介绍页时，同步更新该目录中的生产版 HTML、入口实际引用的资源、favicon、主题脚本、robots、sitemap 与必应验证文件，重启服务后复验。私有端口凭据仅保存在悉尼网关部署环境。备用机无单独定时唤醒，实际接力请求触发唤醒。
+Cloudflare Worker 执行单主站服务时段。北京时间 05:00–13:00 和 15:00–23:00（UTC 前一天 21:00–当天 05:00、当天 07:00–15:00）允许回源。其余时间所有新请求在网关收到带服务时段的 503，午休公网验收已通过。线上独立备份接收服务沿用现有配置，库存及恢复验收见[备份与恢复说明](peer-backup.md)。
 
 ## 2 GiB ECS 试学配置
 

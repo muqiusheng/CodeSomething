@@ -1,0 +1,13 @@
+{
+  "name": "codesomething-instabox-health",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-11-22",
+  "workers_dev": false,
+  "observability": { "enabled": true },
+  "triggers": {
+    "crons": [
+      "*/10 21-23,0-4 * * *", // Beijing 05:00–12:50
+      "*/10 7-14 * * *"       // Beijing 15:00–22:50
+    ]
+  }
+}

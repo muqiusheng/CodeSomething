@@ -1,0 +1,14 @@
+{
+  "name": "maqibu-public-gateway",
+  "main": "gateway-worker.mjs",
+  "compatibility_date": "2026-11-25",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "try.maqibu.online/*", "zone_name": "maqibu.online" }
+  ],
+  "vars": {
+    "PUBLIC_HOST": "try.maqibu.online",
+    "INSTABOX_ORIGIN": "https://17680-agradt36n3vvt65lozxjnwr6uq.instabox.tech"
+  }
+}
