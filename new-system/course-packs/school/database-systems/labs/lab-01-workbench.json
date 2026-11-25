@@ -4,58 +4,174 @@
   "requirements": "每题从预置的学生选课沙箱开始。查看原实验材料可复习 Workbench 建模与数据导入，SQL 作答按各题指定的输出或对象状态判分。",
   "questions": [
     {
-      "id": "q01",
-      "title": "确认数据库与连接",
-      "requirement": "用一条查询从 information_schema.SCHEMATA 返回当前数据库的默认字符集与排序规则，依次输出两列。",
-      "hint": "在 SCHEMATA 中用 SCHEMA_NAME 限定到当前数据库。",
+      "id": "q02",
+      "title": "创建 student 学生表",
+      "requirement": "按下表在当前练习库创建 student。\n\n### 涉及数据表：student（学生表）\n\n| 列名 | 数据类型 | 约束 / 默认值 |\n| :--- | :--- | :--- |\n| `Sno` | CHAR(8) | 主键 |\n| `Sname` | VARCHAR(8) | 不可空 |\n| `Sex` | CHAR(2) | 不可空，默认“男” |\n| `Birth` | DATETIME | 不可空 |\n| `Classno` | CHAR(3) | 不可空 |\n| `Entrance_date` | DATETIME | 不可空 |\n| `Home_addr` | VARCHAR(40) | 可空 |",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "通过MySQL Workbench创建数据库\n2、查看、验证创建的数据库\n方法1：执行show databases查看所有的数据库。\n方法2：MySQL Workbench中查看数据库student_info的信息，包括表、字段、索引、触发器等。"
+      "originalText": "3、通过MySQL Workbench在student_info数据库中创建表\nStudent_info数据库包含3张表：Student表、Course表及SC表，分别代表学生信息、课程信息及学生选课信息。3张表的结构及其约束见表2、表3、表4.",
+      "gradingRevision": "split"
     },
     {
-      "id": "q02",
-      "title": "创建 Student、Course、SC",
-      "requirement": "用 SHOW COLUMNS 依次核对 student、course、sc 的列定义。提交三条查询，顺序为学生、课程、选课。",
-      "hint": "SHOW COLUMNS 每次返回一张表的列定义。",
+      "id": "q02-course",
+      "title": "创建 course 课程表",
+      "requirement": "按下表在当前练习库创建 course。\n\n### 涉及数据表：course（课程表）\n\n| 列名 | 数据类型 | 约束 / 默认值 |\n| :--- | :--- | :--- |\n| `Cno` | CHAR(3) | 主键 |\n| `Cname` | VARCHAR(20) | 不可空 |\n| `Total_perior` | SMALLINT | 可空，非空时大于 0 |\n| `Credit` | TINYINT | 可空，非空时为 1–6 |",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "3、通过MySQL Workbench在student_info数据库中创建表\nStudent_info数据库包含3张表：Student表、Course表及SC表，分别代表学生信息、课程信息及学生选课信息。3张表的结构及其约束见表2、表3、表4."
+      "originalText": "3、通过MySQL Workbench在student_info数据库中创建表\nStudent_info数据库包含3张表：Student表、Course表及SC表，分别代表学生信息、课程信息及学生选课信息。3张表的结构及其约束见表2、表3、表4.",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q02-sc",
+      "title": "创建 sc 选课表",
+      "requirement": "按下表在当前练习库创建 sc。student 和 course 已准备好，可直接建立外键。\n\n### 涉及数据表：sc（选课表）\n\n| 列名 | 数据类型 | 约束 / 默认值 |\n| :--- | :--- | :--- |\n| `Sno` | CHAR(8) | 复合主键第 1 列，外键引用 student(Sno) |\n| `Cno` | CHAR(3) | 复合主键第 2 列，外键引用 course(Cno) |\n| `Grade` | TINYINT | 可空，非空时为 0–100 |",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "3、通过MySQL Workbench在student_info数据库中创建表\nStudent_info数据库包含3张表：Student表、Course表及SC表，分别代表学生信息、课程信息及学生选课信息。3张表的结构及其约束见表2、表3、表4.",
+      "gradingRevision": "split"
     },
     {
       "id": "q03",
-      "title": "管理列与默认值",
-      "requirement": "为 student 增加可存储小数的 Stature DECIMAL(4,2)，再移除该列。为 sc.Grade 设置默认值 0，保留已有成绩。",
-      "hint": "这里仅增加再删除身高列，已有系别与邮编列可保留。",
+      "title": "给 Student 增加身高列",
+      "requirement": "增加可空的 Stature NUMERIC(4,2)，限制其值小于 3.0 米。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "6、通过MySQL Workbench管理表结构\n（1）添加和删除列\na. 给Student表增加身高（以米单位）Stature列 ，类型为numeric(4，2）,允许为空值，且身高值需小于3.0米。\nb. 给Student表增加所在系Sdept列，字符型，长度20，不允许为空值。\nc. 给Student表增加邮政编码Postcode列，字符型，长度为6，可以为空，若不为空时，则要求其值只能出现数字，不能是其它字符。\nd.删除Student表中身高Stature列。\n（2）添加和删除约束\na.在Student表添加约束：入学时间必须在出生年月之后。\nb.给SC表的成绩Grade列增加默认值约束，默认值为0.\nc.删除Grade列的默认值约束"
+      "originalText": "a. 给Student表增加身高（以米单位）Stature列 ，类型为numeric(4，2）,允许为空值，且身高值需小于3.0米。",
+      "gradingRevision": "split"
     },
     {
-      "id": "q04",
-      "title": "录入种子数据",
-      "requirement": "依次录入学生 20119991（何明，男，1993-06-20 出生，051 班，2011-09-01 入学，南京，计算机系，邮编 210000）与该生的 001 课程成绩 86。",
-      "hint": "用显式列名的 INSERT，避免字段顺序变化造成错位。",
+      "id": "q03-sdept",
+      "title": "给 Student 增加所在系字段",
+      "requirement": "增加 Sdept VARCHAR(20)，不允许为空。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "（1）插入数据，Student表、Course表、SC表的记录见表5、表6、表7。\n其它数据可自行添加。要求Student表和SC表中数据包括了每位同学自己的学号。"
+      "originalText": "b. 给Student表增加所在系Sdept列，字符型，长度20，不允许为空值。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q03-postcode",
+      "title": "给 Student 增加邮政编码列",
+      "requirement": "增加可空的 Postcode CHAR(6)。有值时必须恰好为六位数字。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "c. 给Student表增加邮政编码Postcode列，字符型，长度为6，可以为空，若不为空时，则要求其值只能出现数字，不能是其它字符。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q03-drop-stature",
+      "title": "删除 Student 的身高列",
+      "requirement": "删除已预置的 Stature 列。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "d.删除Student表中身高Stature列。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q03-dates",
+      "title": "限制入学时间晚于出生日期",
+      "requirement": "为 Student 添加 CHECK 约束，要求 Entrance_date 严格晚于 Birth。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "a.在Student表添加约束：入学时间必须在出生年月之后。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q03-grade-default",
+      "title": "给 Grade 设置默认值",
+      "requirement": "把 SC.Grade 的默认值设为 0。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "b.给SC表的成绩Grade列增加默认值约束，默认值为0.",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q03-drop-default",
+      "title": "删除 Grade 的默认值",
+      "requirement": "移除 SC.Grade 已设置的默认值。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "c.删除Grade列的默认值约束",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q04-student",
+      "title": "录入表 5 的 student 数据",
+      "requirement": "用一条 INSERT 将原实验表 5 的记录录入 student。 如需按实验手册补录自己的学号，可在个人练习库中操作。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（1）插入数据，Student表、Course表、SC表的记录见表5、表6、表7。\n其它数据可自行添加。要求Student表和SC表中数据包括了每位同学自己的学号。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q04-course",
+      "title": "录入表 6 的 course 数据",
+      "requirement": "用一条 INSERT 将原实验表 6 的记录录入 course。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（1）插入数据，Student表、Course表、SC表的记录见表5、表6、表7。\n其它数据可自行添加。要求Student表和SC表中数据包括了每位同学自己的学号。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q04-sc",
+      "title": "录入表 7 的 sc 数据",
+      "requirement": "用一条 INSERT 将原实验表 7 的记录录入 sc。 如需按实验手册补录自己的学号，可在个人练习库中操作。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（1）插入数据，Student表、Course表、SC表的记录见表5、表6、表7。\n其它数据可自行添加。要求Student表和SC表中数据包括了每位同学自己的学号。",
+      "gradingRevision": "split"
     },
     {
       "id": "q05",
-      "title": "修改与删除记录",
-      "requirement": "将 20110103 的出生日期改为 1993-10-01，将 002 改为 64 学时、4 学分；仅删除 20110002 的 002 选课记录。",
-      "hint": "先用 SELECT 核对 WHERE 匹配行，并同时限定删除的学号和课号。",
+      "title": "修改指定学生的出生日期",
+      "requirement": "将学生 20110103 的出生日期改为 1993-10-01。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "（2）修改数据\na.将Student表中的学号为’20110103’的同学的出生年月改为1993年10月1日。\nb.将Course表中的课程号为’002’的学分改为4，总学时改为64。\n（3）删除数据 （请注意约束的限制）\na.删除SC表中20110103同学的选课记录\nb.删除Course表中课程号为002的记录。如果不能成功删除该记录，请分析原因。"
+      "originalText": "a.将Student表中的学号为’20110103’的同学的出生年月改为1993年10月1日。",
+      "gradingRevision": "split"
     },
     {
-      "id": "q06",
-      "title": "核对当前连接和默认字符集",
-      "requirement": "从 information_schema.SCHEMATA 查询当前库，依次输出默认排序规则、默认字符集。",
-      "hint": "查询 SCHEMATA 的默认排序规则与默认字符集字段。",
-      "optional": true,
+      "id": "q05-course",
+      "title": "修改 002 课程的学分与学时",
+      "requirement": "将 002 课程改为 4 学分、64 学时。",
+      "hint": "",
+      "optional": false,
       "starterSql": "",
-      "originalText": "在 Workbench 的练习连接中查看当前数据库和它的默认字符集。把连接到的库名和字符集写在 SQL 注释里，并附上实际查询。"
+      "originalText": "b.将Course表中的课程号为’002’的学分改为4，总学时改为64。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q05-delete-sc",
+      "title": "删除指定学生的选课记录",
+      "requirement": "删除 SC 中学号 20110103 的所有选课记录。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "a.删除SC表中20110103同学的选课记录",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q05-delete-course",
+      "title": "观察课程删除的外键限制",
+      "requirement": "尝试删除课程 002，观察仍有选课记录时的外键报错。\nDELETE FROM course WHERE Cno='002';",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "b.删除Course表中课程号为002的记录。如果不能成功删除该记录，请分析原因。",
+      "gradingRevision": "split"
     },
     {
       "id": "q07",

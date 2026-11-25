@@ -21,6 +21,7 @@
 
 单题端点挂在 `/{paperId}/drafts/{id}/questions/{questionId}`、`/{paperId}/attempts/{id}/questions/{questionId}` 或 `/mistakes/{questionId}` 下。
 
+- GET /solution 仅适用于草稿题路径。练习草稿或已交卷记录返回标准答案与解析。响应包括 correct、acceptedBlanks、referenceSql、explanation，未交卷的考场草稿返回 HTTP 403。
 - POST `/check` 核对 `answer` 数组并返回得分、标准答案、解析及 SQL 检查点。考场草稿禁止核对。错题满分会更新掌握状态。
 - POST `/debug` 接收 `answer`（SQL 脚本单元素数组）、`mode=run\|selection\|trace\|explain\|schema\|reset`、`offset`（选区开始行减一）。返回状态、执行步骤、耗时、结果表、行变化及行号诊断。初始化预览和兼容的空重置可传空数组。前端清空结果使用本地状态。
 - 选择值使用选项 ID、判断用 `"true"` 或 `"false"`，其余为填空或脚本字符串。开放核对的上下文才会含有参考答案。隔离环境停用或不可用时，SQL 题标记为 `unavailable`，客观题仍可交卷。
@@ -31,7 +32,11 @@
 | --- | --- |
 | GET /api/school/courses/{courseId}/labs/{labId} | 配置判分的实验返回 grading=true，work.executions 中可包含 grade |
 | POST /api/school/courses/{courseId}/labs/{labId}/grade | 接收 revision、drafts、questionId，按当前题的执行、基础结果与变式评分，返回更新后的 work 和当前题 results |
-| GET /api/school/courses/{courseId}/labs/{labId}/questions/{questionId}/tables | 读取本题初始隔离库的字段及每表最多三行样例，与判分共用种子和题目初始化。公网限学员使用。 |
+| GET /api/school/courses/{courseId}/labs/{labId}/questions/{questionId}/tables | 读取本题初始隔离库的字段及每表最多两行样例，与判分共用种子和题目初始化。公网限学员使用。 |
+| POST /api/school/courses/{courseId}/labs/{labId}/questions/{questionId}/debug | 接收 sql、mode（run、selection、trace）和选区 offset。在本题临时库执行并返回语句结果、诊断和跟踪数据，草稿修订与判分记录不变。公网限学员使用。 |
+| GET /api/school/courses/{courseId}/labs/{labId}/questions/{questionId}/solution | 按当前实验题读取 referenceSql、explanation。公网限学员使用。 |
+
+两种答案端点也支持省略 /courses 的短路径。
 
 选区试运行另传 selection、offset，使用题目沙箱并返回当次结果，作答版本与判分记录维持原值。整题结果随相同 SQL 草稿保存，并在满分时计入通过进度。旧运行记录仍可用于导出。运行器不可用时保留作答，并保留相同脚本的最近判分。
 

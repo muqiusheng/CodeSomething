@@ -40,7 +40,9 @@ class SchoolExamCatalogTest {
                     assertEquals(List.of(2, 5, 3), question.checks().stream().map(ExamCatalog.Check::points).toList(), question.id());
                     assertTrue(question.prompt().contains("### 涉及数据表："), question.id());
                     assertTrue(question.prompt().contains("| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |"), question.id());
-                    assertTrue(question.prompt().contains("**数据预览"), question.id());
+                    boolean createsTable = question.referenceSql().stripLeading().matches("(?is)^CREATE TABLE\\b.*");
+                    assertTrue(createsTable ? question.prompt().contains(" · 待创建")
+                        : question.prompt().contains("**数据预览"), question.id());
                 }
                 String previousId = promptIds.putIfAbsent(normalizedPrompt, question.id());
                 assertNull(previousId, () -> "Repeated prompt: " + previousId + " / " + question.id());
@@ -59,6 +61,21 @@ class SchoolExamCatalogTest {
         assertEquals(3, previousMock.version());
         assertEquals(25, previousMock.questions().size());
         assertEquals(4, pack.byPaperId().get("exam-mock-01").version());
+    }
+
+    @Test void revisedLabTasksHaveOneCoreStatementAndPrivateExplanations() {
+        var catalog = new SchoolCourseCatalog("../course-packs", JsonMapper.builder().build());
+        var course = catalog.course("database-systems");
+        for (var outline : course.labs()) {
+            var lab = catalog.lab(course, outline.id());
+            var rules = catalog.labChecks(course, lab);
+            for (var task : lab.questions()) {
+                var rule = rules.get(task.id());
+                assertFalse(rule.explanation().isBlank(), rule.id());
+                if ("split".equals(task.gradingRevision()))
+                    assertEquals(1, ExamSqlScript.split(rule.referenceSql()).size(), rule.id());
+            }
+        }
     }
 
     private static String normalize(String prompt) {

@@ -224,7 +224,6 @@
 .school-actions .button {min-height: 40px;}
 .school-actions .button[aria-pressed=true] {background: var(--primary-soft); color: var(--primary-ink);}
 .school-actions .button.active {background: var(--primary-soft); color: var(--primary-ink); border-color: var(--primary-border, var(--border));}
-.school-monaco .code-editor-shell:not([open]) {height: clamp(235px, 31vh, 410px);}
 .school-notes {width: 100%; min-height: 240px; resize: vertical; font: inherit;}
 .school-report-fields label {display: flex; align-items: center; gap: var(--space-2);}
 .school-report-fields input, .school-notes {
@@ -394,19 +393,6 @@
 .school-table-info dl > div {display: grid; grid-template-columns: 5em minmax(0, 1fr); gap: 4px; padding-block: 4px; margin: 0;}
 .school-table-info dd {margin: 0;}
 .school-result-grid {margin-top: var(--space-3);}
-.school-grid-export {position: relative;}
-.school-grid-export summary {display: flex; align-items: center; gap: 6px; list-style: none;}
-.school-grid-export[open] .school-actions {
-  position: absolute;
-  z-index: var(--z-popover, 10);
-  inset: calc(100% + 4px) 0 auto auto;
-  width: max-content;
-  max-width: calc(100vw - 60px);
-  padding: 6px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-}
 @media (min-width: 1180px) and (min-height: 650px) {
   .page.school-workspace {
     height: calc(100dvh - var(--workspace-header-height));
@@ -430,47 +416,110 @@
 .page.school-practice-workspace {width: min(1760px, 100%); max-width: none; margin-inline: auto; padding: 12px 16px 16px;}
 .school-practice-workspace .school-lab-heading {justify-content: flex-start; align-items: center; gap: 12px; margin: 0 0 10px;}
 .school-practice-workspace .school-lab-heading h1 {font-size: clamp(18px, 1.55vw, 24px); text-wrap: pretty;}
-.school-practice-workspace .school-lab-heading .back-link {margin: 0; font-size: 13px;}
+.school-practice-workspace .school-lab-heading .back-link {
+  margin: 0; min-height: 32px; padding-inline: 6px; border-radius: 8px;
+  color: var(--text-secondary); font-size: 13px;
+}
+.school-practice-workspace .school-lab-heading .back-link:hover {background: var(--surface); color: var(--text);}
+.school-practice-workspace .school-lab-heading > .school-badge {
+  margin-inline-start: auto; border-radius: 8px; font-variant-numeric: tabular-nums;
+}
 .school-practice-grid, .school-practice-sql {display: grid; min-width: 0; gap: 10px;}
-.school-practice-sql {gap: 0;}
-.school-practice-grid > aside {padding: 12px 10px;}
-.school-outline-title {display: flex; align-items: center; justify-content: space-between; gap: 6px;}
+.coding-app .school-practice-grid > .school-pane {border-radius: 12px; box-shadow: none;}
+.school-practice-grid :is(.school-questions button,.school-question-index,.school-optional.badge,.school-directory-toggle.btn) {border-radius: 8px;}
+.school-practice-grid {--lab-directory-width: 56px;}
+.school-practice-grid[data-directory-open=true] {--lab-directory-width: 232px;}
+.school-practice-grid > aside {
+  padding: 8px; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin;
+}
+.school-practice-grid[data-directory-open=false] > aside {padding-inline: 4px;}
+.school-directory-toggle.btn {
+  display: grid; place-items: center; flex: none; width: 40px; min-width: 0; height: 40px;
+  padding: 0; appearance: none; border: 0; border-radius: var(--radius-control);
+  background: transparent; color: var(--text-secondary); box-shadow: none; outline: none;
+}
+@media (hover: hover) {
+  .school-directory-toggle.btn:hover {background: var(--surface-muted); color: var(--text);}
+}
+.school-directory-toggle.btn:focus-visible {outline: 2px solid var(--focus); outline-offset: -2px;}
+.school-practice-grid[data-directory-open=false] .school-outline-title {justify-content: center; margin-bottom: 3px;}
+.school-practice-grid[data-directory-open=false] .school-questions button {
+  position: relative; display: grid; grid-template-columns: 1fr; justify-items: center; padding-inline: 2px;
+}
+.school-practice-grid[data-directory-open=false] .school-question-status {position: absolute; inset-inline-end: 1px; inset-block-start: 4px;}
+.school-practice-grid[data-directory-open=false] .school-question-status svg {width: 11px; height: 11px;}
+.school-questions li[data-passed=true] .school-question-index {background: var(--success-soft); color: var(--success);}
+.school-questions li[data-optional=true] .school-question-index {border: 1px dashed currentColor;}
+.school-outline-title {
+  position: sticky; top: -8px; z-index: 1; display: flex; align-items: center;
+  justify-content: space-between; gap: 6px; background: var(--surface);
+}
+.school-practice-grid .school-questions {max-height: none; overflow: visible;}
 .school-outline-title h2 {margin: 0; font-size: 15px;}
-.school-lab-objective summary {font-size: 12px; color: var(--text-secondary);}
 .school-practice-grid .school-outline-progress {margin-block: 2px 7px;}
 .school-practice-grid .school-questions button {
-  display: grid; grid-template-columns: 2ch minmax(0, 1fr) auto; gap: 6px;
+  display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 6px;
   min-height: 37px; padding: 6px 4px; font-size: 12px;
 }
-.school-question-index {font-variant-numeric: tabular-nums; text-align: end; color: var(--text-secondary);}
-.school-question-header .button {min-height: 34px; padding-block: 4px;}
-.school-lab-data {margin-block: 16px; display: grid; gap: 8px; min-width: 0;}
-.school-lab-data h3 {margin: 0; font-size: 14px;}
-.school-lab-data .school-table-tabs {margin: 0; padding-bottom: 3px;}
-.school-lab-data .school-table-tab {text-transform: none; font: 12px Consolas, monospace; padding: 4px 8px; min-height: 26px; height: auto;}
-.school-lab-data .school-table-tab[aria-pressed=true] {background: var(--primary-soft); color: var(--primary-ink); border-color: var(--primary-border);}
+.school-question-index {display: inline-grid; place-items: center; width: 26px; padding: 0; background: var(--surface-muted); border: 0;
+  border-radius: 5px; font-variant-numeric: tabular-nums; color: var(--text-secondary);}
+.school-question-group + .school-question-group {margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);}
+.school-question-group h3 {margin: 4px 0; font-size: 12px; color: var(--text-secondary);}
+.school-question-label {min-width: 0; overflow-wrap: anywhere;}
+.school-optional.badge {display: inline-flex; align-items: center; white-space: nowrap; margin-inline-start: 5px; padding-inline: 5px; background: var(--surface-muted);
+  border: 0; color: var(--text-secondary); font-size: 10px;}
+.school-question-header .school-question-next {flex-shrink: 0; min-height: 34px; height: auto; padding: 4px 7px; font-size: 13px; white-space: nowrap;}
+.school-practice-prompt > .school-question-header {align-items: start; gap: 6px;}
+.school-practice-prompt > .school-question-header h2 {min-width: 0; overflow-wrap: anywhere; padding-block-start: 4px;}
+.school-table-specs {margin-block: 12px 16px;}
+.school-table-specs .exam-question-table-scroll .table {min-width: 320px;}
+.school-table-specs .exam-question-table-scroll [data-table-kind=schema] th:nth-child(1) {width: 112px;}
+.school-table-specs .exam-question-table-scroll [data-table-kind=schema] th:nth-child(2) {width: 108px;}
+.school-table-specs .exam-question-table-scroll [data-table-kind=schema] th:nth-child(3) {width: auto;}
+.school-table-specs .exam-question-table-scroll td:nth-child(-n+2) {white-space: nowrap; padding-inline: 7px;}
+.school-lab-data {margin-block: 16px 0; min-width: 0;}
+.school-lab-data h3 {margin: 0 0 6px; font-size: 14px;}
+.school-practice-prompt > :is(.school-solution,.school-source),
+.school-lab-data > .school-table-disclosure {border-top: 1px solid var(--border);}
+.school-practice-prompt > .school-source > div {padding-block: 6px 12px;}
 .school-lab-data .table td {white-space: nowrap;}
 .school-lab-data [data-table-kind=lab-schema] :is(th,td) {padding-inline: 5px;}
 .school-lab-data [data-table-kind=lab-schema] th {white-space: nowrap;}
 .school-lab-data [data-table-kind=lab-schema] td:last-child {white-space: normal;}
-.school-practice-prompt .school-question-requirement code {
-  padding: .1em .24em; border: 1px solid var(--border); border-radius: 4px;
+.school-practice-prompt :is(.school-question-requirement,.school-question-header,.school-hint) code {
+  padding: .1em .24em; border-radius: 4px;
   font-size: .9em; color: var(--text); background: var(--surface-muted);
 }
 .school-objects-modal {max-height: 85dvh; overflow: auto;}
 .school-practice-workspace .school-results {margin: 0;}
-.school-practice-workspace .school-results h2 {margin: 0 0 8px;}
-.school-practice-workspace .school-actions.sql-practice-tools {margin: 0; gap: 6px;}
 .school-practice-workspace .school-completion {margin-top: 12px;}
 .school-practice-workspace .school-notes {min-height: 180px; width: 100%;}
-@media (min-width: 821px) {
-  .school-practice-grid {grid-template-columns: minmax(138px, .95fr) minmax(0, 2.65fr) minmax(0, 6.4fr);}
+@media (max-width: 820px) {
+  .school-practice-grid[data-directory-open=false] {grid-template-columns: 56px minmax(0, 1fr);}
+  .school-practice-grid[data-directory-open=false] > aside {grid-row: span 2;}
+  .school-practice-grid > aside {max-height: 55dvh; align-self: start;}
 }
+@media (min-width: 821px) {
+  .school-practice-grid {
+    grid-template-columns: var(--lab-directory-width) minmax(0, 2.65fr) minmax(0, 6.4fr);
+    transition: grid-template-columns 180ms ease-out;
+  }
+  .school-practice-grid > aside {max-height: 75dvh; align-self: start;}
+}
+@media (prefers-reduced-motion: reduce) {
+  .school-practice-grid {transition: none;}
+}
+html[data-motion=reduce] .school-practice-grid {transition: none;}
 @media (min-width: 1180px) and (min-height: 650px) {
   .page.school-practice-workspace {height: calc(100dvh - var(--workspace-header-height) - 8px);}
-  .school-practice-grid {flex: 1; min-height: 0;}
-  .school-practice-grid > aside {min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin;}
-  .school-practice-sql {grid-template-rows: minmax(0, 55fr) auto minmax(0, 45fr); min-height: 0;}
-  .school-practice-sql .school-monaco .code-editor-shell:not([open]) {height: 100%;}
-  .school-practice-sql .school-monaco .code-editor-shell:not([open]) .code-editor-area {height: auto; min-height: 0;}
+  .school-practice-grid {
+    flex: 1; min-height: 0; gap: 0; column-gap: 0;
+    grid-template-columns: var(--lab-directory-width)
+      minmax(0, var(--prompt-size)) 10px minmax(0, var(--lab-code-size));
+  }
+  .school-practice-grid > aside {max-height: none; align-self: stretch;}
+  .school-practice-prompt {margin-inline-start: 10px;}
+  .school-practice-sql {grid-template-rows: minmax(160px, var(--editor-size)) 10px minmax(110px, var(--result-size)); min-height: 0; gap: 0;}
 }
+
+.school-practice-prompt .school-question-requirement {white-space: pre-line; overflow-wrap: anywhere;}

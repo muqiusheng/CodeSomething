@@ -56,7 +56,7 @@ export function isDuplicateSqlErrorCheck(check, diagnostic) {
 }
 
 export function primaryQueryPreview(item) {
-  if (!item || item.question?.kind !== 'sql' || item.status !== 'correct') return null;
+  if (!item || item.question?.kind !== 'sql') return null;
   return (item.checks ?? []).find(check =>
     check.status === 'passed'
     && (check.actual?.length ?? 0) > 0

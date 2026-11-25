@@ -97,7 +97,8 @@ class PublicAccessFilter extends OncePerRequestFilter {
                 throw denied("LOCAL_RUNNER_DISABLED", "隔离运行模式已停用服务端本机文件与IDE操作。");
             }
             if (principal == null) {
-                if (enabled && (under(path, "/api/v1/interactive") || path.matches("/api/school/courses/[^/]+/(?:exams(?:/.*)?|environment/activity|labs/[^/]+/questions/[^/]+/tables)")
+                if (enabled && (under(path, "/api/v1/interactive") || path.matches("/api/school/courses/[^/]+/(?:exams(?:/.*)?|environment/activity|labs/[^/]+/questions/[^/]+/(?:tables|debug|solution))")
+                    || path.matches("/api/school/[^/]+/(?:labs/[^/]+|exams/[^/]+/drafts/[^/]+)/questions/[^/]+/solution")
                     || path.equals("/api/v1/sql/environment/activity")))
                     throw new ApiException(HttpStatus.UNAUTHORIZED, "AUTH_REQUIRED", "请登录学员账号后继续。", Map.of());
                 chain.doFilter(request, response);
@@ -105,7 +106,7 @@ class PublicAccessFilter extends OncePerRequestFilter {
             }
             String id = principal.user().userId();
             if ((post && path.startsWith("/api/v1/sql/environment/")) ||
-                path.matches("/api/school/courses/[^/]+/(databases|schema|labs/[^/]+/(?:reset|questions/[^/]+/tables))")
+                path.matches("/api/school/courses/[^/]+/(databases|schema|labs/[^/]+/(?:reset|questions/[^/]+/(?:tables|debug)))")
                 || post && path.matches("/api/school/courses/[^/]+/exams/.+/debug")) limit(environments,id);
             if (post && (path.equals("/api/v1/check-jobs") || path.equals("/api/v1/sql/attempts")
                 || path.matches("/api/v1/portfolio/[^/]+/checks")

@@ -105,23 +105,21 @@
 .exam-question-footer .button, .exam-question-head .button {min-height: 44px;}
 .exam-debug, .exam-debug-result, .exam-guide {display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); min-width: 0;}
 .exam-debug > * {min-width: 0;}
-.exam-debug .code-editor-shell:not([open]) {border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;}
-.exam-debug .code-editor-shell:not([open]) .code-editor-area {height:clamp(220px, 34vh, 360px);min-height:220px;}
 .exam-sql-workspace {display:grid;gap:var(--space-4);min-width:0;}
-.exam-question-tables {display:grid;align-content:start;gap:var(--space-3);min-width:0;}
-.exam-question-tables section {display:grid;gap:var(--space-2);min-width:0;}
-.exam-question-tables h3, .exam-question-tables p {margin:0;}
-.exam-question-table-scroll {overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-md);}
+.exam-question-tables {display:grid;align-content:start;gap:6px;min-width:0;}
+.exam-question-tables p {margin:0;}
+.school-table-disclosure {min-width:0;}
+.school-table-disclosure > div {display:grid;gap:12px;min-width:0;padding:4px 0 8px;}
+.exam-question-table-scroll {overflow-x:auto;}
 .exam-question-table-scroll .table {width:100%;border-collapse:collapse;font-size:.8125rem;line-height:1.45;}
 .exam-question-table-scroll .table[data-table-kind=schema] {table-layout:fixed;}
 .exam-question-table-scroll .table[data-table-kind=sample] {width:max-content;min-width:100%;}
-.exam-question-table-scroll .table caption {text-align:left;padding:6px 8px;font-weight:600;}
+.exam-question-table-scroll .table caption {text-align:left;padding:4px 0 6px;font-weight:600;color:var(--text-secondary);}
 .exam-question-table-scroll .table :is(th,td) {
   height:auto;min-width:0;padding:6px 8px;text-align:left;vertical-align:top;
   white-space:normal;overflow-wrap:anywhere;border:0;border-bottom:1px solid var(--border);
 }
-.exam-question-table-scroll .table th {background:var(--surface-muted);color:var(--text);font-weight:650;}
-.exam-question-table-scroll .table tbody tr:last-child td {border-bottom:0;}
+.exam-question-table-scroll .table th {color:var(--text-secondary);font-weight:600;}
 .exam-question-table-scroll [data-table-kind=schema] th:nth-child(1) {width:22%;}
 .exam-question-table-scroll [data-table-kind=schema] th:nth-child(2) {width:24%;}
 .exam-question-table-scroll [data-table-kind=schema] th:nth-child(3) {width:35%;}
@@ -131,7 +129,6 @@
   display: inline-flex; width: fit-content; padding: 2px 8px; border-radius: 999px;
   background: var(--success-soft); color: var(--success); border: 1px solid var(--success); font-size: .875rem;
 }
-.exam-debug-tools .button {font-size: .85rem;}
 .exam-workbar, .exam-workbar-title {display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0;}
 .exam-workbar {justify-content: space-between; gap: 12px 20px;}
 .exam-workbar h1 {margin: 0; font-size: clamp(1.05rem,2vw,1.4rem); line-height: 1.4; font-weight: 650; overflow-wrap: anywhere;}
@@ -147,7 +144,7 @@
 .exam-work-question .exam-question-prompt {
   display: block; margin: 0 0 var(--space-2); max-width: 69ch; font-size: 1.055rem; font-weight: 500; line-height: 1.75;
 }
-.exam-question-prompt code {padding: .1em .26em; border: 1px solid var(--border); border-radius: 4px;
+.exam-question-prompt code, .exam-option code {padding: .1em .26em; border-radius: 4px;
   font-size: .9em; color: var(--text); background: var(--surface-muted);}
 .exam-page :is(pre,code), .exam-guide :is(pre,code), .exam-schema-modal :is(pre,code), .exam-blank-template, .exam-blank-input {
   font-variant-ligatures: none; font-feature-settings: "liga" 0,"calt" 0;
@@ -155,7 +152,6 @@
 .exam-blank-template {padding: var(--space-3); border: 1px solid var(--border); border-radius: 8px;
   background: var(--surface-muted); font: .9rem/2.45 Consolas, "Courier New", monospace; white-space: pre-wrap; overflow-wrap: anywhere;}
 .exam-blank-inline {display: inline-flex; align-items: center; gap: 5px; max-width: 100%; margin-inline: 3px; vertical-align: middle;}
-.exam-blank-marker {font-size: .7rem; color: var(--primary-ink);}
 .exam-blank-inline .exam-blank-input {width: auto; max-width: 100%; min-width: 0; min-height: 34px; padding: 3px 7px;
   height: auto; font: inherit; line-height: 1.3; border: 1px solid var(--border-strong); border-radius: 5px;
   color: var(--text); background: var(--surface);}
@@ -163,10 +159,10 @@
 .exam-debug-more > summary {list-style: none; cursor: pointer;}
 .exam-debug-more > summary::-webkit-details-marker {display: none;}
 .exam-debug-menu {position: absolute; z-index: 4; inset-block-start: calc(100% + 4px); inset-inline-end: 0;
-  min-width: 160px; padding: 4px; border: 1px solid var(--border); border-radius: var(--radius-md);
+  min-width: max-content; padding: 5px; border: 1px solid var(--border); border-radius: var(--radius-md);
   background: var(--surface); box-shadow: var(--shadow-sm);}
 .exam-debug-menu button {min-height: 38px; width: 100%; padding: 5px 8px; border-radius: 5px; font-size: .875rem;
-  text-align: left; color: var(--text);}
+  text-align: left; color: var(--text); border: 0; background: transparent; box-shadow: none;}
 .exam-debug-menu button:hover:enabled {background: var(--surface-muted);}
 .exam-debug-menu button:disabled {opacity: .5;}
 .exam-stale {font-size: .82rem; color: var(--text-secondary);}
@@ -174,7 +170,8 @@
 .exam-change-preview {margin-top: 5px;}
 .exam-sql-diagnostic {display: grid; gap: var(--space-2); padding: var(--space-3); border: 1px solid var(--danger);
   border-inline-start-width: 3px; border-radius: var(--radius-md); background: var(--danger-soft); min-width: 0;}
-.exam-sql-diagnostic > strong {color: var(--danger);}
+.exam-sql-diagnostic strong {color: var(--danger);}
+.exam-sql-diagnostic[data-compact=true] {gap: 4px; padding: 8px 10px; border-inline-start-width: 1px;}
 .exam-sql-diagnostic > p {margin: 0;}
 .exam-sql-diagnostic > pre {margin: 0; background: var(--surface);}
 .exam-result-preview {display: grid; gap: var(--space-2); padding: var(--space-3); border: 1px solid var(--border);
@@ -261,52 +258,208 @@
 @media (min-width: 1180px) and (min-height: 650px) {
   .page.exam-workspace[data-sql=true] {height: calc(100dvh - var(--workspace-header-height) - 8px);}
   .exam-workspace[data-sql=true] .exam-work-grid {flex: 1;}
-  .exam-sql-workspace:has(> .sql-practice-reference) {grid-template-columns: minmax(0, 42fr) minmax(var(--exam-editor-min, 0px), 58fr); gap: 10px; min-height: 0;}
-  .exam-workspace .exam-sql-workspace .exam-debug {grid-template-rows: minmax(0, 55fr) auto minmax(0, 45fr); min-height: 0;}
-  .exam-workspace .exam-debug .code-editor-shell:not([open]) .code-editor-area {height: auto; min-height: 0;}
+  .exam-sql-workspace:has(> .sql-practice-reference) {
+    grid-template-columns: minmax(0, var(--exam-reference)) 10px minmax(0, var(--exam-code-size));
+    gap: 0; min-height: 0;
+  }
+  .exam-workspace .exam-sql-workspace .exam-debug {grid-template-rows: minmax(160px, var(--editor-size)) 10px minmax(110px, var(--result-size)); min-height: 0; gap: 0;}
   .exam-sql-workspace .exam-debug-menu {inset-inline-end: 0;}
 }
 
-@media (min-width: 1440px) {
-  .exam-workspace {--exam-editor-min: 682px;}
-}
 
 /* Shared by exam SQL and lab review. */
-.sql-practice-reference, .sql-practice-results, .sql-practice-editor {
+.sql-practice-reference, .sql-practice-results, .sql-practice-editor-card {
   min-width: 0;
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: var(--radius-md);
+  border-radius: 12px;
 }
-.sql-practice-reference, .sql-practice-results {padding: 14px;}
-.sql-practice-results > :is(h2,h3) {margin: 0 0 8px; font-size: 15px;}
-.sql-practice-results > p {margin: 6px 0 10px;}
-.sql-practice-editor .code-editor-shell:not([open]) {border: 0; border-radius: inherit;}
-.sql-practice-editor .code-editor-shell:not([open]) .code-editor-area {resize: none;}
-.sql-practice-tools {position: relative; gap: 6px; margin: 0; padding-block: 6px; align-content: center;}
-.sql-practice-tools .button {min-height: 36px; height: auto; padding: 5px 10px; font-size: 13px; gap: 6px;}
+.sql-practice-reference {padding: 14px;}
+.sql-practice-editor-card {display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0;}
+.sql-practice-editor {min-width: 0;}
+.sql-practice-editor .code-editor-shell:not([open]) {
+  height: clamp(250px, 34vh, 400px); border-radius: 11px 11px 0 0;
+}
+.sql-practice-editor .editor-topbar {
+  min-height: 42px; padding-inline: 14px 8px; background: var(--surface); border-radius: inherit;
+}
+.sql-practice-editor .editor-topbar > span {font-size: 13px; font-weight: 600;}
+.sql-practice-editor .editor-toolbar {align-items: center;}
+.sql-practice-editor .editor-suggestion-switch {
+  display: inline-flex; align-items: center; gap: 6px; padding-inline-end: 9px;
+  margin-inline-end: 3px; border-inline-end: 1px solid var(--border);
+  font: 12px/1.35 var(--font-sans, sans-serif); white-space: nowrap;
+}
+.sql-practice-editor .editor-suggestion-switch .toggle {
+  appearance: none; display: inline-flex; align-items: center; flex: none;
+  width: 28px; height: 16px; margin: 0; padding: 2px; cursor: pointer;
+  border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface-muted);
+}
+.sql-practice-editor .editor-suggestion-switch .toggle::before {
+  content: ''; display: block; width: 10px; height: 10px; flex: none;
+  border-radius: 50%; background: var(--muted); translate: none;
+}
+.sql-practice-editor .editor-suggestion-switch .toggle:checked {justify-content: flex-end; background: var(--primary); border-color: var(--primary);}
+.sql-practice-editor .editor-suggestion-switch .toggle:checked::before {background: var(--on-primary);}
+.sql-practice-editor .editor-suggestion-switch .toggle:disabled {cursor: not-allowed; opacity: .65;}
+.sql-practice-editor .editor-toolbar :is(.button,.editor-shortcuts button) {
+  min-height: 32px; width: 32px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--text-secondary); box-shadow: none;
+}
+.sql-practice-editor .editor-toolbar :is(.button,.editor-shortcuts button):hover {background: var(--surface-muted);}
+.sql-practice-editor .code-editor-shell:not([open]) .code-editor-area {
+  flex: 1; height: auto; min-height: 0; max-height: none; resize: none;
+}
+.sql-practice-tools {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0;
+  padding: 8px; border-top: 1px solid var(--border);
+}
+.sql-practice-utilities {display: flex; align-items: center; gap: 4px; margin-inline-start: auto;}
+.sql-practice-tools > .btn, .sql-practice-utilities > .btn, .sql-practice-utilities > details > summary {
+  min-height: 36px; height: auto; padding: 5px 9px; font-size: 13px; gap: 6px;
+  flex-shrink: 0; white-space: nowrap; border-radius: 8px; box-shadow: none;
+}
 .sql-practice-tools .sql-practice-run {
-  background: #087044; color: #fff; border-color: #087044; box-shadow: none;
+  background: var(--primary); color: var(--on-primary); border-color: transparent; font-weight: 650;
 }
-.sql-practice-tools .sql-practice-run:hover:enabled {background: #075d39; border-color: #075d39;}
+.sql-practice-tools .sql-practice-run:hover:enabled {background: var(--primary-hover);}
 .sql-practice-tools .sql-practice-run:disabled {
-  background: #356651; border-color: #356651; color: #fff; opacity: 1;
+  background: color-mix(in srgb, var(--primary) 70%, var(--surface)); color: var(--on-primary);
+  opacity: 1; cursor: not-allowed;
 }
+.sql-practice-tools .sql-practice-trial {
+  background: var(--surface); color: var(--text-secondary); border: 1px solid var(--border-strong); font-weight: 500;
+}
+.sql-practice-tools .sql-practice-trial:disabled {border-color: var(--border); color: var(--muted); opacity: .75;}
+.sql-practice-tools .sql-practice-trial:hover:enabled {background: var(--surface-muted);}
+.sql-practice-quiet.btn {background: transparent; border: 0; border-radius: 8px; color: var(--text-secondary); font-weight: 500; box-shadow: none;}
+.sql-practice-quiet.btn:not(:disabled):hover {background: var(--surface-muted); color: var(--text);}
+.sql-practice-tools .sql-practice-reset:enabled:hover {color: var(--danger);}
 .sql-practice-run kbd {
-  font-size: 10px; line-height: 1.35; padding: 2px 4px; color: inherit;
-  background: transparent; border: 1px solid rgb(255 255 255 / .55); white-space: nowrap;
+  font: 500 10px/1.35 var(--font-sans, sans-serif); margin-inline-start: 2px;
+  color: inherit; opacity: .83; background: transparent; border: 0; white-space: nowrap;
 }
-.sql-practice-tools .exam-debug-more:focus-within {z-index: 5;}
-.sql-practice-tools .exam-debug-menu {min-width: 184px;}
-.sql-practice-tools .exam-debug-menu select {width: 100%;}
-.sql-practice-tools .exam-debug-menu button {display: flex; align-items: center; gap: 8px;}
-.sql-practice-results .exam-feedback {padding: 0; border: 0;}
+.sql-practice-tools .exam-debug-more[open] {z-index: 5;}
+.sql-practice-tools .exam-debug-menu {width: max-content; min-width: min(218px, calc(100vw - 32px)); max-width: calc(100vw - 32px); max-height: min(60dvh, 360px); overflow: auto;}
+@media (max-width: 480px) {
+  .sql-practice-run kbd {display: none;}
+}
+@media (max-width: 380px) {
+  .sql-practice-editor .editor-topbar {padding-inline: 9px 5px; gap: 4px;}
+  .sql-practice-editor .editor-suggestion-switch {padding-inline-end: 5px; margin-inline-end: 0;}
+  .sql-practice-editor .editor-toolbar :is(.button,.editor-shortcuts button) {width: 28px;}
+}
+@media (pointer: coarse) {
+  .sql-practice-tools > .btn, .sql-practice-utilities > .btn, .sql-practice-utilities > details > summary {min-height: 44px;}
+}
+.exam-debug-more[data-placement=above] > .exam-debug-menu {inset-block-start: auto; inset-block-end: calc(100% + 4px);}
+.sql-practice-tools .exam-debug-menu button {display: flex; align-items: center; gap: 8px; white-space: nowrap;}
+.workbench-results-dialog .exam-feedback {padding: 0; border: 0; background: transparent;}
 .sql-practice-results .school-result-grid {min-width: 0;}
 .sql-practice-results .school-table-scroll table {min-width: 100%; width: max-content; font-size: .8125rem;}
 .sql-practice-results .school-table-scroll :is(th,td) {white-space: pre; overflow-wrap: normal; max-width: none;}
 @media (min-width: 1180px) and (min-height: 650px) {
-  .sql-practice-reference, .sql-practice-results {min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin;}
+  .sql-practice-reference {min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin;}
   .sql-practice-editor {min-height: 0;}
   .sql-practice-editor .code-editor-shell:not([open]) {height: 100%;}
-  .sql-practice-editor .code-editor-shell:not([open]) .code-editor-area {flex: 1; height: auto; min-height: 0; max-height: none;}
+}
+
+
+.exam-workspace[data-sql=false] {align-content: start;}
+.exam-workspace[data-sql=false] .exam-work-question {gap: 12px;}
+.exam-field-reference {border-top: 1px solid var(--border); padding-top: 12px; min-width: 0;}
+.exam-work-question .exam-field-reference h3 {margin: 0 0 8px; font-size: .86rem;}
+.exam-field-reference dl {margin: 0; display: grid; gap: 6px;}
+.exam-field-reference dl > div {display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px 12px;}
+.exam-field-reference dd {margin: 0; display: flex; flex-wrap: wrap; gap: 3px 8px;}
+.exam-field-reference code {font-size: .8rem; color: var(--text-secondary);}
+.exam-field-reference dt code {padding: 2px 5px; border-radius: 4px; background: var(--surface-muted); color: var(--text);}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion=reduce]) .exam-workspace[data-sql=true] .exam-work-question {
+    animation: exam-sql-enter 220ms cubic-bezier(.22, 1, .36, 1);
+  }
+}
+@keyframes exam-sql-enter {
+  from {opacity: .65; transform: translateY(4px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+.exam-debug-menu hr {margin: 4px 5px; border: 0; border-top: 1px solid var(--border);}
+.exam-debug-menu kbd {margin-inline-start: auto; font-size: 11px; color: var(--text-secondary); white-space: nowrap;}
+.exam-debug-menu button:focus-visible {outline: 2px solid var(--primary-ink); outline-offset: -2px;}
+.workbench-resizer {display: none;}
+@media (min-width: 1180px) and (min-height: 650px) {
+  .workbench-resizer {position: relative; display: block; align-self: stretch; touch-action: none; user-select: none;}
+  .workbench-resizer[data-axis=x] {cursor: col-resize;}
+  .workbench-resizer[data-axis=y] {cursor: row-resize;}
+  .workbench-resizer::after {content: ''; position: absolute; inset: 2px 4px; border-radius: 3px; background: var(--border); opacity: .6;}
+  .workbench-resizer[data-axis=y]::after {inset: 3px 2px;}
+  .workbench-resizer:is(:hover,:focus-visible)::after {background: var(--primary-ink); opacity: 1;}
+  .sql-practice-results {min-height: 0;}
+  .workbench-results-dialog:not([open]) {height: 100%;}
+  .workbench-results-body {overflow: auto; overscroll-behavior: contain; scrollbar-width: thin;}
+}
+.workbench-results-dialog {
+  display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 0;
+  color: var(--text); background: var(--surface); min-width: 0;
+}
+.workbench-results-dialog:not([open]) {position: static; width: 100%; border: 0; border-radius: inherit; margin: 0;}
+.workbench-results-dialog[open] {
+  position: fixed; inset: 0; width: 88vw; height: 82vh; max-width: none; max-height: none;
+  margin: auto; border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+}
+.workbench-results-dialog::backdrop {background: rgb(0 0 0 / .45);}
+.workbench-results-dialog[open] .workbench-results-body {overflow: auto; overscroll-behavior: contain;}
+.workbench-results-header {display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; border-bottom: 1px solid var(--border);}
+.workbench-results-header h2 {margin: 0; font-size: 15px;}
+.workbench-results-header button {display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; min-height: 28px;
+  padding: 3px 7px; border: 0; border-radius: 8px; background: transparent; color: var(--text-secondary); font-size: 12px; cursor: pointer;}
+.workbench-results-header button:hover {background: var(--surface-muted); color: var(--text);}
+.workbench-results-header button:focus-visible {outline: 2px solid var(--primary-ink); outline-offset: 1px;}
+.workbench-results-body {min-width: 0; min-height: 0; padding: 10px 12px;}
+.workbench-results-body:focus-visible {outline: 2px solid var(--primary-ink); outline-offset: -2px;}
+.workbench-results-body > p {margin: 0 0 8px;}
+.workbench-results-body pre {max-width: 100%; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere;
+  margin: var(--space-2) 0; background: var(--surface-muted); border-radius: var(--radius-sm); padding: var(--space-2); font-size: .875rem;}
+.workbench-results-body .exam-debug-result {margin-block: 8px;}
+
+.school-solution {min-width: 0;}
+.school-solution > [hidden] {display: none;}
+.school-solution-card {
+  display: grid; gap: 8px; min-width: 0; padding: 6px 0 12px;
+}
+.school-solution-card :is(h3,p,ol) {margin: 0;}
+.school-solution-card h3 {font-size: .875rem;}
+.school-solution-card p {white-space: pre-line;}
+.school-solution-card ol {padding-inline-start: 1.4em;}
+pre.school-solution-sql {
+  margin: 0; padding: 8px 10px; max-width: 100%; max-height: 20rem; overflow: auto;
+  white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2;
+  border-radius: 8px; background: var(--surface-muted); font: .78125rem/1.5 Consolas, monospace;
+}
+.school-solution-sql code {white-space: inherit; overflow-wrap: inherit;}
+.school-solution-actions {display: flex; flex-wrap: wrap; gap: 6px;}
+
+.school-reference-row, .school-solution .btn.school-solution-action {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 34px; height: auto; gap: 6px; padding: 6px 9px; font-size: .8125rem;
+  line-height: 1.35; border: 1px solid transparent; border-radius: 8px;
+  background: transparent; color: var(--text-secondary); box-shadow: none;
+}
+.school-reference-row {
+  width: 100%; justify-content: flex-start; text-align: start; font-weight: 600;
+  cursor: pointer; list-style: none; overflow-wrap: anywhere;
+}
+.school-reference-row::-webkit-details-marker {display: none;}
+.school-reference-row > svg {color: var(--muted);}
+details[open] > .school-reference-row > svg, .school-reference-row[aria-expanded=true] > svg {rotate: 90deg;}
+.school-solution .btn.school-solution-action {border-color: var(--border);}
+.school-reference-row:hover, .school-solution .btn.school-solution-action:enabled:hover {background: var(--surface-muted); color: var(--text);}
+.school-reference-row:focus-visible, .school-solution .btn.school-solution-action:focus-visible {
+  outline: 2px solid var(--focus); outline-offset: 2px;
+}
+.school-solution .btn.school-solution-action:disabled {opacity: .5;}
+@media (pointer: coarse) {
+  .school-reference-row, .school-solution .btn.school-solution-action {min-height: 44px;}
 }

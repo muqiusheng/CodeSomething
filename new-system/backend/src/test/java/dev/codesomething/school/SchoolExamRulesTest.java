@@ -5,6 +5,60 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 class SchoolExamRulesTest {
+    @Test void returnsSolutionsOnlyForTheOwnedPracticeDraftOrSubmittedAttempt() {
+        var json = tools.jackson.databind.json.JsonMapper.builder().build();
+        var courses = new SchoolCourseCatalog("../course-packs", json);
+        var catalog = new ExamCatalog("../course-packs", json, courses);
+        var store = org.mockito.Mockito.mock(ExamStore.class);
+        org.mockito.Mockito.when(store.start(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any()))
+            .thenAnswer(call -> call.getArgument(1));
+        var controller = new SchoolExamController(catalog, store, null);
+        String course = "database-systems", paper = "exam-lab-01";
+        var practice = controller.start(course, paper, new SchoolExamController.Start("practice", 0, true, null, null));
+        var exam = controller.start(course, paper, new SchoolExamController.Start("exam", 60, false, null, null));
+        org.mockito.Mockito.when(store.draft(course, practice.draft().id())).thenReturn(practice.draft());
+        org.mockito.Mockito.when(store.draft(course, exam.draft().id())).thenReturn(exam.draft());
+        var index = catalog.pack(course).questions();
+        for (String kind : List.of("choice", "boolean", "blank", "sql")) {
+            var q = practice.questions().stream().filter(item -> item.kind().equals(kind)).findFirst().orElseThrow();
+            var expected = index.get(q.id());
+            var solution = controller.solution(course, paper, practice.draft().id(), q.id());
+            assertEquals(expected.explanation(), solution.explanation());
+            switch (kind) {
+                case "choice", "boolean" -> assertEquals(List.of(expected.answer()), solution.correct());
+                case "blank" -> assertEquals(expected.blanks(), solution.acceptedBlanks());
+                case "sql" -> assertEquals(expected.referenceSql(), solution.referenceSql());
+            }
+            var denied = assertThrows(dev.codesomething.api.ApiException.class,
+                () -> controller.solution(course, paper, exam.draft().id(), q.id()));
+            assertEquals(org.springframework.http.HttpStatus.FORBIDDEN, denied.status);
+        }
+        assertThrows(dev.codesomething.api.ApiException.class,
+            () -> controller.solution(course, "exam-lab-02", practice.draft().id(), practice.questions().getFirst().id()));
+        assertThrows(dev.codesomething.api.ApiException.class,
+            () -> controller.solution(course, paper, practice.draft().id(), "unrelated-question"));
+        var item = new ExamStore.Item(exam.questions().getFirst(), List.of(), 0, "wrong", "stored explanation",
+            List.of("A"), List.of(), null, List.of());
+        var summary = new ExamStore.Summary(exam.draft().id(), paper, "paper", "exam", 0, 100, "待提升",
+            java.util.Map.of(), 1, 1, true);
+        org.mockito.Mockito.when(store.findAttempt(course, exam.draft().id(), paper))
+            .thenReturn(java.util.Optional.of(new ExamStore.Attempt(summary, List.of(item))));
+        assertEquals("stored explanation", controller.solution(course, paper, exam.draft().id(), item.question().id()).explanation());
+    }
+
+    @Test void labSolutionsComeFromThePrivateCheckConfiguration() {
+        var json = tools.jackson.databind.json.JsonMapper.builder().build();
+        var catalog = new SchoolCourseCatalog("../course-packs", json);
+        var controller = new SchoolCourseController(catalog, null, null, null, null, null, null);
+        var solution = controller.solution("database-systems", "lab-03-single-query", "q01");
+        assertEquals("SELECT * FROM student;", solution.referenceSql());
+        assertFalse(solution.explanation().isBlank());
+        var lab = catalog.lab(catalog.course("database-systems"), "lab-03-single-query");
+        var initial = json.valueToTree(lab.questions().getFirst());
+        assertFalse(initial.has("referenceSql"));
+        assertFalse(initial.has("explanation"));
+    }
+
     @Test void blanksNormalizeWithoutChangingStringLiterals() {
         assertEquals("select sno from student", ExamRules.normalize(" SELECT   \u0060Sno\u0060 FROM student ; "));
         assertNotEquals(ExamRules.normalize("'A  b'"), ExamRules.normalize("'a b'"));

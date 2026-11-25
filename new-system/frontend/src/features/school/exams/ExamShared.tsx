@@ -1,9 +1,11 @@
-import {ArrowLeft, BookOpen, Download, Printer} from 'lucide-react';
-import {Fragment, useState, type ReactNode} from 'react';
+import {ArrowLeft, BookOpen, ChevronRight, Download, Printer} from 'lucide-react';
+import {Fragment, useContext, useState, type ReactNode} from 'react';
 import {Link} from 'react-router-dom';
 import {Modal} from '../../../components/ui/modal';
 import {PageSkeleton} from '../../../components/shared/LoadingState';
+import {ExpandedResults} from '../WorkbenchControls';
 import {WorkbenchResultGrid} from '../WorkbenchResultGrid';
+import {SqlPreview} from '../QuestionSolution';
 import {resultMarkdown} from '../result-grid.mjs';
 import {kindNames,kinds,stateNames,type Item,type Kind,type Summary} from './exam-api';
 import {isDuplicateSqlErrorCheck,primaryQueryPreview,sqlItemDiagnostic} from './exam-state.mjs';
@@ -14,10 +16,21 @@ export function shortPaperTitle(title:string) {
   return separator < 0 ? title : title.slice(separator+1).trim();
 }
 
-const sqlTerms = /(\x60[^\x60\n]+\x60|[A-Za-z_]\w*(?:\s*\((?:[^()\n]|\([^()\n]*\))*\))|[\w]+\.[A-Za-z_]\w*|[A-Za-z][A-Za-z0-9]*_[A-Za-z0-9_]+|\b(?:WITH CHECK OPTION|GROUP BY|ORDER BY|LEFT JOIN|INNER JOIN|IS NOT NULL|IS NULL|NOT EXISTS|PRIMARY KEY|FOREIGN KEY|START TRANSACTION|DELIMITER|ROLLBACK|SELECT|HAVING|UNION ALL|EXPLAIN|ALTER TABLE|CREATE DATABASE|CREATE TABLE|CREATE VIEW|CREATE PROCEDURE|CREATE TRIGGER|COUNT\(\*\)|student|course|sc|Sno|Sname|Sex|Birth|Classno|Entrance_date|Home_addr|Sdept|Postcode|Cno|Cname|Total_perior|Credit|Grade|Salvaging|Out_stock|Stock|Prj_cost|mat_num|mat_name|prj_num|prj_name|prj_status|start_date|end_date|get_date|warehouse|department|amount|speci|unit|DATEDIFF|REGEXP)\b|>=|<=|<>)/gi;
+const sqlTerms = /(\x60[^\x60\n]+\x60|[A-Za-z_][\w$]*(?:\.[A-Za-z_][\w$]*)*(?:[ \t]*\((?:[^()\n]|\([^()\n]*\))*\))?(?:[ \t]+[A-Za-z_][\w$]*(?:\.[A-Za-z_][\w$]*)*(?:[ \t]*\((?:[^()\n]|\([^()\n]*\))*\))?)*|>=|<=|<>|!=)/g;
 
 export function questionHeading(text:string) {
   return text.split('\n\n### 涉及数据表：', 1)[0];
+}
+
+export function TableDisclosure({name,meaning,columnCount,note,children}: {
+  name:string; meaning?:string; columnCount:number; note?:string; children:ReactNode;
+}) {
+  return <details className="school-table-disclosure">
+    <summary className="school-reference-row"><ChevronRight size={14} aria-hidden="true"/>
+      <span><code>{name}</code>（{meaning ? meaning + ' · ' : ''}{columnCount} 列）{note}</span>
+    </summary>
+    <div>{children}</div>
+  </details>;
 }
 
 export function QuestionTables({text}:{text:string}) {
@@ -25,7 +38,10 @@ export function QuestionTables({text}:{text:string}) {
   return sections.length > 0 && <div className="exam-question-tables">
     {sections.map(section=>{
       const [title, ...lines] = section.trim().split('\n');
-      const rendered = lines.join('\n').trim().split(/\n\s*\n/).filter(Boolean).map(block=>{
+      const blocks = lines.join('\n').trim().split(/\n\s*\n/).filter(Boolean);
+      const [name, meaning, note] = /^([^（]+)（([^）]+)）(.*)$/.exec(title)?.slice(1) ?? [title];
+      const columnCount = Math.max(0, (blocks[0]?.match(/^\|/gm)?.length ?? 0)-2);
+      const rendered = blocks.map(block=>{
         const rows = block.split('\n').filter(line=>line.startsWith('|')).map(line=>
           line.slice(1,-1).split(/(?<!\\)\|/).map(cell=>cell.trim().replaceAll('\\|','|')));
         const caption = block.split('\n').find(line=>line.startsWith('**'))?.replace(/^\*\*|\*\*$/g,'');
@@ -35,13 +51,15 @@ export function QuestionTables({text}:{text:string}) {
           <table className="table table-sm" data-table-kind={caption ? 'sample' : 'schema'}>
             {caption && <caption>{caption}</caption>}
             <thead><tr>{headers.map((header,i)=><th key={i} scope="col">{header}</th>)}</tr></thead>
-            <tbody>{data.map((row,i)=><tr key={i}>{row.map((cell,j)=><td key={j}>
+            <tbody>{(caption ? data.slice(0,2) : data).map((row,i)=><tr key={i}>{row.map((cell,j)=><td key={j}>
               {cell.startsWith('`') && cell.endsWith('`') ? <code>{cell.slice(1,-1)}</code> : cell}
             </td>)}</tr>)}</tbody>
           </table>
         </div>;
       });
-      return <section key={title}><h3>{title}</h3>{rendered}</section>;
+      return <TableDisclosure key={title} name={name} meaning={meaning} columnCount={columnCount} note={note}>
+        {rendered}
+      </TableDisclosure>;
     })}
   </div>;
 }
@@ -49,6 +67,28 @@ export function QuestionTables({text}:{text:string}) {
 export function QuestionText({text}:{text:string}) {
   return text.split(sqlTerms).map((chunk,index)=>index%2
     ? <code key={index}>{chunk.replace(/^\x60|\x60$/g,'')}</code> : chunk);
+}
+
+// Fields from the two schemas used by the database-systems papers.
+const examFields = {
+  student: 'Sno Sname Sex Birth Classno Entrance_date Home_addr Sdept Postcode',
+  course: 'Cno Cname Total_perior Credit',
+  sc: 'Sno Cno Grade',
+  Salvaging: 'prj_num prj_name start_date end_date prj_status',
+  Stock: 'mat_num mat_name speci warehouse amount unit total',
+  Out_stock: 'prj_num mat_num amount get_date department',
+  Prj_cost: 'prj_num cost',
+};
+
+export function BlankTableFields({text}:{text:string}) {
+  const words = new Set((text.toLowerCase().match(/[a-z_][a-z0-9_$]*/g) ?? []));
+  const tables = Object.entries(examFields).filter(([name])=>words.has(name.toLowerCase()));
+  if (!tables.length) return null;
+  return <section className="exam-field-reference" aria-label="数据表字段速览">
+    <h3>字段速览</h3>
+    <dl>{tables.map(([name, fields])=><div key={name}><dt><code>{name}</code></dt>
+      <dd>{fields.split(' ').map(field=><code key={field}>{field}</code>)}</dd></div>)}</dl>
+  </section>;
 }
 
 const summaryKindNames: Record<Kind,string> = {choice:'选择',boolean:'判断',blank:'填空',sql:'编程'};
@@ -126,35 +166,60 @@ export function HistoryList({history,base}: {history:Summary[];base:string}) {
   </>;
 }
 
-export function ItemFeedback({item}: {item:Item}) {
+function checkSummary(check: Item['checks'][number]) {
+  const {diff} = check;
+  if (!diff) return check.advice || check.message;
+  const differences = [
+    diff.missing.length ? `缺失 ${diff.missing.length} 行` : '',
+    diff.extra.length ? `多余 ${diff.extra.length} 行` : '',
+    diff.columnsDiffer ? '列名或列数不同' : '',
+    diff.orderDiffers ? '行顺序不同' : '',
+  ].filter(Boolean);
+  return differences.join('，') || check.advice || check.message;
+}
+
+export function ItemFeedback({item, compact = false}: {item:Item; compact?:boolean}) {
+  const expanded = useContext(ExpandedResults);
+  const condensed = compact && !expanded;
   const option = item.question.options.findIndex(value=>value.id===item.correct[0]);
   const correct = item.question.kind==='choice' && option>=0
     ? String.fromCharCode(65+option)+' · '+item.question.options[option].text
     : item.correct.map(value=>value==='true'?'对':value==='false'?'错':value).join('、');
   const diagnostic = sqlItemDiagnostic(item);
   const preview = primaryQueryPreview(item);
+  const failed = item.checks.find(check=>check.status!=='passed');
+  const previewTables = condensed ? preview?.actual.slice(0,2) : preview?.actual;
   return <div className="exam-feedback">
     <p role="status"><strong className={item.score===item.question.points?'badge badge-success exam-score-pass':undefined}>{stateNames[item.status] ?? item.status} · {item.score}/{item.question.points} 分</strong></p>
-    {diagnostic && <div className="exam-sql-diagnostic" role="alert">
-      <strong>{diagnostic.line>0?'第 '+diagnostic.line+' 行':'SQL 执行出错'}</strong>
-      {diagnostic.advice && <p>{diagnostic.advice}</p>}
-      {diagnostic.raw && diagnostic.raw!==diagnostic.advice && <pre>{diagnostic.raw}</pre>}
+    {diagnostic && <div className="exam-sql-diagnostic" data-compact={condensed} role="alert">
+      <p><strong>{diagnostic.line>0?'第 '+diagnostic.line+' 行':'SQL 执行出错'}</strong>
+        {diagnostic.advice && <> · {diagnostic.advice}</>}</p>
+      {diagnostic.raw && diagnostic.raw!==diagnostic.advice && (condensed
+        ? <details><summary>MySQL 原始报错</summary><pre>{diagnostic.raw}</pre></details>
+        : <pre>{diagnostic.raw}</pre>)}
     </div>}
+    {!diagnostic && failed && <p>{checkSummary(failed)} <span className="exam-muted">（展开检查点查看明细）</span></p>}
     {correct && <p>正确答案　{correct}</p>}
     {!!item.acceptedBlanks.length && <ol>{item.acceptedBlanks.map((answers,i)=><li key={i}><code>{answers.join(' ／ ')}</code></li>)}</ol>}
-    {item.explanation && <p>{item.explanation}</p>}
+    {item.explanation && (condensed
+      ? <details><summary>题目解析</summary><p>{item.explanation}</p></details>
+      : <p>{item.explanation}</p>)}
     {preview && <div className="exam-result-preview">
       <div className="exam-result-preview-head">
         <strong>本次查询结果（{preview.label}）</strong>
         <span className="exam-muted">共 {preview.actual.reduce((sum,table)=>sum+table.rows.length,0)} 行</span>
       </div>
-      {preview.actual.map((table,i)=><WorkbenchResultGrid key={i} table={table} index={i}/>)}
+      {previewTables?.map((table,i)=>table.columns.length
+        ? <WorkbenchResultGrid key={i} table={condensed ? {...table,rows:table.rows.slice(0,8)} : table} index={i}/>
+        : <p key={i}>查询返回 0 行。</p>)}
+      {condensed && (preview.actual.length > 2 || preview.actual.some(table=>table.rows.length>8)) &&
+        <p className="exam-muted">预览最多 2 个结果集，每组最多 8 行。放大查看完整结果。</p>}
     </div>}
-    {item.referenceSql && <details><summary>参考 SQL</summary><pre>{item.referenceSql}</pre></details>}
+    {item.referenceSql && <details><summary>参考 SQL</summary><SqlPreview key={item.referenceSql} sql={item.referenceSql}/></details>}
     {item.checks.map((check,index)=>{
       const repeated = isDuplicateSqlErrorCheck(check, diagnostic);
-      return <details key={index} ref={current=>{if(current && !current.dataset.initialized){current.open=check.status!=='passed' && !repeated;current.dataset.initialized='true';}}}>
-        <summary>{check.label} <span className={check.status==='passed'?'exam-check-pass':''}>· {check.status==='passed'?'通过':'未通过'}（{check.score}/{check.points} 分）</span></summary>
+      return <details key={index}>
+        <summary>{check.label} <span className={check.status==='passed'?'exam-check-pass':''}>· {check.status==='passed'?'通过':'未通过'}（{check.score}/{check.points} 分）</span>{check.status!=='passed' && !repeated && check.diff && <small> · {checkSummary(check)}</small>}</summary>
         {check.status!=='passed' && (repeated
           ? <p className="exam-muted">因上方 SQL 执行出错，未能执行本检查点。</p>
           : <>

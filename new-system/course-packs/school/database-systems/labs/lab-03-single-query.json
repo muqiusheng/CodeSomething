@@ -5,12 +5,23 @@
   "questions": [
     {
       "id": "q01",
-      "title": "基本查询",
-      "requirement": "依次返回 student 全部字段，再返回 Sno、Sname。提交两条 SELECT。",
-      "hint": "比较 SELECT * 和显式指定列。",
+      "title": "查询全体学生全部信息",
+      "requirement": "查询学生表中全体学生的全部信息。",
+      "hint": "",
       "optional": false,
-      "starterSql": "-- 在这里编写两条 SELECT 查询\n",
-      "originalText": "1、基本查询\n（1）查询学生表中全体学生的全部信息。\n（2）检索全体学生的学号、姓名。"
+      "starterSql": "",
+      "originalText": "（1）查询学生表中全体学生的全部信息。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q01-names",
+      "title": "查询全体学生学号和姓名",
+      "requirement": "检索全体学生的学号、姓名。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（2）检索全体学生的学号、姓名。",
+      "gradingRevision": "split"
     },
     {
       "id": "q02",
@@ -23,12 +34,43 @@
     },
     {
       "id": "q03",
-      "title": "条件查询",
-      "requirement": "按顺序提交四个结果集，均输出 Sno、Cno、Grade：成绩大于 80；成绩在 75–80（含端点）；选修 002 且成绩大于 80；成绩为 NULL。",
-      "hint": "缺考成绩用 IS NULL；80 的比较区分大于与不小于。",
+      "title": "查询成绩大于 80 分的选课",
+      "requirement": "返回成绩大于 80 分的选课记录的学号、课号和成绩。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "3、条件查询\n（1）查询成绩大于80分的学生的学号及课程号、成绩。\n（2）查询成绩介于75～80分的学生的学号及课程号、成绩。\n（3）查询选修了课程号为“002”，且成绩大于80的学生的学号。\n（4）某些学生选修某门课程后没有参加考试，所以有选课记录，但没有考试成绩，请查询缺少成绩的学生的学号和相应的课程号。"
+      "originalText": "（1）查询成绩大于80分的学生的学号及课程号、成绩。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q03-range",
+      "title": "查询成绩在 75 至 80 分的选课",
+      "requirement": "返回成绩在 75 至 80 分（含端点）的学号、课号和成绩。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（2）查询成绩介于75～80分的学生的学号及课程号、成绩。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q03-course002",
+      "title": "查询 002 课程超过 80 分的学生",
+      "requirement": "只返回选修 002 且成绩大于 80 分的学生的学号。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（3）查询选修了课程号为“002”，且成绩大于80的学生的学号。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q03-missing",
+      "title": "查询没有成绩的选课",
+      "requirement": "只返回有选课记录但没有成绩的学号和课号。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（4）某些学生选修某门课程后没有参加考试，所以有选课记录，但没有考试成绩，请查询缺少成绩的学生的学号和相应的课程号。",
+      "gradingRevision": "split"
     },
     {
       "id": "q04",
@@ -50,21 +92,53 @@
     },
     {
       "id": "q06",
-      "title": "LIKE 与转义",
-      "requirement": "按顺序返回三组结果：姓张学生的 Sno、Sname；姓名第二字为红或虹的 Sno、Sname；课程名恰为 Visual_Basic 的 Credit。用 ESCAPE 匹配字面下划线。",
-      "hint": "未转义的下划线表示任意一个字符。",
+      "title": "查询张姓学生",
+      "requirement": "返回所有张姓学生的全部信息。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "6、基于Like子句的查询\n（1）从学生表中分别检索出姓张的所有同学的资料；检索名字的第二个字是“红”或“虹”的所有同学的资料。\n（2）查询课程名为Visual_Basic的课程的学分。（提示：使用ESCAPE短语）"
+      "originalText": "（1）从学生表中分别检索出姓张的所有同学的资料。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q06-second-char",
+      "title": "按姓名第二个字查询学生",
+      "requirement": "返回姓名的第二个字是“红”或“虹”的学生全部信息。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（1）检索名字的第二个字是“红”或“虹”的所有同学的资料。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q06-escape",
+      "title": "用 ESCAPE 匹配课程名",
+      "requirement": "用 LIKE 和 ESCAPE 查询 Visual_Basic 的学分。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（2）查询课程名为Visual_Basic的课程的学分。（提示：使用ESCAPE短语）",
+      "gradingRevision": "split"
     },
     {
       "id": "q07",
-      "title": "LIMIT 与排名",
-      "requirement": "第一组输出选课人数最多的三门课的 Cno、选课数，按人数降序且按课号升序打破并列。第二组返回按平均成绩降序、学号升序列出的第 3–5 名学号，缺考不参与平均。",
-      "hint": "先 ORDER BY 排序，再用 LIMIT/OFFSET；用学号处理同分的稳定顺序。",
+      "title": "查询选课人数最多的三门课",
+      "requirement": "返回选课人数最多的前三门课程的课号。人数相同按课号升序。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "7、使用LIMIT关键字查询\n（1）从选课表中检索出选课人数最多的前3门课程课号。\n（2）从选课表中检索出平均成绩位列第3到第5的同学学号。"
+      "originalText": "（1）从选课表中检索出选课人数最多的前3门课程课号。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q07-students",
+      "title": "查询均分第 3 至第 5 名",
+      "requirement": "返回平均成绩排在第 3 至第 5 位的学生学号。均分相同按学号升序。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（2）从选课表中检索出平均成绩位列第3到第5的同学学号。",
+      "gradingRevision": "split"
     },
     {
       "id": "q08",
@@ -78,38 +152,82 @@
     {
       "id": "q09",
       "title": "计算年龄",
-      "requirement": "按 2026-11-24 为基准日，返回全体学生姓名和周岁（整数）。",
-      "hint": "TIMESTAMPDIFF(YEAR, Birth, 基准日) 返回完整年数。",
+      "requirement": "查询全体学生的姓名及实岁，使用当前系统日期计算。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "9、查询经过计算的值。\n查询全体学生的姓名及其年龄（提示：利用系统函数now()）"
+      "originalText": "9、查询经过计算的值。\n查询全体学生的姓名及其年龄（提示：利用系统函数now()）",
+      "gradingRevision": "split"
     },
     {
       "id": "q10",
-      "title": "ORDER BY 排序",
-      "requirement": "第一组返回全部学生字段，按 Classno、Sno 升序；第二组返回姓名和截至 2026-11-24 的周岁，按周岁降序、学号升序。",
-      "hint": "第一个排序键相同时才比较下一个。",
+      "title": "按班号和学号排序",
+      "requirement": "显示全体学生的全部信息，先按班号、再按学号升序。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "10、使用ORDER BY语句对查询的结果进行排序\n(1)显示所有学生的基本信息，按班号排列，班号相同则再按学号排列。\n查询全体学生的姓名及其年龄,并按学生的年龄的降序排列。"
+      "originalText": "(1)显示所有学生的基本信息，按班号排列，班号相同则再按学号排列。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q10-age",
+      "title": "按实际年龄降序",
+      "requirement": "查询全体学生的姓名和实岁，按年龄降序。同龄按学号升序。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "查询全体学生的姓名及其年龄,并按学生的年龄的降序排列。",
+      "gradingRevision": "split"
     },
     {
       "id": "q11",
-      "title": "聚集函数",
-      "requirement": "第一组返回全体学生人数，第二组依次返回 002 的平均成绩（四舍五入到两位小数）、最高分、最低分。",
-      "hint": "使用 COUNT、AVG、MAX、MIN，并先筛选课号。",
+      "title": "查询学生总人数",
+      "requirement": "查询 Student 表的总人数。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "11、使用聚合函数\n（1）查询学生总人数。\n计算“002”号课程的学生平均成绩、最高分、最低分。"
+      "originalText": "（1）查询学生总人数。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q11-grades",
+      "title": "汇总 002 课程成绩",
+      "requirement": "查询 002 课程的平均成绩（保留两位小数）、最高分和最低分。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "计算“002”号课程的学生平均成绩、最高分、最低分。",
+      "gradingRevision": "split"
     },
     {
       "id": "q12",
-      "title": "GROUP BY 与 HAVING",
-      "requirement": "依次返回三组结果：班号与人数；总成绩严格大于 150 的学号与总成绩；已有选课记录的课号与选课人数。",
-      "hint": "WHERE 筛选原始行，HAVING 筛选聚合后的组。",
+      "title": "按班级统计学生人数",
+      "requirement": "返回班号与各班学生总人数。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "12、使用Group子句进行查询\n（1）查询各班级学生总人数。\n汇总总分大于150分的学生的学号及总成绩。\n查询各个课程号相应的选课人数。"
+      "originalText": "（1）查询各班级学生总人数。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q12-totals",
+      "title": "查询总成绩超过 150 分的学生",
+      "requirement": "返回总成绩大于 150 分的学生的学号与总成绩。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "汇总总分大于150分的学生的学号及总成绩。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q12-course",
+      "title": "统计各课程的选课人数",
+      "requirement": "从 SC 中统计各课程的选课人数，返回课号和人数。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "查询各个课程号相应的选课人数。",
+      "gradingRevision": "split"
     },
     {
       "id": "q13",
@@ -123,11 +241,12 @@
     {
       "id": "q14",
       "title": "REGEXP 正则匹配",
-      "requirement": "返回姓名中包含张、林、赵任一字符的学生学号与姓名。",
-      "hint": "用字符集合或分支表达式，再用不匹配的姓名对照。",
+      "requirement": "返回姓名中包含“张”“林”或“赵”的学生全部信息。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "14.正则函数的使用\n查询姓名中包含“张”、“林”、“赵”的学生信息。"
+      "originalText": "14.正则函数的使用\n查询姓名中包含“张”、“林”、“赵”的学生信息。",
+      "gradingRevision": "split"
     },
     {
       "id": "q15",

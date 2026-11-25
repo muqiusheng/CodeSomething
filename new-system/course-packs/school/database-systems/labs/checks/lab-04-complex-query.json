@@ -1,7 +1,7 @@
 [
   {
     "id": "q01",
-    "referenceSql": "SELECT Sno,Sname,Birth FROM student WHERE Sex='男' AND Birth<(SELECT Birth FROM student WHERE Sname='林红');",
+    "referenceSql": "SELECT s.* FROM student s WHERE s.Sex='男' AND s.Birth<(SELECT MIN(Birth) FROM student WHERE Sname='林红');",
     "checks": [
       {
         "kind": "execution",
@@ -23,7 +23,8 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "先从 Student 取得林红的出生日期。出生日期更早表示年龄更大，再筛选性别为男的学生。"
   },
   {
     "id": "q02",
@@ -49,7 +50,8 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "比较保留所有学生与只保留匹配行的结果。"
   },
   {
     "id": "q03",
@@ -75,7 +77,8 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "用三表内连接。"
   },
   {
     "id": "q04",
@@ -101,7 +104,8 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "按课程名筛选，按学号关联学生。"
   },
   {
     "id": "q05",
@@ -127,11 +131,12 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "先得到张虹的班级，再筛选。"
   },
   {
     "id": "q06",
-    "referenceSql": "SELECT Sno,Sname,Birth FROM student WHERE Classno<>'051' AND Birth < ALL(SELECT Birth FROM student WHERE Classno='051');",
+    "referenceSql": "SELECT Sno,Sname FROM student WHERE Classno<>'051' AND Birth < (SELECT MIN(Birth) FROM student WHERE Classno='051');",
     "checks": [
       {
         "kind": "execution",
@@ -153,7 +158,8 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "找到 051 班最早的出生日期。其他班学生的出生日期必须比这一日期更早，才比该班每位学生都年长。"
   },
   {
     "id": "q07",
@@ -179,7 +185,8 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "用双重 NOT EXISTS 检查是否存在该生没有选修的课程。预置样本含一位选完所有课程的学生，可直接核对查询。"
   },
   {
     "id": "q08",
@@ -205,7 +212,8 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "检查目标课程集中是否有尚未选修的一门。"
   },
   {
     "id": "q09",
@@ -231,7 +239,8 @@
         "checkColumnNames": false,
         "orderMatters": true
       }
-    ]
+    ],
+    "explanation": "显式选择列，核对课程与成绩对应。"
   },
   {
     "id": "q10",
@@ -257,11 +266,12 @@
         "checkColumnNames": false,
         "orderMatters": true
       }
-    ]
+    ],
+    "explanation": "用 ANY 处理多项比较，考虑空成绩。"
   },
   {
     "id": "q11",
-    "referenceSql": "SELECT s.Sno,s.Sname,SUM(CASE WHEN x.Grade>=60 THEN x.Grade ELSE 0 END) AS total FROM student s JOIN sc x USING(Sno) GROUP BY s.Sno,s.Sname HAVING COUNT(*)>3 ORDER BY total DESC,s.Sno;",
+    "referenceSql": "SELECT Sno,SUM(CASE WHEN Grade>=60 THEN Grade ELSE 0 END) AS total_grade FROM sc GROUP BY Sno HAVING COUNT(*)>3 ORDER BY total_grade DESC,Sno;",
     "checks": [
       {
         "kind": "execution",
@@ -283,7 +293,8 @@
         "checkColumnNames": false,
         "orderMatters": true
       }
-    ]
+    ],
+    "explanation": "按学号分组，用 COUNT(*) 统计所选课程门次。SUM 中只累加及格成绩，再按总成绩降序排列。"
   },
   {
     "id": "q12",
@@ -309,7 +320,8 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "分别处理课号筛选和人数分组。"
   },
   {
     "id": "q13",
@@ -335,7 +347,8 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "先按学生聚合，再筛选 MAX 与 MIN 的差。"
   },
   {
     "id": "q14",
@@ -361,63 +374,199 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "用窗口函数分区并确定并列规则。"
   },
   {
     "id": "q15",
-    "referenceSql": "SELECT Sno FROM student WHERE Classno='051' INTERSECT SELECT Sno FROM sc WHERE Cno='001'; SELECT Sno FROM student WHERE Classno='051' UNION SELECT Sno FROM sc WHERE Cno='001';",
+    "referenceSql": "CREATE TABLE student_other LIKE student;",
     "checks": [
       {
         "kind": "execution",
-        "label": "SQL 脚本完整执行",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
+        "points": 5,
+        "sql": "SELECT LOWER(COLUMN_NAME),COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='student_other';SELECT LOWER(k.COLUMN_NAME),k.ORDINAL_POSITION,LOWER(k.REFERENCED_TABLE_NAME),LOWER(k.REFERENCED_COLUMN_NAME) FROM information_schema.KEY_COLUMN_USAGE k JOIN information_schema.TABLE_CONSTRAINTS t USING(CONSTRAINT_SCHEMA,TABLE_SCHEMA,TABLE_NAME,CONSTRAINT_NAME) WHERE k.TABLE_SCHEMA=DATABASE() AND LOWER(k.TABLE_NAME)='student_other' AND t.CONSTRAINT_TYPE IN ('PRIMARY KEY');SELECT DISTINCT LOWER(TABLE_NAME) FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='student_other' AND CONSTRAINT_TYPE='CHECK' AND ENFORCED='YES';SELECT COUNT(*) FROM student_other;"
+      },
+      {
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
+        "points": 3,
+        "sql": "SELECT LOWER(COLUMN_NAME),COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME)='student_other';SELECT LOWER(k.COLUMN_NAME),k.ORDINAL_POSITION,LOWER(k.REFERENCED_TABLE_NAME),LOWER(k.REFERENCED_COLUMN_NAME) FROM information_schema.KEY_COLUMN_USAGE k JOIN information_schema.TABLE_CONSTRAINTS t USING(CONSTRAINT_SCHEMA,TABLE_SCHEMA,TABLE_NAME,CONSTRAINT_NAME) WHERE k.TABLE_SCHEMA=DATABASE() AND LOWER(k.TABLE_NAME)='student_other' AND t.CONSTRAINT_TYPE IN ('PRIMARY KEY');SELECT DISTINCT LOWER(TABLE_NAME) FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='student_other' AND CONSTRAINT_TYPE='CHECK' AND ENFORCED='YES';SELECT COUNT(*) FROM student_other;",
+        "variantSql": "ALTER DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;"
+      }
+    ],
+    "explanation": "CREATE TABLE ... LIKE 复制列、索引和表结构，数据需要另用 INSERT 写入。"
+  },
+  {
+    "id": "q15-insert",
+    "referenceSql": "INSERT INTO student_other VALUES\n('20110001','张虹','男','1992-09-01','051','2011-09-01','南京','计算机系','200413'),\n('20118888','马宁','女','1993-02-15','052','2011-09-01','南京','软件工程',NULL);",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
+        "points": 5,
+        "sql": "SELECT * FROM student_other;"
+      },
+      {
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
+        "points": 3,
+        "sql": "SELECT * FROM student_other;",
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "CREATE TABLE student_other LIKE student;",
+    "explanation": "INSERT 的目标列顺序必须与每组 VALUES 对应。写入选课记录前，核对所引用的学生和课程已存在。"
+  },
+  {
+    "id": "q15-intersection",
+    "referenceSql": "SELECT * FROM student INTERSECT SELECT * FROM student_other;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
         "points": 2
       },
       {
         "kind": "result_set",
-        "label": "基础结果与对象状态",
+        "label": "查询结果",
         "points": 5,
-        "checkColumnNames": false,
-        "orderMatters": false
+        "orderMatters": false,
+        "checkColumnNames": false
       },
       {
         "kind": "result_set",
-        "label": "变式数据",
+        "label": "变式查询结果",
         "points": 3,
-        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "orderMatters": false,
         "checkColumnNames": false,
-        "orderMatters": false
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
       }
-    ]
+    ],
+    "setupSql": "CREATE TABLE student_other LIKE student;INSERT INTO student_other VALUES\n('20110001','张虹','男','1992-09-01','051','2011-09-01','南京','计算机系','200413'),\n('20118888','马宁','女','1993-02-15','052','2011-09-01','南京','软件工程',NULL);",
+    "explanation": "INTERSECT 只保留同时出现在两个结果集中的行。本题比较完整学生记录，两个 SELECT 的列顺序须一致。"
+  },
+  {
+    "id": "q15-union",
+    "referenceSql": "SELECT * FROM student UNION SELECT * FROM student_other;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "查询结果",
+        "points": 5,
+        "orderMatters": false,
+        "checkColumnNames": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式查询结果",
+        "points": 3,
+        "orderMatters": false,
+        "checkColumnNames": false,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "CREATE TABLE student_other LIKE student;INSERT INTO student_other VALUES\n('20110001','张虹','男','1992-09-01','051','2011-09-01','南京','计算机系','200413'),\n('20118888','马宁','女','1993-02-15','052','2011-09-01','南京','软件工程',NULL);",
+    "explanation": "UNION 合并两侧结果并对整行去重，已在两张表中出现的同一记录只保留一次。"
   },
   {
     "id": "q16",
-    "referenceSql": "WITH other AS(SELECT Sno,Sname FROM student WHERE Sdept='软件工程') SELECT Sno,Sname FROM other WHERE Sno IN(SELECT Sno FROM sc WHERE Cno='006');",
+    "referenceSql": "CREATE DATABASE student_info_other;",
     "checks": [
       {
         "kind": "execution",
-        "label": "SQL 脚本完整执行",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
+        "points": 5,
+        "sql": "SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=CONCAT(DATABASE(),'_practice');"
+      },
+      {
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
+        "points": 3,
+        "sql": "SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=CONCAT(DATABASE(),'_practice');",
+        "variantSql": "ALTER DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;"
+      }
+    ],
+    "setupSql": "-- lab-schema-aliases\n",
+    "explanation": "CREATE DATABASE 建立一个独立的数据库命名空间。实验沙箱会把教材中的库名映射到本次运行私有的库。"
+  },
+  {
+    "id": "q16-copy",
+    "referenceSql": "CREATE TABLE student_info_other.student_other AS SELECT * FROM student_info.student_other;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
+        "points": 5,
+        "sql": "SELECT * FROM student_info_other.student_other;"
+      },
+      {
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
+        "points": 3,
+        "sql": "SELECT * FROM student_info_other.student_other;",
+        "variantSql": "ALTER DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;"
+      }
+    ],
+    "setupSql": "-- lab-schema-aliases\nCREATE DATABASE student_info_other;CREATE TABLE student_other LIKE student;INSERT INTO student_other VALUES\n('20110001','张虹','男','1992-09-01','051','2011-09-01','南京','计算机系','200413'),\n('20118888','马宁','女','1993-02-15','052','2011-09-01','南京','软件工程',NULL);",
+    "explanation": "CREATE TABLE ... AS SELECT 用 SELECT 的结果创建并填充目标表。通过库名限定源表和目标表，可显式完成跨库复制。"
+  },
+  {
+    "id": "q16-intersection",
+    "referenceSql": "SELECT * FROM student INTERSECT SELECT * FROM student_info_other.student_other;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
         "points": 2
       },
       {
         "kind": "result_set",
-        "label": "基础结果与对象状态",
+        "label": "查询结果",
         "points": 5,
-        "checkColumnNames": false,
-        "orderMatters": false
+        "orderMatters": false,
+        "checkColumnNames": false
       },
       {
         "kind": "result_set",
-        "label": "变式数据",
+        "label": "变式查询结果",
         "points": 3,
-        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
+        "orderMatters": false,
         "checkColumnNames": false,
-        "orderMatters": false
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
       }
-    ]
+    ],
+    "setupSql": "-- lab-schema-aliases\nCREATE DATABASE student_info_other;CREATE TABLE student_other LIKE student;INSERT INTO student_other VALUES\n('20110001','张虹','男','1992-09-01','051','2011-09-01','南京','计算机系','200413'),\n('20118888','马宁','女','1993-02-15','052','2011-09-01','南京','软件工程',NULL);CREATE TABLE student_info_other.student_other AS SELECT * FROM student_info.student_other;",
+    "explanation": "INTERSECT 只保留同时出现在两个结果集中的行。本题比较完整学生记录，两个 SELECT 的列顺序须一致。"
   },
   {
     "id": "q17",
-    "referenceSql": "SELECT c.Cno,c.Cname,x.Sno,x.Grade FROM course c LEFT JOIN sc x USING(Cno); SELECT s.Sno,s.Sname,c.Cno,c.Cname,x.Grade FROM student s LEFT JOIN sc x USING(Sno) LEFT JOIN course c USING(Cno) UNION ALL SELECT NULL,NULL,c.Cno,c.Cname,NULL FROM course c WHERE NOT EXISTS(SELECT 1 FROM sc x WHERE x.Cno=c.Cno);",
+    "referenceSql": "SELECT c.*,x.Sno,x.Grade FROM course c LEFT JOIN sc x USING(Cno);",
     "checks": [
       {
         "kind": "execution",
@@ -439,7 +588,35 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "从必须完整保留的一侧开始 LEFT JOIN。没有匹配行时，另一侧的列显示 NULL。"
+  },
+  {
+    "id": "q17-all",
+    "referenceSql": "SELECT s.*,c.*,x.Grade FROM student s LEFT JOIN sc x USING(Sno) LEFT JOIN course c USING(Cno) UNION ALL SELECT NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,c.*,NULL FROM course c WHERE NOT EXISTS(SELECT 1 FROM sc x WHERE x.Cno=c.Cno);",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 脚本完整执行",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "基础结果与对象状态",
+        "points": 5,
+        "checkColumnNames": false,
+        "orderMatters": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式数据",
+        "points": 3,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80); INSERT INTO course VALUES('919','未选课程',32,2);",
+        "checkColumnNames": false,
+        "orderMatters": false
+      }
+    ],
+    "explanation": "从学生侧用 LEFT JOIN 保留未选课者，再补上没有任何选课记录的课程。UNION ALL 保留两部分的全部记录。"
   },
   {
     "id": "q18",
@@ -465,7 +642,8 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "用课程学分加权；排名按班级分区。"
   },
   {
     "id": "q19",
@@ -491,7 +669,8 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "以 SC 的实际记录判断缺考。预置数据中许宁的 C 语言成绩为空，王泽没有选课。"
   },
   {
     "id": "q20",
@@ -517,7 +696,8 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "以课程为保留侧，用 COUNT(Grade)、条件聚合与 NULLIF。"
   },
   {
     "id": "q21",
@@ -543,7 +723,8 @@
         "checkColumnNames": false,
         "orderMatters": true
       }
-    ]
+    ],
+    "explanation": "可先按课号汇总再连接，或使用相关子查询。NULL 成绩不参与均分，也不会进入结果。"
   },
   {
     "id": "q22",
@@ -569,7 +750,8 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "用 NOT EXISTS 按学号关联选课记录。预置数据中王泽应保留，许宁应排除。"
   },
   {
     "id": "q23",
@@ -595,6 +777,7 @@
         "checkColumnNames": false,
         "orderMatters": false
       }
-    ]
+    ],
+    "explanation": "让最高门次数可以对应多个学生，缺考也算选课。"
   }
 ]

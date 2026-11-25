@@ -372,7 +372,7 @@
     {
       "kind": "sql",
       "points": 10,
-      "prompt": "建立缺失的 Prj_cost。定义 prj_num CHAR(8) 为主键，cost DECIMAL(18,2) 非空且默认 0。无需录入数据。\n\n### 涉及数据表：Prj_cost（工程领料费用表）\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | PRIMARY KEY | 工程编号 |\n| `cost` | DECIMAL(18,2) | NOT NULL; DEFAULT 0.00 | 领料总费用（元） |\n\n**数据预览：待创建表，初始沙箱中不存在。**",
+      "prompt": "按下表创建 Prj_cost。无需录入数据。\n\n### 涉及数据表：Prj_cost（工程领料费用表） · 待创建\n\n| 列名 | 数据类型 | 约束 / 默认值 | 含义说明 |\n| :--- | :--- | :--- | :--- |\n| `prj_num` | CHAR(8) | PRIMARY KEY | 工程编号 |\n| `cost` | DECIMAL(18,2) | NOT NULL; DEFAULT 0.00 | 领料总费用（元） |",
       "labId": "lab-01-workbench",
       "tags": [
         "实体完整性",

@@ -1,6 +1,6 @@
 import {ArrowLeft,Bookmark,ChevronLeft,ChevronRight,ClipboardList,Clock3} from 'lucide-react';
 import {useCallback,useEffect,useRef,useState} from 'react';
-import {Link,useNavigate,useParams,useSearchParams} from 'react-router-dom';
+import {Link,useBlocker,useNavigate,useParams,useSearchParams} from 'react-router-dom';
 import {sessionState} from '../../../api/browser-state.mjs';
 import {currentAccess} from '../../../api/auth-api';
 import {useMysqlActivity} from '../../../hooks/useMysqlActivity';
@@ -20,6 +20,10 @@ export default function ExamWorkspace() {
   const api = examApi(courseId)+'/'+encodeURIComponent(paperId);
   const base = examRoute(courseId);
   const work = useExamWork(id ? api+'/drafts/'+encodeURIComponent(id) : null);
+  const {data:currentWork,setData:setWork} = work;
+  const publishDraft = useCallback((draft:Draft)=>{
+    if (currentWork) setWork({...currentWork,draft});
+  },[currentWork,setWork]);
   const info = useExamRead<PaperInfo>(id ? null : api);
   const overview = useExamRead<Overview>(id ? null : examApi(courseId));
   const navigate = useNavigate();
@@ -46,7 +50,8 @@ export default function ExamWorkspace() {
       </section>
     </div>;
   }
-  if (id) return work.data ? <ActiveExam key={id} work={work.data} api={api+'/drafts/'+id} base={base} onDiscard={returnToStart}/>
+  if (id) return work.data ? <ActiveExam key={id} work={work.data} api={api+'/drafts/'+id} base={base}
+    onSaved={publishDraft} onDiscard={returnToStart}/>
     : <div className="page exam-page"><ExamHeader title="试卷作答" back={base}/>
       <ExamReadState error={work.error} reload={work.reload} label="正在恢复作答…"/>
       {work.error && <Link to={base+'/'+paperId}>打开试卷与历史</Link>}</div>;
@@ -123,7 +128,9 @@ function backup(key:string,account:string,value?:string) {
 }
 const formatTime = (seconds:number) => [Math.floor(seconds/60),seconds%60].map(unit=>String(unit).padStart(2,'0')).join(':');
 
-function ActiveExam({work,api,base,onDiscard}:{work:Work;api:string;base:string;onDiscard:()=>void}) {
+function ActiveExam({work,api,base,onSaved,onDiscard}:{
+  work:Work;api:string;base:string;onSaved:(draft:Draft)=>void;onDiscard:()=>void;
+}) {
   const {draft,questions} = work;
   const key = 'school-exam:'+api;
   const account = useRef(currentAccess().user?.userId??'').current;
@@ -139,6 +146,7 @@ function ActiveExam({work,api,base,onDiscard}:{work:Work;api:string;base:string;
   const [saveError,setSaveError] = useState('');
   const [submitError,setSubmitError] = useState('');
   const [busy,setBusy] = useState(false);
+  const [leaving,setLeaving] = useState(false);
   const [discarding,setDiscarding] = useState(false);
   const [discardConfirm,setDiscardConfirm] = useState(false);
   const [discardError,setDiscardError] = useState('');
@@ -155,7 +163,15 @@ function ActiveExam({work,api,base,onDiscard}:{work:Work;api:string;base:string;
   useMysqlActivity(ended ? null : api.split('/exams/')[0]+'/environment/activity', draft.mode==='exam' && draft.minutes>0);
   const auto = useRef(false);
   const submitting = useRef(false);
+  const examFinished = useRef(false);
   const navigate = useNavigate();
+  const exit = useBlocker(({currentLocation,nextLocation}) =>
+    draft.mode==='exam' && !examFinished.current && (
+      currentLocation.pathname!==nextLocation.pathname ||
+      new URLSearchParams(currentLocation.search).get('draft')!==new URLSearchParams(nextLocation.search).get('draft')
+    ));
+  const exitPending = exit.state==='blocked';
+  const exitBusy = busy || discarding || leaving;
   const question = questions[position];
   const isSql = question.kind==='sql';
   const questionSession = questionSessions[question.id] ?? {};
@@ -167,7 +183,8 @@ function ActiveExam({work,api,base,onDiscard}:{work:Work;api:string;base:string;
   },[draft.minutes]);
 
   const save = useCallback(() => {
-    if (inFlight.current || submitting.current) return;
+    if (inFlight.current) return inFlight.current;
+    if (submitting.current) return;
     setSaving(true);
     const job = (async()=>{
       try {
@@ -178,13 +195,15 @@ function ActiveExam({work,api,base,onDiscard}:{work:Work;api:string;base:string;
           revision.current=next.revision;
           saved.current=snapshot;
           backup(key,account,JSON.stringify({...latest.current,revision:next.revision}));
+          onSaved(next);
           setSavedOnce(true);
           setSaveError('');
         }
       } catch (error) {setSaveError(errorMessage(error));}
     })().finally(()=>{inFlight.current=null;setSaving(false);});
     inFlight.current=job;
-  },[account,api,draft.minutes,draft.startedAt,key]);
+    return job;
+  },[account,api,draft.minutes,draft.startedAt,key,onSaved]);
 
   useEffect(()=>{
     if (ended || !dirty || busy || discarding || saveError || saving) return;
@@ -193,14 +212,15 @@ function ActiveExam({work,api,base,onDiscard}:{work:Work;api:string;base:string;
   },[values,dirty,busy,discarding,ended,save,saveError,saving]);
 
   useEffect(()=>{
-    if (!dirty) return;
+    if (!dirty && draft.mode!=='exam') return;
     function warn(event:BeforeUnloadEvent) {
+      if (examFinished.current) return;
       event.preventDefault();
       event.returnValue='';
     }
     window.addEventListener('beforeunload',warn);
     return ()=>window.removeEventListener('beforeunload',warn);
-  },[dirty]);
+  },[dirty,draft.mode]);
 
   function update(next:LocalAnswers) {
     latest.current=next;
@@ -216,6 +236,7 @@ function ActiveExam({work,api,base,onDiscard}:{work:Work;api:string;base:string;
       await inFlight.current;
       const report = await schoolRequest<Attempt>(api+'/submit',{...latest.current,revision:revision.current});
       backup(key,account);
+      examFinished.current=true;
       navigate(base+'/'+report.summary.paperId+'/attempts/'+report.summary.id,{replace:true});
     } catch (error) {setSubmitError(errorMessage(error));}
     finally {submitting.current=false;setBusy(false);}
@@ -233,6 +254,7 @@ function ActiveExam({work,api,base,onDiscard}:{work:Work;api:string;base:string;
       await inFlight.current;
       await discardExamDraft(api,revision.current);
       backup(key,account);
+      examFinished.current=true;
       onDiscard();
     } finally {submitting.current=false;setDiscarding(false);}
   }
@@ -244,6 +266,17 @@ function ActiveExam({work,api,base,onDiscard}:{work:Work;api:string;base:string;
       setDiscardConfirm(false);
     } catch (error) {
       setDiscardError(errorMessage(error));
+    }
+  }
+
+  async function leaveWithDraft() {
+    if (exit.state!=='blocked' || exitBusy) return;
+    setLeaving(true);
+    try {
+      await save();
+      if (!submitting.current && JSON.stringify(latest.current)===JSON.stringify(saved.current)) exit.proceed();
+    } finally {
+      setLeaving(false);
     }
   }
 
@@ -328,7 +361,7 @@ function ActiveExam({work,api,base,onDiscard}:{work:Work;api:string;base:string;
       {isSql && <nav className="exam-compact-numbers" aria-label="快速跳题">{questions.map(number)}</nav>}
       <button type="button" className="button secondary exam-drawer-button" onClick={()=>setDrawer(true)}><ClipboardList size={16} aria-hidden="true"/>打开答题卡</button>
     </div>
-    {drawer && <Modal open={drawer} onOpenChange={setDrawer} title="答题卡" description="按题型选择题号">{card}</Modal>}
+    {drawer && !exitPending && <Modal open={drawer} onOpenChange={setDrawer} title="答题卡" description="按题型选择题号">{card}</Modal>}
     <div className="exam-work-grid">
       {!isSql && <aside className="card exam-panel exam-answer-card" aria-label="答题卡"><h2>答题卡</h2>{card}</aside>}
       <article className="card exam-panel exam-work-question">
@@ -339,7 +372,7 @@ function ActiveExam({work,api,base,onDiscard}:{work:Work;api:string;base:string;
             const index=position+direction;
             if (index>=0 && index<questions.length) go(index);
           }}
-          disabled={ended||busy||discarding} allowCheck={draft.mode==='practice'} session={questionSession}
+          disabled={ended||busy||discarding} allowCheck={draft.mode==='practice'} allowSolution={draft.mode==='practice'} session={questionSession}
           onSessionChange={change=>setQuestionSessions(previous=>({...previous,[question.id]:change(previous[question.id]??{})}))}/>
         {!isSql && <footer className="exam-question-footer">
           <small className="exam-shortcuts">{question.kind!=='blank' && 'A–D / 1–4 选答案 · '}Enter {draft.mode==='practice'?'核对 / 下一题':'下一题'} · Alt + ← / → 切题</small>
@@ -348,12 +381,26 @@ function ActiveExam({work,api,base,onDiscard}:{work:Work;api:string;base:string;
         </footer>}
       </article>
     </div>
-    {confirm && <Modal open={confirm} onOpenChange={setConfirm} title="确认交卷"
+    {exit.state==='blocked' && <Modal open onOpenChange={open=>{if(!open && !exitBusy)exit.reset();}} title="退出考试前是否交卷？"
+      description={(unfinished?'还有 '+unfinished+' 题未答完，交卷时未作答部分计零分。':'所有题目均已作答。')+
+        (timer===null?'':'保存退出后，考试倒计时继续。')}>
+      <div className="exam-actions">
+        <button type="button" className="btn button secondary" disabled={exitBusy} onClick={exit.reset}>继续考试</button>
+        <button type="button" className="btn button secondary" disabled={exitBusy} onClick={()=>void leaveWithDraft()}>
+          {leaving?'正在保存…':'保存草稿并退出'}
+        </button>
+        <button type="button" className="btn button primary" disabled={exitBusy} onClick={()=>void submit()}>
+          {busy?'正在阅卷…':'交卷并查看成绩'}
+        </button>
+      </div>
+      {(submitError || saveError) && <p className="note" role="alert">{submitError || saveError}</p>}
+    </Modal>}
+    {confirm && !exitPending && <Modal open={confirm} onOpenChange={setConfirm} title="确认交卷"
       description={unfinished?'有 '+unfinished+' 题未答完，未作答的部分计零分。':'所有题目均已作答。'}>
       <div className="exam-actions"><button type="button" className="button secondary" onClick={()=>setConfirm(false)}>继续检查</button>
         <button type="button" className="button primary" onClick={()=>void submit()}>提交并阅卷</button></div>
     </Modal>}
-    {discardConfirm && <Modal open={discardConfirm} onOpenChange={next=>{if(!discarding)setDiscardConfirm(next);}} title="放弃当前草稿？"
+    {discardConfirm && !exitPending && <Modal open={discardConfirm} onOpenChange={next=>{if(!discarding)setDiscardConfirm(next);}} title="放弃当前草稿？"
       description="此草稿中的作答和标记将被清除。已经交卷的成绩仍可查阅。">
       <div className="exam-actions">
         <button type="button" className="button secondary" disabled={discarding} onClick={()=>setDiscardConfirm(false)}>保留草稿</button>

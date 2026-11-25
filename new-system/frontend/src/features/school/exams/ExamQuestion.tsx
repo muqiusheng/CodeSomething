@@ -1,15 +1,18 @@
 import {useEffect,useId,useRef,useState,type ReactNode} from 'react';
-import {ChevronDown,Play,RotateCcw} from 'lucide-react';
+import {CodeXml, ListTree, Play, RotateCcw, ScanLine, Table2, Trash2} from 'lucide-react';
 import {debugRunMode,sqlErrorLine} from './exam-state.mjs';
 import {CodeEditor,type CodeEditorHandle} from '../../../components/code/CodeEditor';
 import {Modal} from '../../../components/ui/modal';
 import {WorkbenchResultGrid} from '../WorkbenchResultGrid';
 import {errorMessage,schoolRequest} from '../school-api';
 import {type Debug,type Item,type Question} from './exam-api';
-import {ItemFeedback,QuestionTables} from './ExamShared';
+import {BlankTableFields,ItemFeedback,QuestionTables,QuestionText} from './ExamShared';
+import {splitStyle,useWorkbenchSplit,WorkbenchMenu,WorkbenchResizer,WorkbenchResults} from '../WorkbenchControls';
+import {QuestionSolution} from '../QuestionSolution';
+import {WorkbenchDebugResult} from '../WorkbenchDebugResult';
 
 type Props = {question:Question; answer:string[]; onAnswer:(value:string[])=>void; endpoint:string;
-  allowCheck:boolean; disabled?:boolean; onChecked?:(item:Item)=>void; session?:QuestionSession;
+  allowCheck:boolean; allowSolution?:boolean; disabled?:boolean; onChecked?:(item:Item)=>void; session?:QuestionSession;
   prompt?:ReactNode; onNavigate?:(direction:-1|1)=>void;
   onSessionChange?:(update:(previous:QuestionSession)=>QuestionSession)=>void};
 
@@ -21,9 +24,10 @@ export type QuestionSession = {
   active?:number;
 };
 
-export function ExamQuestion({question,answer,onAnswer,endpoint,allowCheck,disabled,onChecked,session,onSessionChange,prompt,onNavigate}:Props) {
+export function ExamQuestion({question,answer,onAnswer,endpoint,allowCheck,allowSolution,disabled,onChecked,session,onSessionChange,prompt,onNavigate}:Props) {
   const editorId=useId();
-  const hasReference = Boolean(prompt) || question.prompt.includes('\n\n### 涉及数据表：');
+  const columns=useWorkbenchSplit('exam-columns',42,25,65);
+  const hasReference = Boolean(prompt) || !!allowSolution || question.prompt.includes('\n\n### 涉及数据表：');
   const [local,setLocal] = useState<QuestionSession>({});
   const displayed=session??local, update=onSessionChange??setLocal;
   const {checked}=displayed;
@@ -48,7 +52,7 @@ export function ExamQuestion({question,answer,onAnswer,endpoint,allowCheck,disab
     {error && <p className="note" role="alert">{error}</p>}
     {checked && (question.kind==='sql'||checked.key===key) && <>
       {checked.key!==key && <p className="exam-stale" role="status">代码已修改，判分结果可能已过时</p>}
-      <ItemFeedback key={checked.key+':'+checked.item.score+':'+checked.item.status} item={checked.item}/>
+      <ItemFeedback key={checked.key+':'+checked.item.score+':'+checked.item.status} item={checked.item} compact={question.kind==='sql'}/>
     </>}
   </>;
 
@@ -85,24 +89,30 @@ export function ExamQuestion({question,answer,onAnswer,endpoint,allowCheck,disab
     return ()=>window.removeEventListener('keydown',shortcut);
   });
 
+  const solution = allowSolution && <QuestionSolution key={endpoint} endpoint={endpoint+'/solution'}
+    options={question.kind==='choice' ? options : undefined}
+    value={answer[0]} onFill={question.kind==='sql' ? sql=>onAnswer([sql]) : undefined}
+    disabled={disabled || checking}/>;
+
   return <>
     {question.kind==='sql'
-      ? <div className="exam-sql-workspace">
+      ? <div className="exam-sql-workspace" style={splitStyle({'exam-reference':columns.value,'exam-code-size':100-columns.value})}>
         {hasReference && <section className="sql-practice-reference" aria-label="题目与数据" tabIndex={0}>
           {prompt}
-          <QuestionTables text={question.prompt}/>
+          <QuestionTables key={question.id} text={question.prompt}/>
+          {solution}
         </section>}
+        {hasReference && <WorkbenchResizer split={columns} axis="x" label="调整题干与作答区宽度"/>}
         <ExamSqlPanel editorId={editorId} value={answer[0]??''} onChange={value=>onAnswer([value])} endpoint={endpoint} disabled={disabled}
           state={displayed} update={update} checking={checking} onCheck={allowCheck?check:undefined} feedback={feedback} checkError={error}/></div>
       : <fieldset className="exam-answer" disabled={disabled}>
-        <legend>{question.kind==='blank'?'补全 SQL':'作答选项'}</legend>
+        <legend className="sr-only">{question.kind==='blank'?'补全 SQL':'作答选项'}</legend>
         {question.kind==='blank' ? <div className="exam-blank-template" aria-label="SQL 填空模板">
           {(question.template??'').split(/(\{\{\d+\}\})/).map((part,segment)=>{
             const match=part.match(/^\{\{(\d+)\}\}$/);
             if (!match) return <span key={segment}>{part}</span>;
             const index=Number(match[1])-1;
             return <label key={segment} className="exam-blank-inline">
-              <span className="exam-blank-marker" aria-hidden="true">{index+1}</span>
               <input aria-label={'空位 '+(index+1)} className="input exam-blank-input" name={question.id+'-blank-'+(index+1)}
                 autoComplete="off" spellCheck={false} value={answer[index]??''} maxLength={512}
                 size={Math.max(7,Math.min(28,(answer[index]?.length??0)+2))}
@@ -112,14 +122,16 @@ export function ExamQuestion({question,answer,onAnswer,endpoint,allowCheck,disab
         </div> : <div className="exam-options">{options.map((option,i)=><label className="exam-option" key={option.id}>
           <input type="radio" className="radio radio-sm" name={question.id} checked={answer[0]===option.id}
             onChange={()=>onAnswer([option.id])}/>
-          <span>{question.kind==='choice' && <strong>{String.fromCharCode(65+i)}. </strong>}{option.text}</span>
+          <span>{question.kind==='choice' && <strong>{String.fromCharCode(65+i)}. </strong>}<QuestionText text={option.text}/></span>
         </label>)}</div>}
       </fieldset>}
+    {question.kind==='blank' && <BlankTableFields text={question.prompt+' '+(question.template??'')}/>}
     {allowCheck && question.kind!=='sql' && <div className="exam-actions exam-self-check">
       <button type="button" className="button secondary" disabled={checking||disabled} onClick={()=>void check()}>
         {checking?'核对中…':'核对答案与解析'}
       </button>
     </div>}
+    {question.kind!=='sql' && solution}
     {question.kind!=='sql' && feedback}
   </>;
 }
@@ -129,6 +141,7 @@ function ExamSqlPanel({editorId,value,onChange,endpoint,disabled,state,update,ch
   update:(change:(previous:QuestionSession)=>QuestionSession)=>void;checking:boolean;onCheck?:()=>Promise<void>;feedback:ReactNode;checkError:string;
 }) {
   const editor = useRef<CodeEditorHandle>(null);
+  const rows=useWorkbenchSplit('exam-rows',55,25,75);
   const results = useRef<HTMLElement>(null);
   const [showSchema,setShowSchema] = useState(false);
   const [clearEditor,setClearEditor] = useState(false);
@@ -193,48 +206,42 @@ function ExamSqlPanel({editorId,value,onChange,endpoint,disabled,state,update,ch
 
   function setActive(active:number) {update(previous=>({...previous,active}));}
 
-  return <div className="exam-debug" id={editorId} tabIndex={-1}>
-    <div className="sql-practice-editor" onKeyDownCapture={event=>{
-      if ((event.ctrlKey||event.metaKey) && event.key==='Enter' && !event.repeat) {
-        event.preventDefault();event.stopPropagation();
-        if (onCheck) grade(); else void run(debugRunMode(editor.current?.getSelectedText()));
-      }
-    }}>
-      <CodeEditor path={endpoint.split('/').at(-1)+'.sql'} value={value} onChange={onChange} readOnly={disabled}
-        selectionRef={editor} errorLine={editorErrorLine} wordWrap={false}
-        traceRange={!stale && step?.status==='ok' ? {start:step.startLine,end:step.endLine} : undefined}/>
-    </div>
-    <div className="exam-actions exam-debug-tools sql-practice-tools">
-      {onCheck && <button type="button" className="btn button sql-practice-run" aria-keyshortcuts="Control+Enter Meta+Enter"
-        disabled={blocked} onClick={grade}><Play size={14} aria-hidden="true"/>{checking?'判分中…':'运行并判分'}
-        {!checking && <kbd aria-hidden="true">Ctrl+Enter</kbd>}</button>}
-      <button type="button" className={onCheck?'btn button secondary':'btn button sql-practice-run'} disabled={blocked}
-        onClick={()=>void run('run')}><span>{pending==='run'?'运行中…':'试运行'}</span>{!onCheck && <kbd aria-hidden="true">Ctrl+Enter</kbd>}</button>
-      <button type="button" className="btn button secondary" disabled={blocked} onClick={()=>void run('reset')}>
-        <RotateCcw size={14} aria-hidden="true"/>重置本题数据
-      </button>
-      <details className="exam-debug-more dropdown dropdown-end" onBlur={event=>{
-        if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open=false;
-      }} onKeyDown={event=>{
-        if (event.key!=='Escape' || !event.currentTarget.open) return;
-        event.currentTarget.open=false;
-        event.currentTarget.querySelector('summary')?.focus();
+  return <div className="exam-debug" style={splitStyle({'editor-size':rows.value,'result-size':100-rows.value})} id={editorId} tabIndex={-1}>
+    <div className="sql-practice-editor-card">
+      <div className="sql-practice-editor" onKeyDownCapture={event=>{
+        if ((event.ctrlKey||event.metaKey) && event.key==='Enter' && !event.repeat) {
+          event.preventDefault();event.stopPropagation();
+          if (event.shiftKey) void run('selection');
+          else if (onCheck) grade(); else void run(debugRunMode(editor.current?.getSelectedText()));
+        }
       }}>
-        <summary className="btn button secondary">更多 <ChevronDown size={14} aria-hidden="true"/></summary>
-        <div className="exam-debug-menu dropdown-content" onClick={event=>{
-          if (event.target instanceof HTMLButtonElement && !event.target.disabled) {
-            const menu=event.currentTarget.closest('details');
-            if (menu) {menu.open=false;menu.querySelector('summary')?.focus();}
-          }
-        }}>
-          <button type="button" disabled={blocked} onClick={()=>void run('trace')}>单步跟踪</button>
-          <button type="button" disabled={blocked} onClick={()=>void run('selection')}>运行选中片段</button>
-          <button type="button" disabled={blocked} onClick={()=>void run('schema')}>完整建表 DDL</button>
-          <button type="button" disabled={blocked} onClick={()=>void run('explain')}>查看 EXPLAIN</button>
-          <button type="button" disabled={blocked || (!debug && !state.checked)} onClick={clearResults}>清空结果</button>
-          <button type="button" disabled={blocked || !value} onClick={()=>setClearEditor(true)}>清空编辑器</button>
+        <CodeEditor path={endpoint.split('/').at(-1)+'.sql'} value={value} onChange={onChange} readOnly={disabled}
+          selectionRef={editor} errorLine={editorErrorLine} sqlWorkbench wordWrap={false}
+          traceRange={!stale && step?.status==='ok' ? {start:step.startLine,end:step.endLine} : undefined}/>
+      </div>
+      <div className="exam-debug-tools sql-practice-tools">
+        {onCheck && <button type="button" className="btn btn-primary sql-practice-run" aria-keyshortcuts="Control+Enter Meta+Enter"
+          disabled={blocked} onClick={grade}><Play size={14} aria-hidden="true"/>{checking?'判分中…':'运行并判分'}
+          {!checking && <kbd aria-hidden="true">Ctrl+Enter</kbd>}</button>}
+        <button type="button" className={onCheck?'btn btn-outline sql-practice-trial':'btn btn-primary sql-practice-run'} disabled={blocked}
+          onClick={()=>void run('run')}><span>{pending==='run'?'运行中…':'试运行'}</span>{!onCheck && <kbd aria-hidden="true">Ctrl+Enter</kbd>}</button>
+        <div className="sql-practice-utilities">
+          <button type="button" className="btn btn-ghost sql-practice-quiet sql-practice-reset" disabled={blocked} onClick={()=>void run('reset')}>
+            <RotateCcw size={14} aria-hidden="true"/>重置本题数据
+          </button>
+          <WorkbenchMenu>
+            <button type="button" disabled={blocked} aria-keyshortcuts="Control+Shift+Enter Meta+Shift+Enter"
+              onClick={()=>void run('selection')}><ScanLine size={15} aria-hidden="true"/>运行选中代码 <kbd aria-hidden="true">Ctrl+Shift+Enter</kbd></button>
+            <button type="button" disabled={blocked} onClick={()=>void run('trace')}><ListTree size={15} aria-hidden="true"/>单步跟踪</button>
+            <hr/>
+            <button type="button" disabled={blocked} onClick={()=>void run('schema')}><Table2 size={15} aria-hidden="true"/>完整建表 DDL</button>
+            <button type="button" disabled={blocked} onClick={()=>void run('explain')}><CodeXml size={15} aria-hidden="true"/>查看 EXPLAIN</button>
+            <hr/>
+            <button type="button" disabled={blocked || (!debug && !state.checked)} onClick={clearResults}><Trash2 size={15} aria-hidden="true"/>清空结果</button>
+            <button type="button" disabled={blocked || !value} onClick={()=>setClearEditor(true)}><Trash2 size={15} aria-hidden="true"/>清空编辑器</button>
+          </WorkbenchMenu>
         </div>
-      </details>
+      </div>
     </div>
     {clearEditor && <Modal open={clearEditor} onOpenChange={setClearEditor} title="清空 SQL 编辑器？" description="当前题的代码与运行结果将清空。">
       <div className="exam-actions">
@@ -242,8 +249,8 @@ function ExamSqlPanel({editorId,value,onChange,endpoint,disabled,state,update,ch
         <button type="button" className="button danger" onClick={()=>{onChange('');clearResults();setClearEditor(false);}}>确认清空</button>
       </div>
     </Modal>}
-    <section className="sql-practice-results" ref={results} aria-label="SQL 结果" tabIndex={0}>
-    <h3>{onCheck?'运行与判分结果':'执行结果'}</h3>
+    <WorkbenchResizer split={rows} axis="y" label="调整编辑器与结果区高度"/>
+    <WorkbenchResults scrollRef={results} title="运行与判分结果">
     {!checking && !pending && !notice && !error && !checkError && !debug && !state.checked &&
       <p className="exam-muted">输入 SQL 后{onCheck?'运行并判分':'试运行'}，在此查看结果。</p>}
     {checking && <p role="status">判分中…</p>}
@@ -251,36 +258,9 @@ function ExamSqlPanel({editorId,value,onChange,endpoint,disabled,state,update,ch
     {pending && pending!=='schema' && <p role="status">正在运行隔离 MySQL…</p>}
     {error && !showSchema && <p className="note" role="alert">{error}</p>}
     {stale && <p className="exam-stale" role="status">代码已修改，调试结果可能已过时</p>}
-    {debug?.result.error && <div className="exam-feedback" role="alert">
-      <strong>{debug.result.error.line>0?'第 '+debug.result.error.line+' 行':'SQL 运行反馈'}</strong>
-      <p>{debug.result.error.advice}</p><pre>{debug.result.error.raw}</pre>
-    </div>}
-    {debug && !debug.result.error && <p role="status">已运行 · {debug.result.elapsedMs} ms</p>}
-    {step && <div className="exam-trace-picker">
-      <button type="button" className="button secondary" disabled={active===0} onClick={()=>setActive(active-1)}>上一步</button>
-      <label>执行轨迹<select className="select exam-input" name="trace-step" value={active} onChange={event=>setActive(Number(event.target.value))}>
-        {steps.map((item,i)=><option key={i} value={i}>{i+1}. 第 {item.startLine}–{item.endLine} 行 {item.status==='ok'?'成功':'出错'}</option>)}
-      </select></label>
-      <button type="button" className="button secondary" disabled={active===steps.length-1} onClick={()=>setActive(active+1)}>下一步</button>
-    </div>}
-    {(step ? [step] : steps).map((item,index)=>
-      <div className="exam-debug-result" key={item.startLine+'-'+(step?active:index)+'-'+item.summary}>
-        <p><strong>第 {item.startLine}–{item.endLine} 行</strong> · {item.status==='ok'?'成功':'出错'}
-          {item.elapsedMs!==null && ' · '+item.elapsedMs+' ms'}{item.affectedRows!==null && ' · 影响 '+item.affectedRows+' 行'}</p>
-        <pre>{item.summary}</pre>
-        {item.changes.length>0 && <ul aria-label="表数据变化">
-          {item.changes.map(change=>{
-            const before=change.before.split(' · ')[0], after=change.after.split(' · ')[0];
-            return <li key={change.table}><code>{change.table}</code>　{before} → {after}{before===after && ' · 数据或结构变化'}
-              {!!change.preview?.rows.length && <details className="exam-change-preview"><summary>查看变更后数据</summary>
-                <WorkbenchResultGrid table={change.preview} index={0}/>
-              </details>}</li>;
-          })}
-        </ul>}
-        {item.tables.map((table,i)=><WorkbenchResultGrid key={i} table={table} index={i}/>)}
-      </div>)}
+    {debug && <WorkbenchDebugResult result={debug.result} trace={debug.mode==='trace'} active={active} setActive={setActive}/>}
     {(!debug || checking || checkError) && feedback}
-    </section>
+    </WorkbenchResults>
     {showSchema && <Modal open={showSchema} onOpenChange={setShowSchema} title="完整建表 DDL"
       description="预览当前题初始化后的数据表、视图与约束" className="exam-schema-modal">
       {pending==='schema' ? <p role="status">正在读取种子数据…</p>

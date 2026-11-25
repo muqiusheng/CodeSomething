@@ -39,7 +39,8 @@ public class AdminSchoolService {
             for(var course:catalog.courses()) for(var outline:course.labs()) {
                 var work=drafts.read(course.id(),outline.id());
                 if(work.revision()==0) continue;
-                result.add(progress(course,outline,catalog.lab(course,outline.id()),work));
+                var lab=catalog.lab(course,outline.id());
+                result.add(progress(course,outline,lab,SchoolDraftStore.visible(work,lab)));
             }
         }
         return result;
@@ -87,7 +88,7 @@ public class AdminSchoolService {
                 if (Thread.currentThread().isInterrupted()) throw new IOException("Export interrupted");
                 for(var outline:course.labs()) {
                     var lab=catalog.lab(course,outline.id());
-                    var work=drafts.read(course.id(),outline.id());
+                    var work=drafts.read(course.id(),lab);
                     var evidence=progress(course,outline,lab,work);
                     if(evidence.required()==0 || evidence.required()!=evidence.completed()) continue;
                     String content=format.equals("word")

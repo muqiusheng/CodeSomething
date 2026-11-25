@@ -174,6 +174,25 @@ class SchoolExamController {
         return store.findAttempt(courseId, id, paperId).orElseThrow(ExamCatalog::missing);
     }
 
+    record Solution(List<String> correct, List<List<String>> acceptedBlanks, String referenceSql, String explanation) {}
+
+    @GetMapping("/{paperId}/drafts/{id}/questions/{questionId}/solution")
+    Solution solution(@PathVariable String courseId, @PathVariable String paperId, @PathVariable String id,
+                      @PathVariable String questionId) {
+        var attempt = store.findAttempt(courseId, id, paperId);
+        if (attempt.isPresent()) {
+            var item = attempt.get().items().stream().filter(question -> question.question().id().equals(questionId))
+                .findFirst().orElseThrow(ExamCatalog::missing);
+            return new Solution(item.correct(), item.acceptedBlanks(), item.referenceSql(), item.explanation());
+        }
+        var draft = draft(courseId, paperId, id);
+        if (!draft.mode().equals("practice"))
+            throw new ApiException(HttpStatus.FORBIDDEN, "EXAM_SOLUTION_FORBIDDEN", "考场模式交卷后可查看答案与解析。", Map.of());
+        var question = draftQuestion(courseId, draft, questionId);
+        return new Solution(question.answer() == null ? List.of() : List.of(question.answer()),
+            question.blanks() == null ? List.of() : question.blanks(), question.referenceSql(), question.explanation());
+    }
+
     @PostMapping("/{paperId}/drafts/{id}/questions/{questionId}/check")
     ExamStore.Item check(@PathVariable String courseId, @PathVariable String paperId, @PathVariable String id,
                          @PathVariable String questionId, @RequestBody Input request) {

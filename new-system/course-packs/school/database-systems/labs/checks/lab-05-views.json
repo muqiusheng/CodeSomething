@@ -30,7 +30,8 @@
         "orderMatters": false,
         "sql": "SELECT * FROM stuview1; SELECT LOWER(TABLE_NAME),IS_UPDATABLE,CHECK_OPTION FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME) IN ('stuview1') ORDER BY 1;"
       }
-    ]
+    ],
+    "explanation": "筛选条件需要参与视图写入校验。"
   },
   {
     "id": "q02",
@@ -58,7 +59,8 @@
         "orderMatters": false,
         "sql": "SELECT * FROM stuview2; SELECT LOWER(TABLE_NAME),IS_UPDATABLE,CHECK_OPTION FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME) IN ('stuview2') ORDER BY 1;"
       }
-    ]
+    ],
+    "explanation": "返回指定列，检查过滤条件。"
   },
   {
     "id": "q03",
@@ -86,7 +88,8 @@
         "orderMatters": false,
         "sql": "SELECT * FROM stuview3; SELECT LOWER(TABLE_NAME),IS_UPDATABLE,CHECK_OPTION FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME) IN ('stuview3') ORDER BY 1;"
       }
-    ]
+    ],
+    "explanation": "在连接后按班级与性别筛选。"
   },
   {
     "id": "q04",
@@ -114,11 +117,12 @@
         "orderMatters": false,
         "sql": "SELECT * FROM stuview4; SELECT LOWER(TABLE_NAME),IS_UPDATABLE,CHECK_OPTION FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME) IN ('stuview4') ORDER BY 1;"
       }
-    ]
+    ],
+    "explanation": "按学生聚合，确保列名明确。"
   },
   {
     "id": "q05",
-    "referenceSql": "CREATE VIEW stuview5 AS WITH means AS(SELECT s.Sno,s.Sname,s.Classno,SUM(x.Grade*c.Credit)/SUM(c.Credit) AS avg_grade FROM student s JOIN sc x USING(Sno) JOIN course c USING(Cno) WHERE x.Grade IS NOT NULL AND NOT EXISTS(SELECT 1 FROM sc bad WHERE bad.Sno=s.Sno AND bad.Grade<60) GROUP BY s.Sno,s.Sname,s.Classno), ranked AS(SELECT *,DENSE_RANK() OVER(PARTITION BY Classno ORDER BY avg_grade DESC) AS pos FROM means) SELECT Sno,Sname,Classno,ROUND(avg_grade,2) AS avg_grade,pos FROM ranked WHERE pos<=3;",
+    "referenceSql": "CREATE VIEW stuview5 AS WITH means AS (SELECT s.Sno,s.Classno,SUM(x.Grade*c.Credit)/SUM(c.Credit) AS avg_grade FROM student s JOIN sc x USING(Sno) JOIN course c USING(Cno) WHERE x.Grade IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sc bad WHERE bad.Sno=s.Sno AND bad.Grade<60) GROUP BY s.Sno,s.Classno), ranked AS (SELECT Sno,DENSE_RANK() OVER(PARTITION BY Classno ORDER BY avg_grade DESC) AS pos FROM means) SELECT s.* FROM student s JOIN ranked r USING(Sno) WHERE r.pos<=3;",
     "checks": [
       {
         "kind": "execution",
@@ -142,97 +146,308 @@
         "orderMatters": false,
         "sql": "SELECT * FROM stuview5; SELECT LOWER(TABLE_NAME),IS_UPDATABLE,CHECK_OPTION FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME) IN ('stuview5') ORDER BY 1;"
       }
-    ]
+    ],
+    "explanation": "先排除有不及格成绩的学生，用成绩乘学分之和除以有效成绩的学分总和。按班级对均分做 DENSE_RANK，最后回到 Student 取基本资料。"
   },
   {
     "id": "q06",
-    "referenceSql": "SELECT TABLE_NAME,IS_UPDATABLE,CHECK_OPTION FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() ORDER BY TABLE_NAME;",
+    "referenceSql": "SHOW TABLES;",
     "checks": [
       {
         "kind": "execution",
-        "label": "SQL 脚本完整执行",
+        "label": "SQL 执行成功",
         "points": 2
       },
       {
         "kind": "result_set",
-        "label": "基础结果与对象状态",
+        "label": "查询结果",
         "points": 5,
-        "checkColumnNames": false,
-        "orderMatters": true
+        "orderMatters": false,
+        "checkColumnNames": false
       },
       {
         "kind": "result_set",
-        "label": "变式数据",
+        "label": "变式查询结果",
         "points": 3,
-        "variantSql": "CREATE VIEW v_lab_051 AS SELECT * FROM student WHERE Classno='051' WITH CHECK OPTION;",
+        "orderMatters": false,
         "checkColumnNames": false,
-        "orderMatters": true
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
       }
     ],
-    "setupSql": "CREATE VIEW stuview2 AS SELECT Cno,Cname,Total_perior FROM course WHERE Credit>3; CREATE VIEW stuview4 AS SELECT Sno,SUM(Grade) AS total_grade FROM sc GROUP BY Sno;"
+    "setupSql": "CREATE VIEW stuview1 AS SELECT * FROM student WHERE Sex='男' WITH CHECK OPTION;",
+    "explanation": "SHOW TABLES 列出当前库可见的表和视图，可从名称定位本实验的对象。"
+  },
+  {
+    "id": "q06-status",
+    "referenceSql": "SHOW TABLE STATUS WHERE Name = 'stuview1';",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "查询结果",
+        "points": 5,
+        "orderMatters": false,
+        "checkColumnNames": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式查询结果",
+        "points": 3,
+        "orderMatters": false,
+        "checkColumnNames": false,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "CREATE VIEW stuview1 AS SELECT * FROM student WHERE Sex='男' WITH CHECK OPTION;",
+    "explanation": "SHOW TABLE STATUS 返回对象状态。视图的 Comment 标记为 VIEW，存储引擎等表专属值为空。"
+  },
+  {
+    "id": "q06-definition",
+    "referenceSql": "SHOW CREATE VIEW stuview1;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "查询结果",
+        "points": 5,
+        "orderMatters": false,
+        "checkColumnNames": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式查询结果",
+        "points": 3,
+        "orderMatters": false,
+        "checkColumnNames": false,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "CREATE VIEW stuview1 AS SELECT * FROM student WHERE Sex='男' WITH CHECK OPTION;",
+    "explanation": "SHOW CREATE VIEW 返回可重建视图的完整定义。检查 SELECT 的筛选条件及 WITH CHECK OPTION。"
+  },
+  {
+    "id": "q06-metadata",
+    "referenceSql": "SELECT VIEW_DEFINITION FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='stuview3';",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "查询结果",
+        "points": 5,
+        "orderMatters": false,
+        "checkColumnNames": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式查询结果",
+        "points": 3,
+        "orderMatters": false,
+        "checkColumnNames": false,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "CREATE VIEW stuview3 AS SELECT s.Sno,x.Cno,x.Grade FROM student s JOIN sc x USING(Sno) WHERE s.Classno='051' AND s.Sex='女';",
+    "explanation": "用 information_schema 读取对象定义。先限制到当前库，再按题目要求筛选对象名与返回字段。"
   },
   {
     "id": "q07",
-    "referenceSql": "ALTER VIEW stuview2 AS SELECT Cno,Cname,Credit FROM course WHERE Total_perior>60; DROP VIEW stuview4;",
+    "referenceSql": "ALTER VIEW stuview2 AS SELECT Cno,Cname,Credit FROM course WHERE Total_perior>60;",
     "checks": [
       {
         "kind": "execution",
-        "label": "SQL 脚本完整执行",
+        "label": "SQL 执行成功",
         "points": 2
       },
       {
-        "kind": "post_query",
-        "label": "基础结果与对象状态",
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
         "points": 5,
-        "checkColumnNames": true,
-        "orderMatters": false,
-        "sql": "SELECT * FROM stuview2; SELECT LOWER(TABLE_NAME),IS_UPDATABLE,CHECK_OPTION FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME) IN ('stuview2','stuview4') ORDER BY 1;"
+        "sql": "SELECT * FROM stuview2;"
       },
       {
-        "kind": "post_query",
-        "label": "变式数据",
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
         "points": 3,
-        "variantSql": "INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO course VALUES('914','数据分析',61,2);",
-        "checkColumnNames": true,
-        "orderMatters": false,
-        "sql": "SELECT * FROM stuview2; SELECT LOWER(TABLE_NAME),IS_UPDATABLE,CHECK_OPTION FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME) IN ('stuview2','stuview4') ORDER BY 1;"
+        "sql": "SELECT * FROM stuview2;",
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
       }
     ],
-    "setupSql": "CREATE DEFINER={{sandboxUser}} VIEW stuview2 AS SELECT Cno,Cname,Total_perior FROM course WHERE Credit>3; CREATE DEFINER={{sandboxUser}} VIEW stuview4 AS SELECT Sno,SUM(Grade) AS total_grade FROM sc GROUP BY Sno;"
+    "setupSql": "CREATE DEFINER={{sandboxUser}} VIEW stuview2 AS SELECT Cno,Cname,Total_perior FROM course WHERE Credit>3;",
+    "explanation": "ALTER VIEW 用新查询替换已有视图的定义。验证查询列和筛选条件是否符合本题。"
+  },
+  {
+    "id": "q07-drop",
+    "referenceSql": "DROP VIEW stuview4;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
+        "points": 5,
+        "sql": "SELECT TABLE_NAME FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE();"
+      },
+      {
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
+        "points": 3,
+        "sql": "SELECT TABLE_NAME FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE();",
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "CREATE DEFINER={{sandboxUser}} VIEW stuview2 AS SELECT Cno,Cname,Total_perior FROM course WHERE Credit>3; CREATE DEFINER={{sandboxUser}} VIEW stuview4 AS SELECT Sno,SUM(Grade) AS total_grade FROM sc GROUP BY Sno;",
+    "explanation": "DROP VIEW 删除视图定义，所引用的基表和数据仍保留。"
   },
   {
     "id": "q08",
-    "referenceSql": "UPDATE v_class_051 SET Home_addr='南京市' WHERE Sno='20110001'; INSERT INTO v_class_051 VALUES('20119991','何明','男','1993-06-20','051','2011-09-01','南京','计算机系','210000');",
+    "referenceSql": "SELECT * FROM stuview1 WHERE Classno='051' AND Sname='张虹';",
     "checks": [
       {
         "kind": "execution",
-        "label": "SQL 脚本完整执行",
+        "label": "SQL 执行成功",
         "points": 2
       },
       {
-        "kind": "post_query",
-        "label": "基础结果与对象状态",
+        "kind": "result_set",
+        "label": "查询结果",
         "points": 5,
-        "checkColumnNames": false,
         "orderMatters": false,
-        "sql": "SELECT * FROM student ORDER BY Sno;"
+        "checkColumnNames": false
       },
       {
-        "kind": "negative_check",
-        "label": "变式数据与约束边界",
+        "kind": "result_set",
+        "label": "变式查询结果",
         "points": 3,
-        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
-        "positiveSql": "UPDATE v_class_051 SET Home_addr='苏州' WHERE Sno='20119991';",
-        "negativeSql": "UPDATE v_class_051 SET Classno='061' WHERE Sno='20119991';",
-        "errorCodes": [
-          1369
-        ],
-        "checkColumnNames": false,
         "orderMatters": false,
-        "sql": "SELECT * FROM student ORDER BY Sno;"
+        "checkColumnNames": false,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
       }
     ],
-    "setupSql": "CREATE VIEW v_class_051 AS SELECT * FROM student WHERE Classno='051' WITH CHECK OPTION;"
+    "setupSql": "CREATE VIEW stuview1 AS SELECT * FROM student WHERE Sex='男' WITH CHECK OPTION;",
+    "explanation": "SELECT 决定输出列，FROM 确定数据来源。用题目给定的条件过滤记录，并按要求检查输出顺序。"
+  },
+  {
+    "id": "q08-insert",
+    "referenceSql": "INSERT INTO stuview1(Sno,Sname,Classno,Sex,Home_addr,Entrance_date,Birth,Sdept) VALUES('20110005','许华','054','男','南京','2011-09-01','1983-01-09','计算机系');",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
+        "points": 5,
+        "sql": "SELECT * FROM student ORDER BY Sno;SELECT * FROM sc ORDER BY Sno,Cno;"
+      },
+      {
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
+        "points": 3,
+        "sql": "SELECT * FROM student ORDER BY Sno;SELECT * FROM sc ORDER BY Sno,Cno;",
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "DELETE FROM sc WHERE Sno IN ('20110005','20110006'); DELETE FROM student WHERE Sno IN ('20110005','20110006');CREATE VIEW stuview1 AS SELECT * FROM student WHERE Sex='男' WITH CHECK OPTION;",
+    "explanation": "INSERT 的目标列顺序必须与每组 VALUES 对应。写入选课记录前，核对所引用的学生和课程已存在。"
+  },
+  {
+    "id": "q08-check-option",
+    "referenceSql": "INSERT INTO stuview1(Sno,Sname,Classno,Sex,Home_addr,Entrance_date,Birth,Sdept) VALUES('20110006','赵静','054','女','南京','2011-09-01','1983-11-09','计算机系');",
+    "checks": [
+      {
+        "kind": "expected_error",
+        "label": "运行原实验语句",
+        "points": 2,
+        "sql": "\\s*[\\x60]?INSERT[\\x60]?\\s+[\\x60]?INTO[\\x60]?\\s+[\\x60]?stuview1[\\x60]?\\s*\\(\\s*[\\x60]?Sno[\\x60]?\\s*,\\s*[\\x60]?Sname[\\x60]?\\s*,\\s*[\\x60]?Classno[\\x60]?\\s*,\\s*[\\x60]?Sex[\\x60]?\\s*,\\s*[\\x60]?Home_addr[\\x60]?\\s*,\\s*[\\x60]?Entrance_date[\\x60]?\\s*,\\s*[\\x60]?Birth[\\x60]?\\s*,\\s*[\\x60]?Sdept[\\x60]?\\s*\\)\\s*[\\x60]?VALUES[\\x60]?\\s*\\(\\s*'20110006'\\s*,\\s*'赵静'\\s*,\\s*'054'\\s*,\\s*'女'\\s*,\\s*'南京'\\s*,\\s*'2011\\-09\\-01'\\s*,\\s*'1983\\-11\\-09'\\s*,\\s*'计算机系'\\s*\\)\\s*",
+        "errorCode": 1369
+      },
+      {
+        "kind": "expected_error",
+        "label": "复现预期错误",
+        "points": 5,
+        "sql": "\\s*[\\x60]?INSERT[\\x60]?\\s+[\\x60]?INTO[\\x60]?\\s+[\\x60]?stuview1[\\x60]?\\s*\\(\\s*[\\x60]?Sno[\\x60]?\\s*,\\s*[\\x60]?Sname[\\x60]?\\s*,\\s*[\\x60]?Classno[\\x60]?\\s*,\\s*[\\x60]?Sex[\\x60]?\\s*,\\s*[\\x60]?Home_addr[\\x60]?\\s*,\\s*[\\x60]?Entrance_date[\\x60]?\\s*,\\s*[\\x60]?Birth[\\x60]?\\s*,\\s*[\\x60]?Sdept[\\x60]?\\s*\\)\\s*[\\x60]?VALUES[\\x60]?\\s*\\(\\s*'20110006'\\s*,\\s*'赵静'\\s*,\\s*'054'\\s*,\\s*'女'\\s*,\\s*'南京'\\s*,\\s*'2011\\-09\\-01'\\s*,\\s*'1983\\-11\\-09'\\s*,\\s*'计算机系'\\s*\\)\\s*",
+        "errorCode": 1369
+      },
+      {
+        "kind": "expected_error",
+        "label": "变式中仍触发相同约束",
+        "points": 3,
+        "sql": "\\s*[\\x60]?INSERT[\\x60]?\\s+[\\x60]?INTO[\\x60]?\\s+[\\x60]?stuview1[\\x60]?\\s*\\(\\s*[\\x60]?Sno[\\x60]?\\s*,\\s*[\\x60]?Sname[\\x60]?\\s*,\\s*[\\x60]?Classno[\\x60]?\\s*,\\s*[\\x60]?Sex[\\x60]?\\s*,\\s*[\\x60]?Home_addr[\\x60]?\\s*,\\s*[\\x60]?Entrance_date[\\x60]?\\s*,\\s*[\\x60]?Birth[\\x60]?\\s*,\\s*[\\x60]?Sdept[\\x60]?\\s*\\)\\s*[\\x60]?VALUES[\\x60]?\\s*\\(\\s*'20110006'\\s*,\\s*'赵静'\\s*,\\s*'054'\\s*,\\s*'女'\\s*,\\s*'南京'\\s*,\\s*'2011\\-09\\-01'\\s*,\\s*'1983\\-11\\-09'\\s*,\\s*'计算机系'\\s*\\)\\s*",
+        "errorCode": 1369,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "DELETE FROM sc WHERE Sno IN ('20110005','20110006'); DELETE FROM student WHERE Sno IN ('20110005','20110006');CREATE VIEW stuview1 AS SELECT * FROM student WHERE Sex='男' WITH CHECK OPTION;",
+    "explanation": "stuview1 只允许男学生。WITH CHECK OPTION 会拒绝通过该视图插入不满足筛选条件的女学生，Student 不会新增记录。"
+  },
+  {
+    "id": "q08-update",
+    "referenceSql": "UPDATE stuview1 SET Home_addr='扬州市' WHERE Classno='054' AND Sname='许华';",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
+        "points": 5,
+        "sql": "SELECT * FROM student ORDER BY Sno;SELECT * FROM sc ORDER BY Sno,Cno;"
+      },
+      {
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
+        "points": 3,
+        "sql": "SELECT * FROM student ORDER BY Sno;SELECT * FROM sc ORDER BY Sno,Cno;",
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "DELETE FROM sc WHERE Sno IN ('20110005','20110006'); DELETE FROM student WHERE Sno IN ('20110005','20110006');CREATE VIEW stuview1 AS SELECT * FROM student WHERE Sex='男' WITH CHECK OPTION;INSERT INTO stuview1(Sno,Sname,Classno,Sex,Home_addr,Entrance_date,Birth,Sdept) VALUES('20110005','许华','054','男','南京','2011-09-01','1983-01-09','计算机系');",
+    "explanation": "先用键或题目给定的条件定位目标行，再用 SET 更新指定字段。用同一条件查询可核对结果。"
+  },
+  {
+    "id": "q08-delete",
+    "referenceSql": "DELETE FROM stuview1 WHERE Classno='054' AND Sname='许华';",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
+        "points": 5,
+        "sql": "SELECT * FROM student ORDER BY Sno;SELECT * FROM sc ORDER BY Sno,Cno;"
+      },
+      {
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
+        "points": 3,
+        "sql": "SELECT * FROM student ORDER BY Sno;SELECT * FROM sc ORDER BY Sno,Cno;",
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "DELETE FROM sc WHERE Sno IN ('20110005','20110006'); DELETE FROM student WHERE Sno IN ('20110005','20110006');CREATE VIEW stuview1 AS SELECT * FROM student WHERE Sex='男' WITH CHECK OPTION;INSERT INTO stuview1(Sno,Sname,Classno,Sex,Home_addr,Entrance_date,Birth,Sdept) VALUES('20110005','许华','054','男','南京','2011-09-01','1983-01-09','计算机系');",
+    "explanation": "先核对 WHERE 匹配的记录，再删除。若行被外键引用，需留意 MySQL 的参照完整性限制。"
   },
   {
     "id": "q09",
@@ -260,7 +475,8 @@
         "orderMatters": false,
         "sql": "SELECT * FROM v_practice_class_size; SELECT LOWER(TABLE_NAME),IS_UPDATABLE,CHECK_OPTION FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME) IN ('v_practice_class_size') ORDER BY 1;"
       }
-    ]
+    ],
+    "explanation": "用 GROUP BY 形成每班一行。预置数据里 051 有 4 人。"
   },
   {
     "id": "q10",
@@ -288,63 +504,109 @@
         "orderMatters": false,
         "sql": "UPDATE student SET Classno='051' WHERE Sno='20110005'; SELECT * FROM v_practice_class_051;"
       }
-    ]
+    ],
+    "explanation": "只提交视图定义，系统随后会更新基表检验视图。"
   },
   {
     "id": "q11",
-    "referenceSql": "CREATE VIEW v_course_counts AS SELECT c.Cno,COUNT(x.Sno) AS chosen,COUNT(x.Grade) AS graded FROM course c LEFT JOIN sc x USING(Cno) GROUP BY c.Cno; CREATE VIEW v_course_absences AS SELECT Cno,chosen,graded FROM v_course_counts WHERE chosen>graded;",
+    "referenceSql": "CREATE VIEW v_course_counts AS SELECT c.Cno,COUNT(x.Sno) AS chosen,COUNT(x.Grade) AS graded FROM course c LEFT JOIN sc x USING(Cno) GROUP BY c.Cno;",
     "checks": [
       {
         "kind": "execution",
-        "label": "SQL 脚本完整执行",
+        "label": "SQL 执行成功",
         "points": 2
       },
       {
-        "kind": "post_query",
-        "label": "基础结果与对象状态",
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
         "points": 5,
-        "checkColumnNames": true,
-        "orderMatters": false,
-        "sql": "SELECT * FROM v_course_counts; SELECT * FROM v_course_absences; SELECT LOWER(TABLE_NAME),IS_UPDATABLE,CHECK_OPTION FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME) IN ('v_course_counts','v_course_absences') ORDER BY 1;"
+        "sql": "SELECT * FROM v_course_counts; SELECT IS_UPDATABLE FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='v_course_counts';"
       },
       {
-        "kind": "post_query",
-        "label": "变式数据",
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
         "points": 3,
-        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
-        "checkColumnNames": true,
-        "orderMatters": false,
-        "sql": "SELECT * FROM v_course_counts; SELECT * FROM v_course_absences; SELECT LOWER(TABLE_NAME),IS_UPDATABLE,CHECK_OPTION FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME) IN ('v_course_counts','v_course_absences') ORDER BY 1;"
+        "sql": "SELECT * FROM v_course_counts; SELECT IS_UPDATABLE FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='v_course_counts';",
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
       }
-    ]
+    ],
+    "explanation": "从必须完整保留的一侧开始 LEFT JOIN。没有匹配行时，另一侧的列显示 NULL。"
+  },
+  {
+    "id": "q11-second",
+    "referenceSql": "CREATE VIEW v_course_absences AS SELECT Cno,chosen,graded FROM v_course_counts WHERE chosen>graded;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
+        "points": 5,
+        "sql": "SELECT * FROM v_course_absences; SELECT IS_UPDATABLE FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='v_course_absences';"
+      },
+      {
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
+        "points": 3,
+        "sql": "SELECT * FROM v_course_absences; SELECT IS_UPDATABLE FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='v_course_absences';",
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "CREATE VIEW v_course_counts AS SELECT c.Cno,COUNT(x.Sno) AS chosen,COUNT(x.Grade) AS graded FROM course c LEFT JOIN sc x USING(Cno) GROUP BY c.Cno;",
+    "explanation": "先验证 AS 后的查询是否只返回题目需要的行和列，再把它保存为命名视图。"
   },
   {
     "id": "q12",
-    "referenceSql": "CREATE VIEW v_course_projection AS SELECT Cno,Cname FROM course; CREATE VIEW v_course_enrollment AS SELECT Cno,COUNT(*) AS chosen FROM sc GROUP BY Cno;",
+    "referenceSql": "CREATE VIEW v_course_projection AS SELECT Cno,Cname FROM course;",
     "checks": [
       {
         "kind": "execution",
-        "label": "SQL 脚本完整执行",
+        "label": "SQL 执行成功",
         "points": 2
       },
       {
-        "kind": "post_query",
-        "label": "基础结果与对象状态",
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
         "points": 5,
-        "checkColumnNames": true,
-        "orderMatters": false,
-        "sql": "SELECT * FROM v_course_projection; SELECT * FROM v_course_enrollment; SELECT LOWER(TABLE_NAME),IS_UPDATABLE,CHECK_OPTION FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME) IN ('v_course_projection','v_course_enrollment') ORDER BY 1;"
+        "sql": "SELECT * FROM v_course_projection; SELECT IS_UPDATABLE FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='v_course_projection';"
       },
       {
-        "kind": "post_query",
-        "label": "变式数据",
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
         "points": 3,
-        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
-        "checkColumnNames": true,
-        "orderMatters": false,
-        "sql": "SELECT * FROM v_course_projection; SELECT * FROM v_course_enrollment; SELECT LOWER(TABLE_NAME),IS_UPDATABLE,CHECK_OPTION FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND LOWER(TABLE_NAME) IN ('v_course_projection','v_course_enrollment') ORDER BY 1;"
+        "sql": "SELECT * FROM v_course_projection; SELECT IS_UPDATABLE FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='v_course_projection';",
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
       }
-    ]
+    ],
+    "explanation": "先验证 AS 后的查询是否只返回题目需要的行和列，再把它保存为命名视图。"
+  },
+  {
+    "id": "q12-second",
+    "referenceSql": "CREATE VIEW v_course_enrollment AS SELECT Cno,COUNT(*) AS chosen FROM sc GROUP BY Cno;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
+        "points": 5,
+        "sql": "SELECT * FROM v_course_enrollment; SELECT IS_UPDATABLE FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='v_course_enrollment';"
+      },
+      {
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
+        "points": 3,
+        "sql": "SELECT * FROM v_course_enrollment; SELECT IS_UPDATABLE FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='v_course_enrollment';",
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "explanation": "先验证 AS 后的查询是否只返回题目需要的行和列，再把它保存为命名视图。"
   },
   {
     "id": "q13",
@@ -377,6 +639,7 @@
         "orderMatters": false,
         "sql": "SELECT * FROM v_student_names ORDER BY student_id;"
       }
-    ]
+    ],
+    "explanation": "在 SELECT 列表中用 AS 显式声明视图列名。"
   }
 ]

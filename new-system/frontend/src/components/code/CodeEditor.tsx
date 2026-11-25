@@ -1,3 +1,4 @@
+import {localState} from '../../api/browser-state.mjs';
 import EditorWorker from 'monaco-editor/editor/editor.worker.js?worker';
 import {useEffect,useImperativeHandle,useRef,useState,type Ref} from 'react';
 import {Keyboard,Lightbulb,Maximize2,Minimize2} from 'lucide-react';
@@ -9,7 +10,7 @@ import '../../styles/browser-workspace.css';
 
 (globalThis as typeof globalThis & {MonacoEnvironment:unknown}).MonacoEnvironment={getWorker:()=>new EditorWorker()};
 let runtime:Promise<typeof Monaco>|undefined;
-function loadEditor(){return runtime??=Promise.all([
+export function loadEditor(){return runtime??=Promise.all([
  import('monaco-editor/editor/editor.api.js'),
  import('monaco-editor/editor/browser/coreCommands.js'),
  import('monaco-editor/editor/contrib/find/browser/findController.js'),
@@ -26,7 +27,7 @@ function loadEditor(){return runtime??=Promise.all([
 });}
 export type CodeEditorHandle = {getSelectedText(): string; getSelectionStartLine(): number};
 
-export function CodeEditor({path,value,onChange,readOnly=false,line,errorLine,traceRange,selectionRef,wordWrap=true}:{path:string;value:string;onChange:(value:string)=>void;readOnly?:boolean;line?:number;errorLine?:number;traceRange?:{start:number;end:number};selectionRef?:Ref<CodeEditorHandle>;wordWrap?:boolean}){
+export function CodeEditor({path,value,onChange,readOnly=false,line,errorLine,traceRange,selectionRef,wordWrap=true,sqlWorkbench=false}:{path:string;value:string;onChange:(value:string)=>void;readOnly?:boolean;line?:number;errorLine?:number;traceRange?:{start:number;end:number};selectionRef?:Ref<CodeEditorHandle>;wordWrap?:boolean;sqlWorkbench?:boolean}){
  const host=useRef<HTMLDivElement>(null),instance=useRef<Monaco.editor.IStandaloneCodeEditor|null>(null),api=useRef<typeof Monaco|null>(null);
  const applyingValue=useRef(false);
  const models=useRef(new Map<string, {model:Monaco.editor.ITextModel;view:Monaco.editor.ICodeEditorViewState|null}>());
@@ -120,6 +121,18 @@ export function CodeEditor({path,value,onChange,readOnly=false,line,errorLine,tr
   const input=fallback.current;
   return input?input.value.slice(0,input.selectionStart).split('\n').length:1;
  }}),[]);
+ const [suggestions,setSuggestions]=useState(()=>{
+  try{return localState.getItem('cs-code-suggestions')==='on'}catch{return false}
+ });
+ const suggestionsRef=useRef(suggestions);
+ function toggleSuggestions(){
+  const enabled=!suggestionsRef.current;
+  suggestionsRef.current=enabled;
+  setSuggestions(enabled);
+  instance.current?.updateOptions(completionOptions(enabled));
+  if(!enabled)instance.current?.trigger('toolbar','hideSuggestWidget',{});
+  try{localState.setItem('cs-code-suggestions',enabled?'on':'off')}catch{/* Preference applies for this editor. */}
+ }
  const [shortcuts,setShortcuts]=useState(false);
  const [expanded,setExpanded]=useState(false);
  function restore(){panel.current?.close();setExpanded(false);expandButton.current?.focus()}
@@ -127,8 +140,9 @@ export function CodeEditor({path,value,onChange,readOnly=false,line,errorLine,tr
  useEffect(()=>{if(!expanded)return;const previous=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.body.style.overflow=previous}},[expanded]);
  useEffect(()=>{let active=true;let dispose:(()=>void)|undefined;
   void loadEditor().then(monaco=>{if(!active||!host.current)return;api.current=monaco;monaco.editor.defineTheme('cs-code-light',{base:'vs',inherit:true,rules:[{token:'annotation',foreground:'626270'}],colors:{'editor.lineHighlightBorder':'#00000000','editor.lineHighlightBackground':'#f5f7f9'}});monaco.editor.defineTheme('cs-code-dark',{base:'vs-dark',inherit:true,rules:[{token:'comment',foreground:'92AD9B'},{token:'annotation',foreground:'D6A0A8'}],colors:{'editor.background':'#160d2e','editorGutter.background':'#160d2e','editor.lineHighlightBorder':'#00000000','editor.lineHighlightBackground':'#21153b','editor.selectionBackground':'#523875'}});
-   const editor=monaco.editor.create(host.current,{model:null,readOnly:latest.current.readOnly,automaticLayout:true,editContext:false,minimap:{enabled:false},fontSize:14,lineHeight:23,fontFamily:'Consolas, monospace',fontLigatures:false,scrollBeyondLastLine:false,wordWrap:latest.current.wordWrap?'on':'off',tabSize:4,insertSpaces:true,quickSuggestions:{other:true,comments:false,strings:false},suggestOnTriggerCharacters:true,tabCompletion:'on',snippetSuggestions:'top',wordBasedSuggestions:'off',suggest:{showWords:false,preview:true},accessibilitySupport:'on',ariaLabel:'代码编辑器 '+latest.current.path,theme:document.documentElement.dataset.theme==='dark'?'cs-code-dark':'cs-code-light',padding:{top:14,bottom:14}});
+   const editor=monaco.editor.create(host.current,{model:null,readOnly:latest.current.readOnly,automaticLayout:true,editContext:false,minimap:{enabled:false},fontSize:14,lineHeight:23,fontFamily:'Consolas, monospace',fontLigatures:false,scrollBeyondLastLine:false,wordWrap:latest.current.wordWrap?'on':'off',tabSize:4,insertSpaces:true,quickSuggestions:false,suggestOnTriggerCharacters:false,tabCompletion:'off',snippetSuggestions:'top',wordBasedSuggestions:'off',suggest:{showWords:false,preview:true},accessibilitySupport:'on',ariaLabel:'代码编辑器 '+latest.current.path,theme:document.documentElement.dataset.theme==='dark'?'cs-code-dark':'cs-code-light',padding:{top:14,bottom:14}});
    instance.current=editor;
+   if(suggestionsRef.current)editor.updateOptions(completionOptions(true));
    showFile(editor,monaco,latest.current.path,latest.current.value);
    showError(editor,latest.current.errorLine);
    showTrace(editor,latest.current.traceRange);
@@ -163,7 +177,11 @@ export function CodeEditor({path,value,onChange,readOnly=false,line,errorLine,tr
  useEffect(()=>{if(line&&instance.current){instance.current.revealLineInCenter(line);instance.current.setPosition({lineNumber:line,column:1});instance.current.focus()}},[line,path]);
  return <dialog ref={panel} className="code-editor-shell" role={expanded?'dialog':'region'} aria-label={'编辑 '+path} aria-modal={expanded?true:undefined} onKeyDownCapture={e=>{if(expanded&&e.key==='Escape'){e.preventDefault();e.stopPropagation();restore()}}} onCancel={e=>{e.preventDefault();restore()}} onClose={()=>setExpanded(false)}>
  <div className="editor-topbar"><span>{path.split(/[\\/]/).at(-1)}</span><div className="editor-toolbar">
-  {!readOnly&&<button type="button" className="button secondary" aria-label="代码提示" title="代码提示（Ctrl+Space）" onClick={()=>{instance.current?.focus();instance.current?.trigger('toolbar','editor.action.triggerSuggest',{})}}><Lightbulb size={15}/></button>}
+  {sqlWorkbench ? <label className="editor-suggestion-switch">
+    <input type="checkbox" role="switch" className="toggle toggle-primary toggle-xs" checked={suggestions}
+      disabled={readOnly} onChange={toggleSuggestions}/>代码提示
+  </label> : !readOnly&&<button type="button" className="btn button secondary editor-suggestions" aria-pressed={suggestions}
+    onClick={toggleSuggestions}><Lightbulb size={14} aria-hidden="true"/>代码提示：{suggestions?'开':'关'}</button>}
   <button ref={expandButton} type="button" className="button secondary" title={expanded?'还原编辑器':readOnly?'放大查看':'放大编辑'} aria-label={expanded?'还原编辑器':readOnly?'放大查看':'放大编辑'} aria-expanded={expanded} onClick={expanded?restore:expand}>{expanded?<Minimize2 size={15}/>:<Maximize2 size={15}/>}</button>
   <div className="editor-shortcuts" data-open={shortcuts} onKeyDown={event=>{if(event.key==='Escape')setShortcuts(false)}}><button type="button" aria-label="编辑器快捷键" aria-expanded={shortcuts} onClick={()=>setShortcuts(value=>!value)}><Keyboard size={16}/></button><span>UTF-8 · {expanded?'Esc 还原 · ':''}{readOnly?'只读查看':'Ctrl+Space 提示 · Enter 采纳 · Tab 下一处 · Ctrl+F 查找 · Ctrl+M 切换焦点移动'}</span></div>
  </div></div>
@@ -173,3 +191,11 @@ export function CodeEditor({path,value,onChange,readOnly=false,line,errorLine,tr
  </>}</div></dialog>;
 }
 function language(path:string){return path.endsWith('.java')?'java':path.endsWith('.sql')?'sql':path.endsWith('.xml')?'xml':'plaintext'}
+
+function completionOptions(enabled:boolean):Monaco.editor.IEditorOptions {
+ return {
+  quickSuggestions:enabled?{other:true,comments:false,strings:false}:false,
+  suggestOnTriggerCharacters:enabled,
+  tabCompletion:enabled?'on':'off',
+ };
+}

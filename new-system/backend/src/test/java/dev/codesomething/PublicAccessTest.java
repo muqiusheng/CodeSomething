@@ -56,6 +56,16 @@ class PublicAccessTest {
                 """;
             var details = json.readTree(request(app, "GET", lab, null, first, null).body());
             assertTrue(details.path("grading").asBoolean());
+            String debug = lab + "/questions/q02/debug";
+            String trace = """
+                {"sql":"SELECT Sno FROM student;","mode":"trace","offset":0}
+                """;
+            assertEquals(401, request(app, "POST", debug, trace, null, null).statusCode());
+            assertEquals(403, request(app, "POST", debug, trace, admin, null).statusCode());
+            var debugResponse = request(app, "POST", debug, trace, first, null);
+            assertEquals(200, debugResponse.statusCode(), debugResponse.body());
+            assertEquals("environment_error", json.readTree(debugResponse.body()).path("status").asText());
+            assertEquals(0, json.readTree(request(app, "GET", lab, null, first, null).body()).path("work").path("revision").asInt());
             assertFalse(details.path("lab").path("questions").get(1).has("checks"));
             var response = request(app, "POST", lab + "/grade", input, first, null);
             assertEquals(200, response.statusCode(), response.body());
@@ -92,6 +102,17 @@ class PublicAccessTest {
             assertEquals(4, draft.path("draft").path("order").path(choice).size());
             assertFalse(draft.path("questions").get(0).has("answer"));
             assertFalse(draft.path("questions").get(20).has("referenceSql"));
+            String examSolution = work + "/questions/" + choice + "/solution";
+            String shortExamSolution = examSolution.replace("/school/courses/", "/school/");
+            assertEquals(403, request(app, "GET", examSolution, null, first, null).statusCode());
+            assertEquals(403, request(app, "GET", shortExamSolution, null, first, null).statusCode());
+            assertEquals(404, request(app, "GET", examSolution, null, second, null).statusCode());
+            String labSolution = "/api/school/database-systems/labs/lab-03-single-query/questions/q01/solution";
+            assertEquals(401, request(app, "GET", labSolution, null, null, null).statusCode());
+            var labReference = request(app, "GET", labSolution, null, first, null);
+            assertEquals(200, labReference.statusCode(), labReference.body());
+            assertEquals("SELECT * FROM student;", json.readTree(labReference.body()).path("referenceSql").asText());
+            assertFalse(json.readTree(labReference.body()).path("explanation").asText().isBlank());
             assertEquals(404, request(app, "GET", work, null, second, null).statusCode());
             assertEquals(400, request(app, "POST", work + "/questions/" + choice + "/check",
                 "{\"answer\":[\"A\"],\"mode\":\"check\",\"offset\":0}", first, null).statusCode());
@@ -135,6 +156,11 @@ class PublicAccessTest {
                 """, first, null);
             assertEquals(200, blankRetry.statusCode(), blankRetry.body());
             String blankId = json.readTree(blankRetry.body()).path("draft").path("id").asText();
+            String practiceSolution = paper + "/drafts/" + blankId + "/questions/" + sql + "/solution";
+            var reference = request(app, "GET", practiceSolution, null, first, null);
+            assertEquals(200, reference.statusCode(), reference.body());
+            assertFalse(json.readTree(reference.body()).path("referenceSql").asText().isBlank());
+            assertEquals(200, request(app, "GET", shortExamSolution, null, first, null).statusCode());
             assertEquals(200, request(app, "POST", paper + "/drafts/" + blankId + "/submit", """
                 {"revision":0,"answers":{},"stars":[]}
                 """, first, null).statusCode());

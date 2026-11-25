@@ -6,11 +6,12 @@
     {
       "id": "q01",
       "title": "比较出生日期",
-      "requirement": "返回比林红年长的男学生的 Sno、Sname、Birth。",
+      "requirement": "查询比林红年长的男学生，返回 Student 的全部字段。",
       "hint": "出生日期越早，年龄越大。",
       "optional": false,
       "starterSql": "",
-      "originalText": "（1）查询比“林红”年纪大的男学生信息。"
+      "originalText": "（1）查询比“林红”年纪大的男学生信息。",
+      "gradingRevision": "split"
     },
     {
       "id": "q02",
@@ -51,11 +52,12 @@
     {
       "id": "q06",
       "title": "与全班年龄比较",
-      "requirement": "返回其他班级中比 051 班所有学生都年长的 Sno、Sname、Birth。",
+      "requirement": "返回其他班级中比 051 班所有学生都年长的学生学号和姓名。",
       "hint": "比较出生日期的最小值或用 ALL。",
       "optional": false,
       "starterSql": "",
-      "originalText": "（6）查询其他班级中比“051”班所有学生年龄大的学生的学号、姓名。"
+      "originalText": "（6）查询其他班级中比“051”班所有学生年龄大的学生的学号、姓名。",
+      "gradingRevision": "split"
     },
     {
       "id": "q07",
@@ -96,11 +98,12 @@
     {
       "id": "q11",
       "title": "达标总成绩",
-      "requirement": "选课门次严格大于 3 的学生，输出 Sno、Sname、及格成绩总和，不及格和缺考记 0。按总和降序、学号升序。",
+      "requirement": "查询选修超过 3 门课程的学生学号及及格成绩总和。缺考和不及格不计入总成绩，按总成绩降序，同分按学号升序。",
       "hint": "分清门数条件和成绩汇总条件。",
       "optional": false,
       "starterSql": "",
-      "originalText": "（11）查询选修3门以上课程的学生的学号、总成绩（不统计不及格的课程），并要求按总成绩的降序排列出来。"
+      "originalText": "（11）查询选修3门以上课程的学生的学号、总成绩（不统计不及格的课程），并要求按总成绩的降序排列出来。",
+      "gradingRevision": "split"
     },
     {
       "id": "q12",
@@ -131,30 +134,93 @@
     },
     {
       "id": "q15",
-      "title": "表间集合查询",
-      "requirement": "学生集合 A 为 051 班学生，集合 B 为选修 001 的学生。按顺序返回学号集合的交集，再返回去重并集。",
-      "hint": "注意集合操作两边列的顺序与类型。",
+      "title": "创建 Student 结构副本",
+      "requirement": "创建空表 student_other，使其列与结构约束和 Student 相同。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "（15）创建一个表student_other，结构同Student，输入若干记录，部分记录和Student表中的相同。\na．查询同时出现在Student表和student_other表中的记录。\nb．查询Student表和student_other表中的全部记录。"
+      "originalText": "（15）创建一个表student_other，结构同Student。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q15-insert",
+      "title": "为 Student 副本录入对照记录",
+      "requirement": "向 student_other 录入两行：复制 Student 的 20110001，再录入 20118888（马宁、女、1993-02-15、052、2011-09-01、南京、软件工程、邮编 NULL）。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "输入若干记录，部分记录和Student表中的相同。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q15-intersection",
+      "title": "查询两表中都有的学生记录",
+      "requirement": "查询两表中都有的学生记录。比较全部字段，重复记录只返回一次。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "a．查询同时出现在Student表和student_other表中的记录。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q15-union",
+      "title": "查询两张学生表的全部记录",
+      "requirement": "查询两张学生表的全部记录。比较全部字段，重复记录只返回一次。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "b．查询Student表和student_other表中的全部记录。",
+      "gradingRevision": "split"
     },
     {
       "id": "q16",
-      "title": "跨库复制与查询",
-      "requirement": "用 CTE 将软件工程学生的 Sno、Sname 提取为独立关系，再输出该关系与 006 选课集合的交集。输出 Sno、Sname 两列。",
-      "hint": "CTE 可为子查询命名，外层按学号与 006 选课集合匹配。",
+      "title": "创建 student_info_other 数据库",
+      "requirement": "创建名为 student_info_other 的数据库。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "2．多个数据库间的多表查询\n创建一个数据库student_info_other。\n（1）当前数据库为Student_info，将student_info数据库中的表student_other复制到student_info_other中。\n（2）查询同时出现在Student表和student_info_other数据库student_other表中的记录。"
+      "originalText": "创建一个数据库student_info_other。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q16-copy",
+      "title": "跨库复制 student_other",
+      "requirement": "当前数据库为 Student_info。将 student_other 的全部列和记录复制到 student_info_other 的同名表。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（1）当前数据库为Student_info，将student_info数据库中的表student_other复制到student_info_other中。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q16-intersection",
+      "title": "查询跨库重复学生记录",
+      "requirement": "查询当前库 Student 和 student_info_other.student_other 都有的完整学生记录。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（2）查询同时出现在Student表和student_info_other数据库student_other表中的记录。",
+      "gradingRevision": "split"
     },
     {
       "id": "q17",
-      "title": "保留未匹配记录",
-      "requirement": "第一组输出所有课程的 Cno、Cname 及匹配的 Sno、Grade，保留无人选修的课程。第二组输出 Sno、Sname、Cno、Cname、Grade，同时保留未选课学生和无人选修课程。",
-      "hint": "第二组可在学生左连接结果上使用 UNION ALL 补入无人选修课程。",
+      "title": "保留无人选修的课程",
+      "requirement": "查询所有课程信息和匹配的选课记录，保留无人选修的课程。输出课程表四列，另加选课的 Sno、Grade。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "3．外连接查询\n（1）查询所有课程信息及其选课信息，包含未被学生选修的课程。\n（2）查询所有学生信息，所有课程信息及其选课信息，包含未选修课程的学生及未被学生选修的课程。"
+      "originalText": "（1）查询所有课程信息及其选课信息，包含未被学生选修的课程。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q17-all",
+      "title": "同时保留未选课学生和无人选修课程",
+      "requirement": "输出学生表全部字段、课程表全部字段和成绩，保留未选课学生和无人选修的课程。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（2）查询所有学生信息，所有课程信息及其选课信息，包含未选修课程的学生及未被学生选修的课程。",
+      "gradingRevision": "split"
     },
     {
       "id": "q18",

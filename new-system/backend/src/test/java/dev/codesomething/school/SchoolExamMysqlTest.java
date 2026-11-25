@@ -139,7 +139,7 @@ class SchoolExamMysqlTest {
             assertNotNull(syntaxErr.error());
             assertEquals(2, syntaxErr.error().line());
             assertTrue(syntaxErr.error().raw().contains("at line 2:"), syntaxErr.error().raw());
-            assertTrue(syntaxErr.error().advice().contains("DELIMITER"), syntaxErr.error().advice());
+            assertTrue(syntaxErr.error().advice().contains("SQL 语法错误"), syntaxErr.error().advice());
             assertTrue(syntaxErr.checks().stream().allMatch(check -> Integer.valueOf(2).equals(check.errorLine()) && check.advice() != null));
             var unknownColErr = runner.grade(course.id(), query, "SELECT Sno FROM sc;\nSELECT UnknownColumn FROM sc;");
             assertEquals(0, unknownColErr.score());

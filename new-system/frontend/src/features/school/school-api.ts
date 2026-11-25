@@ -3,7 +3,7 @@ import {apiFetch} from '../../api/auth-api';
 export type LabProgress = {id: string; title: string; questions: number; executed: number; totalQuestions: number};
 export type SchoolCourse = {id: string; title: string; school: string; major: string; summary: string; engine: 'mysql' | 'manual'};
 export type CourseGroup = {term: string; title: string; courses: {course: SchoolCourse; labs: LabProgress[]; examCount?: number}[]};
-export type Question = {id: string; title: string; requirement: string; hint: string; optional: boolean; starterSql: string; originalText?: string | null};
+export type Question = {id: string; title: string; requirement: string; hint: string; optional: boolean; starterSql: string; originalText?: string | null; gradingRevision?: string | null };
 export type SourceTable = {title: string; columns: string[]; rows: string[][]};
 export type SchemaColumn = {name: string; type: string; primaryKey: boolean; nullable: boolean; defaultValue: string | null; extra: string};
 export type SchoolSchema = {

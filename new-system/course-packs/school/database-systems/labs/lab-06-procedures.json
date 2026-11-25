@@ -6,29 +6,32 @@
     {
       "id": "q01",
       "title": "无参过程 stu_pr",
-      "requirement": "创建无参过程 stu_pr()，返回 051 班学生的 Sno、Sname、Cno、Grade，保留未选课学生。",
+      "requirement": "创建无参过程 stu_pr()，返回 051 班学生的全部基本资料及选课课号、成绩。保留未选课的学生。",
       "hint": "用 LEFT JOIN 保留未匹配学生。",
       "optional": false,
       "starterSql": "",
-      "originalText": "（1）创建一个名为stu_pr的存储过程，该存储过程能查询出051班学生的所有资料，包括学生的基本信息、学生的选课信息（含未选课同学的信息）。"
+      "originalText": "（1）创建一个名为stu_pr的存储过程，该存储过程能查询出051班学生的所有资料，包括学生的基本信息、学生的选课信息（含未选课同学的信息）。",
+      "gradingRevision": "split"
     },
     {
       "id": "q02",
       "title": "按系汇总平均成绩",
-      "requirement": "创建无参过程 dept_course_avg()，返回有选课记录的各系在 005、006、007 三门课的系别、课程名、平均分（两位小数）。",
+      "requirement": "创建无参过程 dept_course_avg()。每个系一行，按原实验格式依次返回 sdept、数据结构、数据库原理和操作系统三列平均分，结果保留两位小数。",
       "hint": "关联三表后，以院系和课程分组。",
       "optional": false,
       "starterSql": "",
-      "originalText": "（2）创建存储过程，查询各系“数据结构”、“数据库原理”、“操作系统”的平均分，参考格式如下："
+      "originalText": "（2）创建存储过程，查询各系“数据结构”、“数据库原理”、“操作系统”的平均分，参考格式如下：",
+      "gradingRevision": "split"
     },
     {
       "id": "q03",
       "title": "带输入参数 stu_proc1",
-      "requirement": "创建 stu_proc1(IN p_dept VARCHAR(20), IN p_name VARCHAR(20))。按 LIKE 模式筛选已有选课的学生，NULL 分别用 % 与 林% 替代。输出 Sno、Sname、截至 2026-11-24 的周岁、Cname、Grade。",
+      "requirement": "创建 stu_proc1(IN p_dept VARCHAR(20), IN p_name VARCHAR(20))。按 LIKE 模式筛选已有选课的学生，NULL 分别用 % 与 林% 替代。输出 Sno、Sname、按当前系统日期计算的周岁、Cname、Grade。",
       "hint": "MySQL 可在过程内部用 COALESCE 为 NULL 输入补默认筛选词。",
       "optional": false,
       "starterSql": "",
-      "originalText": "（1）创建一个名为stu_proc1的存储过程，查询某系、某姓名的学生的学号、姓名、年龄、选修课程名、成绩。系名和姓名在调用该存储过程时输入，其默认值分别为“%”       与“林%”。执行该存储过程，用多种参数加以测试。"
+      "originalText": "（1）创建一个名为stu_proc1的存储过程，查询某系、某姓名的学生的学号、姓名、年龄、选修课程名、成绩。系名和姓名在调用该存储过程时输入，其默认值分别为“%”       与“林%”。执行该存储过程，用多种参数加以测试。",
+      "gradingRevision": "split"
     },
     {
       "id": "q04",
@@ -50,21 +53,103 @@
     },
     {
       "id": "q06",
-      "title": "输出均分与条件提示",
+      "title": "创建输出均分的过程 course_average",
       "requirement": "创建 course_average(IN p_cno CHAR(3), OUT p_avg DECIMAL(6,2))。返回课程有效成绩的均值，无有效成绩则写入 NULL。",
-      "hint": "AVG 忽略 NULL。将聚合结果用 SELECT ... INTO 写入 OUT 参数。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "3．创建带输出参数的存储过程\n（1）创建一个名为course_average的存储过程，可查询某门课程考试的平均成绩。总成绩可以输出，以便进一步调用。\n（2）创建一执行该存储过程的批处理，要求当平均成绩小于60时，显示信息为：“XX课程的平均成绩为：XX，其平均分未达60分”。超过60时，显示信息为：“XX课程的平均成绩为：XX”。"
+      "originalText": "（1）创建一个名为course_average的存储过程，可查询某门课程考试的平均成绩。总成绩可以输出，以便进一步调用。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q06-report",
+      "title": "调用均分过程并输出条件提示",
+      "requirement": "创建 course_average_report(IN p_cno CHAR(3)) 作为可调用批处理。调用已预置的 course_average；用课程名替换 XX，平均分低于 60 时附加原题提示，等于或高于 60 时只显示均分，无成绩显示“无成绩”。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（2）创建一执行该存储过程的批处理，要求当平均成绩小于60时，显示信息为：“XX课程的平均成绩为：XX，其平均分未达60分”。超过60时，显示信息为：“XX课程的平均成绩为：XX”。",
+      "gradingRevision": "split"
     },
     {
       "id": "q07",
-      "title": "查询与维护过程",
-      "requirement": "删除预置 stu_pr，再建立同名无参过程。新过程返回 051 班女生的 Sno、Sname。",
-      "hint": "先 DROP PROCEDURE，再用相同名称写新定义。",
+      "title": "查看 student_sc 的创建脚本",
+      "requirement": "查看 student_sc 的创建脚本。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "4．使用SQL语句管理和维护存储过程\n（1）使用SHOW CREATE  PROCEDURE查看存储过程student_sc的定义脚本。语句格式如下：\nSHOW CREATE  PROCEDURE  [ like  <存储过程名匹配表达式>];\n（2）存储过程的定义记录在information_schema数据库的Routines表中，使用select语句查看student_sc存储过程的相关信息。\n（3）使用SHOW PROCEDURE STATUS语句查看存储过程的信息，语句格式如下：\nSHOW PROCEDURE STATUS  [ like  <存储过程名匹配表达式>];\n（4）删除存储过程stu_pr。\n6．使用MySQL Workbench管理存储过程\n（1）在MySQL Workbench  中重新创建刚删除的存储过程stu_pr。\n（2）查看存储过程stu_pr，并将该过程修改为查询051班女生的所有资料。\n（3）删除存储过程stu_pr。"
+      "originalText": "（1）使用SHOW CREATE  PROCEDURE查看存储过程student_sc的定义脚本。语句格式如下：",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q07-routines",
+      "title": "查询 student_sc 的元数据",
+      "requirement": "查询 student_sc 的元数据。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（2）存储过程的定义记录在information_schema数据库的Routines表中，使用select语句查看student_sc存储过程的相关信息。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q07-status",
+      "title": "查看 student_sc 的过程状态",
+      "requirement": "查看 student_sc 的过程状态。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（3）使用SHOW PROCEDURE STATUS语句查看存储过程的信息，语句格式如下：",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q07-drop",
+      "title": "删除 stu_pr",
+      "requirement": "删除已预置的 stu_pr。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（4）删除存储过程stu_pr。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q07-recreate",
+      "title": "重新创建 stu_pr",
+      "requirement": "重新建立无参过程 stu_pr，查询 051 班学生的基本资料与选课情况，保留未选课学生。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（1）在MySQL Workbench  中重新创建刚删除的存储过程stu_pr。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q07-inspect",
+      "title": "查看重新创建的 stu_pr",
+      "requirement": "查看 stu_pr 的定义脚本。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（2）查看存储过程stu_pr。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q07-female",
+      "title": "修改 stu_pr 查询 051 班女生",
+      "requirement": "MySQL 修改过程体需要重建过程。沙箱已移除旧过程，提交新定义，返回 051 班女生的全部基本资料和选课信息，保留未选课女生。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（2）查看存储过程stu_pr，并将该过程修改为查询051班女生的所有资料。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q07-drop-female",
+      "title": "删除修改后的 stu_pr",
+      "requirement": "删除已预置的女生查询过程 stu_pr。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（3）删除存储过程stu_pr。",
+      "gradingRevision": "split"
     },
     {
       "id": "q08",

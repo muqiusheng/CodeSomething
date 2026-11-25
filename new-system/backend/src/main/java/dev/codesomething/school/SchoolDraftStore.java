@@ -33,12 +33,41 @@ class SchoolDraftStore {
             .stream().findFirst().orElse(new Draft(0, Map.of(), Map.of()));
     }
 
-    Draft save(String course, String lab, long revision, Map<String, String> sql, Map<String, Execution> executions) {
+    Draft read(String course, SchoolCourseCatalog.Lab lab) {
+        return visible(read(course, lab.id()), lab);
+    }
+
+    static Draft visible(Draft draft, SchoolCourseCatalog.Lab lab) {
+        var scripts = new LinkedHashMap<String, String>();
+        var executions = new LinkedHashMap<String, Execution>();
+        for (var question : lab.questions()) {
+            String id = question.id();
+            if (draft.drafts().containsKey(id)) scripts.put(id, draft.drafts().get(id));
+            var execution = draft.executions().get(id);
+            if (execution != null && (execution.grade() == null
+                || question.gradingRevision() == null || execution.grade().question().id().equals(question.gradingId(lab.id()))))
+                executions.put(id, execution);
+        }
+        return new Draft(draft.revision(), scripts, executions);
+    }
+
+    Draft save(String course, SchoolCourseCatalog.Lab definition, long revision, Map<String, String> sql,
+               Map<String, Execution> executions) {
+        String lab = definition.id();
+        var previous = read(course, lab);
+        if (previous.revision() != revision) throw conflict();
+        var currentSql = new LinkedHashMap<>(sql);
         var currentResults = new LinkedHashMap<String, Execution>();
-        executions.forEach((id, execution) -> {
-            if (Objects.equals(sql.get(id), execution.sql())) currentResults.put(id, execution);
+        var active = definition.questions().stream().map(SchoolCourseCatalog.Question::id).collect(java.util.stream.Collectors.toSet());
+        previous.drafts().forEach((id, script) -> {
+            if (!active.contains(id)) currentSql.put(id, script);
         });
-        var draft = new Draft(revision + 1, sql, currentResults);
+        var retained = new LinkedHashMap<>(previous.executions());
+        retained.putAll(executions);
+        retained.forEach((id, execution) -> {
+            if (Objects.equals(currentSql.get(id), execution.sql())) currentResults.put(id, execution);
+        });
+        var draft = new Draft(revision + 1, currentSql, currentResults);
         var payload = json.writeValueAsString(draft);
         int changed = revision == 0
             ? jdbc.update("INSERT INTO school_lab_drafts(course_id,lab_id,revision,payload) VALUES(?,?,?,?) ON CONFLICT DO NOTHING",
@@ -46,7 +75,7 @@ class SchoolDraftStore {
             : jdbc.update("UPDATE school_lab_drafts SET revision=?,payload=? WHERE course_id=? AND lab_id=? AND revision=?",
                 draft.revision(), payload, course, lab, revision);
         if (changed != 1) throw conflict();
-        return draft;
+        return visible(draft, definition);
     }
 
     static ApiException conflict() {

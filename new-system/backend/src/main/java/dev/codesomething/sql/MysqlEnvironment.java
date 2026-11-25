@@ -9,6 +9,7 @@ import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.BooleanSupplier;
+import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -439,10 +440,33 @@ public class MysqlEnvironment {
     public record ExamOutput(String transcript, List<String> errors) {}
     private static final java.util.regex.Pattern EXAM_ERROR = java.util.regex.Pattern.compile("(?m)^ERROR [0-9]+[^\r\n]*");
 
+    // Aliases are opt-in for the lab fixtures that exercise schema creation and cross-schema SQL.
+    private static final Pattern LAB_SCHEMA_TOKEN = Pattern.compile(
+        "(?is)'(?:[^'\\\\]|\\\\.|'')*'|\"(?:[^\"\\\\]|\\\\.|\"\")*\"|/\\*.*?\\*/|--[ \\t][^\\r\\n]*|#[^\\r\\n]*"
+        + "|`(?:student_info_other|student_inf_xxxxxxxx|student_info)`|\\b(?:student_info_other|student_inf_xxxxxxxx|student_info)\\b");
+
     public final class ExamSession {
         private final String name;
+        private final boolean labSchemas;
         private boolean interrupted;
-        private ExamSession(String name) { this.name = name; }
+
+        private ExamSession(String name, boolean labSchemas) {
+            this.name = name;
+            this.labSchemas = labSchemas;
+        }
+
+        private String resolveLabSchemas(String sql) {
+            if (!labSchemas) return sql;
+            return LAB_SCHEMA_TOKEN.matcher(sql).replaceAll(match -> switch (match.group().replace("`", "").toLowerCase(Locale.ROOT)) {
+                case "student_info" -> name;
+                case "student_info_other", "student_inf_xxxxxxxx" -> name + "_practice";
+                default -> java.util.regex.Matcher.quoteReplacement(match.group());
+            });
+        }
+
+        private String normalizeSandboxNames(String text) {
+            return text.replace(name + "_practice", "lab_secondary").replace(name, "lab_sandbox");
+        }
 
         public ExamOutput query(String sql, boolean force, boolean columnMetadata, boolean verbose) {
             var arguments = new ArrayList<>(List.of("exec", "-i", "--user=mysql", ownedContainerId, "mysql",
@@ -455,7 +479,7 @@ public class MysqlEnvironment {
             if (force) arguments.add("--force");
             ProcessResult result;
             try {
-                result = command(sql, 6, () -> false, true, arguments.toArray(String[]::new));
+                result = command(resolveLabSchemas(sql), 6, () -> false, true, arguments.toArray(String[]::new));
             } catch (Failure e) {
                 interrupted = Set.of("timeout", "output_limit", "cancelled").contains(e.status);
                 throw e;
@@ -464,7 +488,7 @@ public class MysqlEnvironment {
             if (errors.stream().anyMatch(error -> error.matches("ERROR (1045|2002|2003|2006|2013).*"))
                     || result.code() != 0 && errors.isEmpty())
                 throw new Failure("environment_error", "隔离 MySQL 不可用。");
-            return new ExamOutput(result.output(), errors);
+            return new ExamOutput(normalizeSandboxNames(result.output()), errors.stream().map(this::normalizeSandboxNames).toList());
         }
     }
 
@@ -491,17 +515,19 @@ public class MysqlEnvironment {
         var setup = new StringBuilder();
         for (String seed : seeds) {
             String name = "cs_exam_" + UUID.randomUUID().toString().replace("-", "").substring(0, 23);
-            sessions.add(new ExamSession(name));
+            boolean labSchemas = seed.contains("-- lab-schema-aliases");
+            var session = new ExamSession(name, labSchemas);
+            sessions.add(session);
             setup.append("CREATE DATABASE ").append(name).append(" CHARACTER SET utf8mb4; CREATE USER '")
                 .append(name).append("'@'localhost';")
                 .append(" GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,DROP,ALTER,INDEX,REFERENCES,CREATE VIEW,SHOW VIEW,")
                 .append("CREATE ROUTINE,ALTER ROUTINE,EXECUTE,TRIGGER,CREATE TEMPORARY TABLES ON `")
                 .append(name.replace("_", "\\_")).append("`.* TO '").append(name).append("'@'localhost';")
-                .append(" GRANT CREATE ON `").append((name + "_practice").replace("_", "\\_"))
+                .append(labSchemas ? " GRANT SELECT,INSERT,CREATE ON `" : " GRANT CREATE ON `").append((name + "_practice").replace("_", "\\_"))
                 .append("`.* TO '").append(name).append("'@'localhost'; USE ")
                 .append(name).append(";\n")
                 // Trusted fixtures can give the temporary learner ownership of a precreated routine or view.
-                .append(seed.replace("{{sandboxUser}}", "'" + name + "'@'localhost'"))
+                .append(session.resolveLabSchemas(seed).replace("{{sandboxUser}}", "'" + name + "'@'localhost'"))
                 .append("\nDELIMITER ;\n;\n");
         }
         Throwable failure = null;

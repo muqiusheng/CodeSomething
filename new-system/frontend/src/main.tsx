@@ -15,7 +15,7 @@ import React, {useState, useEffect} from 'react';
 import {receiveIdeHandoff} from './api/ide-handoff';
 import {learningRequest} from './api/learning-api';
 import {createRoot} from 'react-dom/client';
-import {BrowserRouter, Routes, Route, NavLink, Link, useLocation, useSearchParams} from 'react-router-dom';
+import {createBrowserRouter, createRoutesFromElements, Outlet, RouterProvider, Routes, Route, NavLink, Link, useLocation, useSearchParams} from 'react-router-dom';
 import {ArrowRight, ArrowUpRight, BookOpen, Check, ChevronRight, Circle, Clock3, Compass, Copy, ExternalLink, FileCode2, Folder, GraduationCap, Home, Layers3, Menu, RotateCcw, Settings, ShieldCheck, Terminal, Trophy, UserRound, X,PanelLeftClose,PanelLeftOpen} from 'lucide-react';
 import {SchoolHome} from './features/school/SchoolHome';
 const SchoolLabWorkspace = React.lazy(() => import('./features/school/SchoolLabWorkspace').then(m => ({default: m.SchoolLabWorkspace})));
@@ -131,15 +131,16 @@ if(window.location.hash.startsWith('#ide-handoff=')){
  try{if(currentAccess().config?.enabled!==false)throw new Error('IDE交接仅适用于本机服务');await receiveIdeHandoff(window.location,window.history,window.sessionStorage,learningRequest)}
  catch{window.history.replaceState(null,'',window.location.pathname+'?tab='+encodeURIComponent('任务')+'&ide-handoff-error=1')}
 }
-createRoot(document.getElementById('root')!).render(<React.StrictMode><BrowserRouter><AuthProvider>
-  <Routes>
+const router = createBrowserRouter(createRoutesFromElements(
+  <Route element={<AuthProvider><Outlet/></AuthProvider>}>
     <Route path="/login" element={<AccountPage key="login" mode="login"/>}/>
     <Route path="/register" element={<AccountPage key="register" mode="register"/>}/>
     <Route path="/change-password" element={<AccountPage key="password" mode="password"/>}/>
     <Route path="/admin/*" element={<RequireAuth admin><React.Suspense fallback={<PageSkeleton variant="table" className="admin-route-loading" label="正在加载控制台…"/>}><AdminLayout/></React.Suspense></RequireAuth>}/>
     <Route path="*" element={<RequireAuth><App/></RequireAuth>}/>
-  </Routes>
-</AuthProvider></BrowserRouter></React.StrictMode>);
+  </Route>
+));
+createRoot(document.getElementById('root')!).render(<React.StrictMode><RouterProvider router={router}/></React.StrictMode>);
 
 
 

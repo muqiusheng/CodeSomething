@@ -1,7 +1,7 @@
 [
   {
     "id": "q01",
-    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE stu_pr()\nBEGIN\nSELECT s.Sno,s.Sname,x.Cno,x.Grade FROM student s LEFT JOIN sc x USING(Sno) WHERE s.Classno='051';\nEND$$\nDELIMITER ;",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE stu_pr()\nBEGIN\n  SELECT s.*,x.Cno,x.Grade FROM student s LEFT JOIN sc x USING(Sno) WHERE s.Classno='051';\nEND$$\nDELIMITER ;",
     "checks": [
       {
         "kind": "execution",
@@ -25,11 +25,12 @@
         "orderMatters": false,
         "sql": "CALL stu_pr();"
       }
-    ]
+    ],
+    "explanation": "从 051 班学生出发，用 LEFT JOIN 连接 SC。没有选课的学生仍有一行，课号和成绩为空。"
   },
   {
     "id": "q02",
-    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE dept_course_avg()\nBEGIN\nSELECT s.Sdept,c.Cname,ROUND(AVG(x.Grade),2) FROM student s JOIN sc x USING(Sno) JOIN course c USING(Cno) WHERE c.Cno IN('005','006','007') GROUP BY s.Sdept,c.Cname;\nEND$$\nDELIMITER ;",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE dept_course_avg()\nBEGIN\n  SELECT s.Sdept AS sdept,\n    ROUND(AVG(CASE WHEN c.Cname='数据结构' THEN x.Grade END),2) AS `数据结构`,\n    ROUND(AVG(CASE WHEN c.Cname='数据库原理' THEN x.Grade END),2) AS `数据库原理`,\n    ROUND(AVG(CASE WHEN c.Cname='操作系统' THEN x.Grade END),2) AS `操作系统`\n  FROM student s JOIN sc x USING(Sno) JOIN course c USING(Cno)\n  WHERE c.Cname IN ('数据结构','数据库原理','操作系统')\n  GROUP BY s.Sdept;\nEND$$\nDELIMITER ;",
     "checks": [
       {
         "kind": "execution",
@@ -40,7 +41,7 @@
         "kind": "post_query",
         "label": "基础结果与对象状态",
         "points": 5,
-        "checkColumnNames": false,
+        "checkColumnNames": true,
         "orderMatters": false,
         "sql": "CALL dept_course_avg();"
       },
@@ -49,15 +50,16 @@
         "label": "变式数据",
         "points": 3,
         "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
-        "checkColumnNames": false,
+        "checkColumnNames": true,
         "orderMatters": false,
         "sql": "CALL dept_course_avg();"
       }
-    ]
+    ],
+    "explanation": "按系分组。每个 AVG 用 CASE 只接收该课程的成绩，其他课程返回 NULL，因而可在一行显示三门课程的平均分。"
   },
   {
     "id": "q03",
-    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE stu_proc1(IN p_dept VARCHAR(20), IN p_name VARCHAR(20))\nBEGIN\nSELECT s.Sno,s.Sname,TIMESTAMPDIFF(YEAR,s.Birth,'2026-11-24'),c.Cname,x.Grade FROM student s JOIN sc x USING(Sno) JOIN course c USING(Cno) WHERE s.Sdept LIKE COALESCE(p_dept,'%') AND s.Sname LIKE COALESCE(p_name,'林%');\nEND$$\nDELIMITER ;",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE stu_proc1(IN p_dept VARCHAR(20), IN p_name VARCHAR(20))\nBEGIN\nSELECT s.Sno,s.Sname,TIMESTAMPDIFF(YEAR,s.Birth,CURDATE()),c.Cname,x.Grade FROM student s JOIN sc x USING(Sno) JOIN course c USING(Cno) WHERE s.Sdept LIKE COALESCE(p_dept,'%') AND s.Sname LIKE COALESCE(p_name,'林%');\nEND$$\nDELIMITER ;",
     "checks": [
       {
         "kind": "execution",
@@ -81,7 +83,8 @@
         "orderMatters": false,
         "sql": "CALL stu_proc1(NULL,NULL); CALL stu_proc1('软件%','张%');"
       }
-    ]
+    ],
+    "explanation": "用 LIKE 接收传入的系别和姓名模式，通过 COALESCE 为 NULL 参数提供默认模式。用 TIMESTAMPDIFF 根据当前日期计算实岁。"
   },
   {
     "id": "q04",
@@ -109,7 +112,8 @@
         "orderMatters": false,
         "sql": "CALL student_sc('20110001','20110005'); CALL student_sc('20119990','20119990');"
       }
-    ]
+    ],
+    "explanation": "用区间条件后汇总，写出边界测试。"
   },
   {
     "id": "q05",
@@ -137,7 +141,8 @@
         "orderMatters": false,
         "sql": "CALL update_sc('20110001','001',86); CALL update_sc('20110002','002',NULL); SELECT * FROM sc ORDER BY Sno,Cno;"
       }
-    ]
+    ],
+    "explanation": "补充新成绩输入，用两个编号联合定位。"
   },
   {
     "id": "q06",
@@ -165,36 +170,248 @@
         "orderMatters": false,
         "sql": "CALL course_average('002',@average); SELECT @average; CALL course_average('999',@average); SELECT @average;"
       }
-    ]
+    ],
+    "explanation": "过程或触发器内部可包含多条以分号结束的语句。临时更换客户端分隔符，便可把整个对象定义当作一条语句执行。"
   },
   {
-    "id": "q07",
-    "referenceSql": "DROP PROCEDURE stu_pr;\nDELIMITER $$\nCREATE PROCEDURE stu_pr()\nBEGIN\nSELECT Sno,Sname FROM student WHERE Classno='051' AND Sex='女';\nEND$$\nDELIMITER ;",
+    "id": "q06-report",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE course_average_report(IN p_cno CHAR(3))\nBEGIN\n  CALL course_average(p_cno,@average);\n  SELECT CONCAT(Cname,'课程的平均成绩为：',COALESCE(@average,'无成绩'),\n                IF(@average<60,'，其平均分未达60分','')) AS message\n  FROM course WHERE Cno=p_cno;\nEND$$\nDELIMITER ;",
     "checks": [
       {
         "kind": "execution",
-        "label": "SQL 脚本完整执行",
+        "label": "SQL 执行成功",
         "points": 2
       },
       {
-        "kind": "post_query",
-        "label": "基础结果与对象状态",
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
         "points": 5,
-        "checkColumnNames": false,
+        "sql": "CALL course_average_report('002'); CALL course_average_report('004');"
+      },
+      {
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
+        "points": 3,
+        "sql": "CALL course_average_report('002'); CALL course_average_report('004');",
+        "variantSql": "UPDATE sc SET Grade=55 WHERE Cno='002';"
+      }
+    ],
+    "setupSql": "DELIMITER $$\nCREATE PROCEDURE course_average(IN p_cno CHAR(3), OUT p_avg DECIMAL(6,2))\nBEGIN\nSELECT AVG(Grade) INTO p_avg FROM sc WHERE Cno=p_cno;\nEND$$\nDELIMITER ;",
+    "explanation": "过程或触发器内部可包含多条以分号结束的语句。临时更换客户端分隔符，便可把整个对象定义当作一条语句执行。"
+  },
+  {
+    "id": "q07",
+    "referenceSql": "SHOW CREATE PROCEDURE student_sc;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "查询结果",
+        "points": 5,
         "orderMatters": false,
+        "checkColumnNames": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式查询结果",
+        "points": 3,
+        "orderMatters": false,
+        "checkColumnNames": false,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "DELIMITER $$\nCREATE DEFINER={{sandboxUser}} PROCEDURE student_sc(IN p_start CHAR(8), IN p_end CHAR(8))\nBEGIN\nSELECT s.Sno,s.Sname,SUM(x.Grade) FROM student s LEFT JOIN sc x USING(Sno) WHERE s.Sno BETWEEN p_start AND p_end GROUP BY s.Sno,s.Sname;\nEND$$\nDELIMITER ;",
+    "explanation": "SHOW CREATE PROCEDURE 需直接接存储过程名。输出中的 Create Procedure 列可用于核对参数和过程体。"
+  },
+  {
+    "id": "q07-routines",
+    "referenceSql": "SELECT ROUTINE_NAME,ROUTINE_TYPE,ROUTINE_DEFINITION FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA=DATABASE() AND ROUTINE_NAME='student_sc';",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "查询结果",
+        "points": 5,
+        "orderMatters": false,
+        "checkColumnNames": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式查询结果",
+        "points": 3,
+        "orderMatters": false,
+        "checkColumnNames": false,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "DELIMITER $$\nCREATE DEFINER={{sandboxUser}} PROCEDURE student_sc(IN p_start CHAR(8), IN p_end CHAR(8))\nBEGIN\nSELECT s.Sno,s.Sname,SUM(x.Grade) FROM student s LEFT JOIN sc x USING(Sno) WHERE s.Sno BETWEEN p_start AND p_end GROUP BY s.Sno,s.Sname;\nEND$$\nDELIMITER ;",
+    "explanation": "用 information_schema 读取对象定义。先限制到当前库，再按题目要求筛选对象名与返回字段。"
+  },
+  {
+    "id": "q07-status",
+    "referenceSql": "SHOW PROCEDURE STATUS WHERE Name='student_sc';",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "查询结果",
+        "points": 5,
+        "orderMatters": false,
+        "checkColumnNames": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式查询结果",
+        "points": 3,
+        "orderMatters": false,
+        "checkColumnNames": false,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "DELIMITER $$\nCREATE DEFINER={{sandboxUser}} PROCEDURE student_sc(IN p_start CHAR(8), IN p_end CHAR(8))\nBEGIN\nSELECT s.Sno,s.Sname,SUM(x.Grade) FROM student s LEFT JOIN sc x USING(Sno) WHERE s.Sno BETWEEN p_start AND p_end GROUP BY s.Sno,s.Sname;\nEND$$\nDELIMITER ;",
+    "explanation": "SHOW PROCEDURE STATUS 返回过程属性，用 Name 筛出目标过程。重点查看过程名、数据库和安全类型。"
+  },
+  {
+    "id": "q07-drop",
+    "referenceSql": "DROP PROCEDURE stu_pr;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
+        "points": 5,
+        "sql": "SELECT ROUTINE_NAME FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA=DATABASE() AND ROUTINE_TYPE='PROCEDURE';"
+      },
+      {
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
+        "points": 3,
+        "sql": "SELECT ROUTINE_NAME FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA=DATABASE() AND ROUTINE_TYPE='PROCEDURE';",
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "DELIMITER $$\nCREATE DEFINER={{sandboxUser}} PROCEDURE stu_pr()\nBEGIN\nSELECT s.*,x.Cno,x.Grade FROM student s LEFT JOIN sc x USING(Sno) WHERE s.Classno='051';\nEND$$\nDELIMITER ;",
+    "explanation": "用 DROP PROCEDURE 删除指定过程，可通过例程元数据确认目标过程已消失。"
+  },
+  {
+    "id": "q07-recreate",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE stu_pr()\nBEGIN\nSELECT s.*,x.Cno,x.Grade FROM student s LEFT JOIN sc x USING(Sno) WHERE s.Classno='051';\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
+        "points": 5,
         "sql": "CALL stu_pr();"
       },
       {
-        "kind": "post_query",
-        "label": "变式数据",
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
         "points": 3,
-        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程');INSERT INTO course VALUES('913','数据库设计',48,3);INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);",
-        "checkColumnNames": false,
-        "orderMatters": false,
-        "sql": "CALL stu_pr();"
+        "sql": "CALL stu_pr();",
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
       }
     ],
-    "setupSql": "DELIMITER $$\nCREATE DEFINER={{sandboxUser}} PROCEDURE stu_pr()\nBEGIN\nSELECT Sno,Sname FROM student WHERE Classno='051';\nEND$$\nDELIMITER ;\n"
+    "explanation": "过程或触发器内部可包含多条以分号结束的语句。临时更换客户端分隔符，便可把整个对象定义当作一条语句执行。"
+  },
+  {
+    "id": "q07-inspect",
+    "referenceSql": "SHOW CREATE PROCEDURE stu_pr;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "result_set",
+        "label": "查询结果",
+        "points": 5,
+        "orderMatters": false,
+        "checkColumnNames": false
+      },
+      {
+        "kind": "result_set",
+        "label": "变式查询结果",
+        "points": 3,
+        "orderMatters": false,
+        "checkColumnNames": false,
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "DELIMITER $$\nCREATE DEFINER={{sandboxUser}} PROCEDURE stu_pr()\nBEGIN\nSELECT s.*,x.Cno,x.Grade FROM student s LEFT JOIN sc x USING(Sno) WHERE s.Classno='051';\nEND$$\nDELIMITER ;",
+    "explanation": "SHOW CREATE PROCEDURE 需直接接存储过程名。输出中的 Create Procedure 列可用于核对参数和过程体。"
+  },
+  {
+    "id": "q07-female",
+    "referenceSql": "DELIMITER $$\nCREATE PROCEDURE stu_pr()\nBEGIN\nSELECT s.*,x.Cno,x.Grade FROM student s LEFT JOIN sc x USING(Sno) WHERE s.Classno='051' AND s.Sex='女';\nEND$$\nDELIMITER ;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
+        "points": 5,
+        "sql": "CALL stu_pr();"
+      },
+      {
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
+        "points": 3,
+        "sql": "CALL stu_pr();",
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "explanation": "过程或触发器内部可包含多条以分号结束的语句。临时更换客户端分隔符，便可把整个对象定义当作一条语句执行。"
+  },
+  {
+    "id": "q07-drop-female",
+    "referenceSql": "DROP PROCEDURE stu_pr;",
+    "checks": [
+      {
+        "kind": "execution",
+        "label": "SQL 执行成功",
+        "points": 2
+      },
+      {
+        "kind": "state_check",
+        "label": "核对数据或对象状态",
+        "points": 5,
+        "sql": "SELECT ROUTINE_NAME FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA=DATABASE() AND ROUTINE_TYPE='PROCEDURE';"
+      },
+      {
+        "kind": "state_check",
+        "label": "核对变式数据或对象状态",
+        "points": 3,
+        "sql": "SELECT ROUTINE_NAME FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA=DATABASE() AND ROUTINE_TYPE='PROCEDURE';",
+        "variantSql": "INSERT INTO student(Sno,Sname,Sex,Birth,Classno,Entrance_date,Sdept) VALUES('20119990','张红','女','1989-02-01','051','2011-09-01','软件工程'); INSERT INTO course VALUES('913','数据库设计',48,3); INSERT INTO sc VALUES('20119990','001',60),('20119990','002',NULL),('20119990','006',80);"
+      }
+    ],
+    "setupSql": "DELIMITER $$\nCREATE DEFINER={{sandboxUser}} PROCEDURE stu_pr()\nBEGIN\nSELECT s.*,x.Cno,x.Grade FROM student s LEFT JOIN sc x USING(Sno) WHERE s.Classno='051' AND s.Sex='女';\nEND$$\nDELIMITER ;",
+    "explanation": "用 DROP PROCEDURE 删除指定过程，可通过例程元数据确认目标过程已消失。"
   },
   {
     "id": "q08",
@@ -222,7 +439,8 @@
         "orderMatters": false,
         "sql": "CALL practice_absences('002'); CALL practice_absences('001');"
       }
-    ]
+    ],
+    "explanation": "使用 SC.Grade IS NULL。预置 002 有一人缺考，001 没有。"
   },
   {
     "id": "q09",
@@ -250,7 +468,8 @@
         "orderMatters": false,
         "sql": "CALL practice_exam_counts('002',@chosen,@graded); SELECT @chosen,@graded; CALL practice_exam_counts('999',@chosen,@graded); SELECT @chosen,@graded;"
       }
-    ]
+    ],
+    "explanation": "COUNT(*) 和 COUNT(Grade) 的差值是该课程的缺考人数。"
   },
   {
     "id": "q10",
@@ -278,7 +497,8 @@
         "orderMatters": false,
         "sql": "SET @n=10; CALL practice_add_credit('001',@n); SELECT @n; CALL practice_add_credit('999',@n); SELECT @n;"
       }
-    ]
+    ],
+    "explanation": "先初始化会话变量。正常调用后增加课程学分，找不到课程时保留原值。"
   },
   {
     "id": "q11",
@@ -306,7 +526,8 @@
         "orderMatters": false,
         "sql": "CALL practice_grade_status(NULL); CALL practice_grade_status(-1); CALL practice_grade_status(59); CALL practice_grade_status(60); CALL practice_grade_status(100); CALL practice_grade_status(101);"
       }
-    ]
+    ],
+    "explanation": "可使用 IF、ELSEIF 或 CASE。先处理缺考与非法值，再检查 60 的边界。"
   },
   {
     "id": "q12",
@@ -334,6 +555,7 @@
         "orderMatters": false,
         "sql": "CALL practice_grade_band('002',60,90); CALL practice_grade_band('006',88,88); CALL practice_grade_band('002',90,60);"
       }
-    ]
+    ],
+    "explanation": "BETWEEN 包含两端。用过程分支处理非法范围，避免把参数错误误认为没有匹配数据。"
   }
 ]

@@ -186,6 +186,8 @@ class ExamSqlRunner {
         if (indices.isEmpty()) throw ApiException.invalid("sql", "请输入至少一条 SQL 语句。");
         var steps = source.run(session, false);
         var run = source.report(steps, indices, 0);
+        if (checks.stream().allMatch(check -> check.kind().equals("expected_error")))
+            return observeExpectedError(script, run, checks);
         if (!run.status().equals("ok")) return new Observation(run, List.of());
         var probes = new ExamSqlBatch();
         var plan = new ArrayList<Probe>();
@@ -237,7 +239,7 @@ class ExamSqlRunner {
             var probe = plan.get(i);
             evidence.add(switch (check.kind()) {
                 case "execution" -> new Evidence(run, List.of(), true);
-                case "result_set" -> new Evidence(run, tables(run), !tables(run).isEmpty());
+                case "result_set" -> new Evidence(run, resultSetEvidence(run), !tables(run).isEmpty());
                 case "negative_check" -> negative(check, probes, results, probe);
                 default -> evidence(probes.report(results, probe.query(), 0));
             });
@@ -286,6 +288,35 @@ class ExamSqlRunner {
             new ExamSqlScript.Diagnostic(0, negative.error() == null ? 0 : negative.error().code(),
                 "预期错误码 " + codes + "。实际：" + reason, "确认非法语句被指定约束拦截，且数据保持不变。"));
         return new Evidence(report, after.tables(), pass);
+    }
+
+    private static Observation observeExpectedError(String script, Debug run, List<ExamCatalog.Check> checks) {
+        // This task asks the learner to reproduce one specific, deliberately invalid statement.
+        var statements = ExamSqlScript.split(script);
+        var submitted = statements.size() == 1 ? statements.getFirst().sql() : "";
+        var evidence = checks.stream().map(check -> {
+            boolean accepted = run.error() != null && check.expectedErrorCodes().contains(run.error().code())
+                && Pattern.compile(check.sql(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL).matcher(submitted).matches();
+            var diagnostic = new ExamSqlScript.Diagnostic(0, 0, "未重现题目指定的 SQL 错误。",
+                "运行题目给出的单条语句并核对 MySQL 的报错。");
+            return new Evidence(accepted ? run : new Debug("check_failed", 0, List.of(), diagnostic), List.of(), accepted);
+        }).toList();
+        return new Observation(new Debug("ok", run.elapsedMs(), run.steps(), null), evidence);
+    }
+
+    private static List<SchoolLabRunner.ResultTable> resultSetEvidence(Debug run) {
+        return run.steps().stream().flatMap(step -> {
+            if (!step.summary().matches("(?is)^SHOW (TRIGGERS|CREATE TRIGGER|PROCEDURE STATUS|TABLE STATUS)\\b.*"))
+                return step.tables().stream();
+            // Object metadata can contain timestamps assigned at fixture creation.
+            return step.tables().stream().map(table -> {
+                var indices = java.util.stream.IntStream.range(0, table.columns().size())
+                    .filter(i -> !Set.of("created", "modified", "create_time", "update_time", "check_time")
+                        .contains(table.columns().get(i).toLowerCase(Locale.ROOT))).boxed().toList();
+                return new SchoolLabRunner.ResultTable(indices.stream().map(table.columns()::get).toList(),
+                    table.rows().stream().map(row -> indices.stream().map(row::get).toList()).toList());
+            });
+        }).toList();
     }
 
     private static Evidence evidence(Debug run) { return new Evidence(run, tables(run), run.status().equals("ok")); }
@@ -397,7 +428,7 @@ class ExamSqlRunner {
                 String name = quoteIdentifier(row.getFirst());
                 indices.addAll(batch.add(tablePreview ? "DESCRIBE " + name
                     : "SHOW CREATE " + (row.get(1).equals("VIEW") ? "VIEW " : "TABLE ") + name));
-                indices.addAll(batch.add("SELECT * FROM " + name + (tablePreview ? " LIMIT 3" : " LIMIT 5")));
+                indices.addAll(batch.add("SELECT * FROM " + name + (tablePreview ? " LIMIT 2" : " LIMIT 5")));
             }
         }
         if (indices.isEmpty()) return new Debug("ok", elapsed(start), List.of(), null);

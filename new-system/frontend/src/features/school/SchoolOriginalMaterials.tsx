@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {Check, Copy, Download, FileText} from 'lucide-react';
+import {Check, ChevronRight, Copy, Download, FileText} from 'lucide-react';
 import type {LabDetails, Question} from './school-api';
 import {isConnectionTask, matchSourceTables} from './source-tables.mjs';
 
@@ -143,7 +143,9 @@ export function SchoolOriginalMaterials({
 
   return (
     <details className="school-source" open={!collapsed}>
-      <summary>原题与实验数据 ({tables.length > 0 ? `${tables.length} 张表` : '原文'})</summary>
+      <summary className="school-reference-row"><ChevronRight size={14} aria-hidden="true"/>
+        原题与实验数据 ({tables.length > 0 ? `${tables.length} 张表` : '原文'})
+      </summary>
       {content}
     </details>
   );

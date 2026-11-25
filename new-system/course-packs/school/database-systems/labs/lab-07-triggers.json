@@ -4,13 +4,24 @@
   "requirements": "基于选课库编写触发器与完整性约束。题目会说明预置的对象，系统会用约束反例和变式数据检查实际行为。",
   "questions": [
     {
+      "id": "q01-drop-foreign",
+      "title": "移除 SC 的学生外键",
+      "requirement": "在触发器练习前，移除 SC 中引用 Student 的外键 fk_sc_student。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（注：Student表与SC表的外键约束要先取消。）",
+      "gradingRevision": "split"
+    },
+    {
       "id": "q01",
       "title": "插入前校验 sc_insert",
       "requirement": "建立 sc_insert BEFORE INSERT 触发器。学号不存在时报 SQLSTATE 45000、错误文本“学号不存在”；仅课号不存在时同样报 45000、文本“课号不存在”。",
-      "hint": "使用 NEW 与 SIGNAL，先查学生存在性，再查课程。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "（1）创建一个BEFORE触发器sc_insert，在插入时触发。当向SC表插入数据时，须确保插入的学号已在Student表中存在，并且还须确保插入的课程号在Course表中存在；若不存在，则给出相应的提示信息，并取消插入操作，提示信息要求指明插入信息是学号不满足条件还是课程号不满足条件。（注：Student表与SC表的外键约束要先取消。）"
+      "originalText": "（1）创建一个BEFORE触发器sc_insert，在插入时触发。当向SC表插入数据时，须确保插入的学号已在Student表中存在，并且还须确保插入的课程号在Course表中存在；若不存在，则给出相应的提示信息，并取消插入操作，提示信息要求指明插入信息是学号不满足条件还是课程号不满足条件。（注：Student表与SC表的外键约束要先取消。）",
+      "gradingRevision": "split"
     },
     {
       "id": "q02",
@@ -22,49 +33,214 @@
       "originalText": "（2）为Course表创建一个AFTER触发器Course_del，当删除了Course表中的一条课程信息时，同时将表SC中相应的学生选课记录也删除。"
     },
     {
-      "id": "q03",
-      "title": "改分后更新均分 grade_modify",
-      "requirement": "为 course 添加 avg_grade DECIMAL(5,2)，允许 NULL。创建 grade_modify AFTER UPDATE 触发器，在 sc 成绩修改后用该课当前有效成绩重算均分。",
-      "hint": "在触发器里用 NEW.Cno 确定待汇总的课程。AVG 会忽略缺考。",
+      "id": "q03-column",
+      "title": "为 course 新增 avg_grade 列",
+      "requirement": "新增 avg_grade 列，用于记录每门课程的均分（DECIMAL(5,2)，可空）。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "（3）在Course表中添加一个平均成绩avg_grade字段（记录每门课程的平均成绩），创建一个AFTER触发器grade_modify，当SC表中的某学生的成绩发生变化时，则Course表中的平均成绩也能及时相应发生改变。"
+      "originalText": "（3）在Course表中添加一个平均成绩avg_grade字段（记录每门课程的平均成绩）。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q03",
+      "title": "改分后更新均分 grade_modify",
+      "requirement": "创建 grade_modify AFTER UPDATE 触发器。SC 成绩更新后重算该课程的均分。avg_grade 已预置。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（3）在Course表中添加一个平均成绩avg_grade字段（记录每门课程的平均成绩），创建一个AFTER触发器grade_modify，当SC表中的某学生的成绩发生变化时，则Course表中的平均成绩也能及时相应发生改变。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q04-column",
+      "title": "为 student 新增 getcredit 列",
+      "requirement": "新增 getcredit 列，用于记录学生已获学分（INT NOT NULL DEFAULT 0）。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（4）在Student表中插入一个getcredit字段（记录学生所获学分的情况）。",
+      "gradingRevision": "split"
     },
     {
       "id": "q04",
       "title": "插入成绩后更新所得学分",
-      "requirement": "为 student 增加 getcredit INT NOT NULL DEFAULT 0。创建 ins_credit AFTER INSERT 触发器，仅新成绩达到 60 才累加该课程学分，NULL 学分按 0 处理。",
-      "hint": "先为 Student 增加 getcredit 列，再创建触发器。用尚未选过的学生与课程组合试验，避免复合主键冲突。",
+      "requirement": "创建 ins_credit AFTER INSERT 触发器。新成绩达到 60 分时累加课程学分，否则保持现值。getcredit 已预置。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "（4）在Student表中插入一个getcredit字段（记录学生所获学分的情况），创建一个触发器ins_credit，当插入SC表中的学生成绩时，如果新成绩大于等于60分，则该生可获得这门课的学分，如果新成绩小于60分，则该生未能获得这门课的学分。"
+      "originalText": "（4）在Student表中插入一个getcredit字段（记录学生所获学分的情况），创建一个触发器ins_credit，当插入SC表中的学生成绩时，如果新成绩大于等于60分，则该生可获得这门课的学分，如果新成绩小于60分，则该生未能获得这门课的学分。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q05-list",
+      "title": "查看当前库触发器",
+      "requirement": "查看当前库触发器。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（1）使用 SHOW TRIGGERS语句查看触发器信息。语句格式如下：",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q05-definition",
+      "title": "查看 grade_modify 的创建脚本",
+      "requirement": "查看 grade_modify 的创建脚本。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（2）使用SHOW CREATE  TRIGGER查看触发器grade_modify的定义脚本。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q05-metadata",
+      "title": "查询 grade_modify 的触发器元数据",
+      "requirement": "查询 grade_modify 的触发器元数据。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（3）触发器的定义记录在information_schema数据库的triggers表中，使用select语句查看触发器grade_modify的相关信息。",
+      "gradingRevision": "split"
     },
     {
       "id": "q05",
-      "title": "查看与移除触发器",
+      "title": "删除预置触发器",
       "requirement": "删除预置触发器 sc_insert，保留其他触发器。",
-      "hint": "核对定义的表、事件和 BEFORE/AFTER。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "2．使用SQL语句管理和维护触发器\n（1）使用 SHOW TRIGGERS语句查看触发器信息。语句格式如下：\nSHOW TRIGGERS [FROM <db_name>] [LIKE <触发器名匹配表达式>]\n（2）使用SHOW CREATE  TRIGGER查看触发器grade_modify的定义脚本。\n（3）触发器的定义记录在information_schema数据库的triggers表中，使用select语句查看触发器grade_modify的相关信息。\n（4）将触发器sc_insert删除。\n3．完整性约束的添加、删除"
+      "originalText": "（4）将触发器sc_insert删除。",
+      "gradingRevision": "split"
     },
     {
       "id": "q06",
-      "title": "用 Workbench 管理约束",
-      "requirement": "给 student.Sdept 设置默认“待分系”，添加 Sname 唯一约束，并把 sc 的两条外键替换为更新和删除均级联。",
-      "hint": "在 sc 上替换两条外键时，每条都要指定 ON UPDATE CASCADE 与 ON DELETE CASCADE。",
+      "title": "检查新增学生的出生日期",
+      "requirement": "MySQL CHECK 无法使用 CURDATE()，创建 student_birth_before_today BEFORE INSERT 触发器校验新增记录。生日为今天或以后时用 SQLSTATE 45000 拒绝写入。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "（1）使用MySQL Workbench实施约束。\na．为表Student的Birth字段创建检查约束，使输入的生日日期小于系统日期。\nb．为表Student的Sdept字段，设置默认值约束，默认值取'计算机系'。\nc．为Student表的Sname字段添加唯一性约束。\nd．为SC表的Sno,Cno字段设置外键约束，约束名自己取，并允许级联删除与级联更新。若已存在外键约束，请先删除。"
+      "originalText": "a．为表Student的Birth字段创建检查约束，使输入的生日日期小于系统日期。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q06-birth-update",
+      "title": "检查修改后的出生日期",
+      "requirement": "创建 student_birth_before_today_update BEFORE UPDATE 触发器。修改 Student 时，生日为今天或以后则用 SQLSTATE 45000 拒绝修改。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "a．为表Student的Birth字段创建检查约束，使输入的生日日期小于系统日期。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q06-department",
+      "title": "为所在系设置默认值",
+      "requirement": "为 Student.Sdept 设置默认值“计算机系”。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "b．为表Student的Sdept字段，设置默认值约束，默认值取'计算机系'。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q06-unique-name",
+      "title": "限制学生姓名唯一",
+      "requirement": "给 Student.Sname 添加唯一约束。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "c．为Student表的Sname字段添加唯一性约束。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q06-cascade-sno",
+      "title": "为 SC.Sno 设置级联外键",
+      "requirement": "为 SC.Sno 添加引用 student.Sno 的外键，更新与删除均级联。目标旧外键已移除，另一条外键仍在。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "d．为SC表的Sno,Cno字段设置外键约束，约束名自己取，并允许级联删除与级联更新。若已存在外键约束，请先删除。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q06-cascade-cno",
+      "title": "为 SC.Cno 设置级联外键",
+      "requirement": "为 SC.Cno 添加引用 course.Cno 的外键，更新与删除均级联。目标旧外键已移除，另一条外键仍在。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "d．为SC表的Sno,Cno字段设置外键约束，约束名自己取，并允许级联删除与级联更新。若已存在外键约束，请先删除。",
+      "gradingRevision": "split"
     },
     {
       "id": "q07",
-      "title": "用 SQL 验证约束变更",
-      "requirement": "将 student.Classno 改为可空 CHAR(3)；课程名 Cname 必须唯一；给 student.Sno 添加 2011 开头、后接 4 位数字的 CHECK。保留其他约束。",
-      "hint": "分别检查列可空性、Sno 格式和课程名唯一性。",
+      "title": "添加学号格式检查",
+      "requirement": "规定学号以 2011 开头，后四位均为数字。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "（2）使用SQL语句实施约束。\na．为student表的Sno字段添加一个check约束，使学号满足如下条件：学号前四位为2011，学号后四位为数字字符。\nb．为student表中的Birth字段添加一个约束，规定生日应小于入学时间。\ne．删除（a）所设置的check约束。\nf．将Student表中的Classno字段设置为允许空。\ng．为SC表中的Sno，Cno添加外键约束，约束名自取；并允许级联删除与级联更新。若已存在外键约束，请先删除。\nh．为Course表中的Cname字段添加唯一性约束。"
+      "originalText": "a．为student表的Sno字段添加一个check约束，使学号满足如下条件：学号前四位为2011，学号后四位为数字字符。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q07-birth",
+      "title": "限制生日早于入学时间",
+      "requirement": "给 Student 添加 CHECK，要求 Birth 小于 Entrance_date。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "b．为student表中的Birth字段添加一个约束，规定生日应小于入学时间。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q07-drop-check",
+      "title": "删除学号格式检查",
+      "requirement": "只移除已预置的 chk_student_sno 约束。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "e．删除（a）所设置的check约束。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q07-class-null",
+      "title": "允许班号为空",
+      "requirement": "将 Student.Classno 改为可空 CHAR(3)。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "f．将Student表中的Classno字段设置为允许空。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q07-cascade-sno",
+      "title": "为 SC.Sno 设置级联外键",
+      "requirement": "为 SC.Sno 添加引用 student.Sno 的外键，更新与删除均级联。目标旧外键已移除，另一条外键仍在。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "g．为SC表中的Sno，Cno添加外键约束，约束名自取；并允许级联删除与级联更新。若已存在外键约束，请先删除。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q07-cascade-cno",
+      "title": "为 SC.Cno 设置级联外键",
+      "requirement": "为 SC.Cno 添加引用 course.Cno 的外键，更新与删除均级联。目标旧外键已移除，另一条外键仍在。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "g．为SC表中的Sno，Cno添加外键约束，约束名自取；并允许级联删除与级联更新。若已存在外键约束，请先删除。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q07-unique-course",
+      "title": "限制课程名唯一",
+      "requirement": "给 Course.Cname 添加唯一约束。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "h．为Course表中的Cname字段添加唯一性约束。",
+      "gradingRevision": "split"
     },
     {
       "id": "q08",

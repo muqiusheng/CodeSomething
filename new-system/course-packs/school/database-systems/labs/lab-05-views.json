@@ -42,38 +42,122 @@
     {
       "id": "q05",
       "title": "创建排名视图",
-      "requirement": "创建 stuview5，忽略缺考，排除有不及格记录或无有效成绩的学生。按班级以学分加权平均成绩做 DENSE_RANK 排名，取前 3；列名为 Sno、Sname、Classno、avg_grade（两位小数）、pos。",
+      "requirement": "创建 stuview5，返回班内学分加权均分排名前 3 的学生全部基本资料。排除有不及格成绩和没有有效成绩的学生，缺考不参与均分，并列使用 DENSE_RANK。",
       "hint": "将实验四的加权排名改为每班前三。",
       "optional": false,
       "starterSql": "",
-      "originalText": "（5）创建一个名为stuview5的视图，查询没有不及格记录且加权平均成绩在班级排名前3的学生基本信息"
+      "originalText": "（5）创建一个名为stuview5的视图，查询没有不及格记录且加权平均成绩在班级排名前3的学生基本信息",
+      "gradingRevision": "split"
     },
     {
       "id": "q06",
-      "title": "查看定义与元数据",
-      "requirement": "查询 information_schema.VIEWS，返回当前库中各视图的 TABLE_NAME、IS_UPDATABLE、CHECK_OPTION，按名称升序。",
-      "hint": "用 TABLE_SCHEMA=DATABASE() 限定本题沙箱。",
+      "title": "查看当前数据库的表和视图",
+      "requirement": "查看当前数据库的表和视图。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "2．查询视图的创建信息及视图中的数据\n（1）查看视图stuview1的创建信息。\n方法1：通过SHOW TABLES 查看所有的表和视图。\n方法2：通过 SHOW TABLE STATUS查看视图，语句格式如下：\nSHOW TABLE STATUS [LIKE <视图名匹配表达式>]\n（2）查看视图的定义脚本。\n方法1：通过命令SHOW CREATE VIEW <视图名>。\n方法2：视图信息存储在information_schema数据库中的表views，通过select语句查询视图stuview3的定义脚本。"
+      "originalText": "方法1：通过SHOW TABLES 查看所有的表和视图。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q06-status",
+      "title": "查看 stuview1 的对象状态",
+      "requirement": "查看 stuview1 的对象状态。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "方法2：通过 SHOW TABLE STATUS查看视图，语句格式如下：",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q06-definition",
+      "title": "查看 stuview1 的创建脚本",
+      "requirement": "查看 stuview1 的创建脚本。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "方法1：通过命令SHOW CREATE VIEW <视图名>。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q06-metadata",
+      "title": "从元数据读取 stuview3 定义",
+      "requirement": "从元数据读取 stuview3 定义。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "方法2：视图信息存储在information_schema数据库中的表views，通过select语句查询视图stuview3的定义脚本。",
+      "gradingRevision": "split"
     },
     {
       "id": "q07",
-      "title": "修改和删除视图",
-      "requirement": "将已预置的 stuview2 改为总学时严格高于 60 的课程，输出 Cno、Cname、Credit；删除已预置的 stuview4。",
-      "hint": "完成后验证视图列表与基表。",
+      "title": "修改 stuview2 的定义",
+      "requirement": "修改 stuview2，返回总学时大于 60 的课程的课号、课程名、学分。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "3．修改视图的定义\n修改视图stuview2，使其从数据库Student_info的Course表中查询总学时大于60的所有课程的课程号、课程名、学分。\n4．视图的删除\n将视图stuv4删除。"
+      "originalText": "修改视图stuview2，使其从数据库Student_info的Course表中查询总学时大于60的所有课程的课程号、课程名、学分。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q07-drop",
+      "title": "删除 stuview4",
+      "requirement": "删除已预置的 stuview4。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "将视图stuv4删除。",
+      "gradingRevision": "split"
     },
     {
       "id": "q08",
-      "title": "通过视图查询和写入",
-      "requirement": "通过预置 v_class_051 更新 20110001 的家庭地址为“南京市”，并插入 20119991（何明、男、1993-06-20 生、051 班、2011-09-01 入学、南京、计算机系、邮编 210000）。保留其他数据。",
-      "hint": "该视图含 CHECK OPTION，插入时提供全部要求字段并保持班号 051。",
+      "title": "通过 stuview1 查询张虹",
+      "requirement": "查询 051 班张虹的全部资料。",
+      "hint": "",
       "optional": false,
       "starterSql": "",
-      "originalText": "5．管理视图中的数据\n（1）从视图stuview1查询出班级为“051”、姓名为“张虹”的资料。\n（2）向视图stuview1中插入一行数据。学号：20110005，姓名：许华，班级：054，性别：男，家庭住址：南京，入学时间：2011/09/01，出生年月：1983/01/09。\n原Student表中的内容有何变化？\n思考：如向视图stuview1中插入一行数据。学号：20110006，姓名：赵静，班级：054，性别：女，家庭住址：南京，入学时间：2011/09/01，出生年月：1983/11/09。会出现什么样的结果？原Student表中的内容有何变化？\n（3）修改视图stuview1中的数据。\n将stuview1中054班、姓名为“许华”同学的家庭地址改为“扬州市”。\n原Student表中的内容有何变化？\n（4）删除视图stuview1中班级为054、姓名为“许华”的同学的记录。\n原Student表中的内容有何变化？"
+      "originalText": "（1）从视图stuview1查询出班级为“051”、姓名为“张虹”的资料。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q08-insert",
+      "title": "通过 stuview1 录入许华",
+      "requirement": "向 stuview1 插入原题给出的许华记录。沙箱已释放原题学号，所在系补为“计算机系”，邮编留空。运行后观察 Student。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（2）向视图stuview1中插入一行数据。学号：20110005，姓名：许华，班级：054，性别：男，家庭住址：南京，入学时间：2011/09/01，出生年月：1983/01/09。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q08-check-option",
+      "title": "观察视图 CHECK OPTION",
+      "requirement": "执行下列原题插入。扩展字段所在系补为“计算机系”。观察对基表的影响。\nINSERT INTO stuview1(Sno,Sname,Classno,Sex,Home_addr,Entrance_date,Birth,Sdept) VALUES('20110006','赵静','054','女','南京','2011-09-01','1983-11-09','计算机系');",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "思考：如向视图stuview1中插入一行数据。学号：20110006，姓名：赵静，班级：054，性别：女，家庭住址：南京，入学时间：2011/09/01，出生年月：1983/11/09。会出现什么样的结果？原Student表中的内容有何变化？",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q08-update",
+      "title": "通过 stuview1 修改许华的住址",
+      "requirement": "将 054 班许华的家庭住址改为“扬州市”。观察 Student。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（3）修改视图stuview1中的数据。\n将stuview1中054班、姓名为“许华”同学的家庭地址改为“扬州市”。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q08-delete",
+      "title": "通过 stuview1 删除许华",
+      "requirement": "删除 054 班许华在 stuview1 中的记录。观察 Student。",
+      "hint": "",
+      "optional": false,
+      "starterSql": "",
+      "originalText": "（4）删除视图stuview1中班级为054、姓名为“许华”的同学的记录。",
+      "gradingRevision": "split"
     },
     {
       "id": "q09",
@@ -95,21 +179,43 @@
     },
     {
       "id": "q11",
-      "title": "分层复用课程选修统计视图",
-      "requirement": "创建 v_course_counts（Cno、chosen、graded，分别为课号、选课人数、到考人数，包含无人选修课程）；基于它创建 v_course_absences，三列相同，只保留存在缺考记录的课程。",
-      "hint": "第二层查询上面一层的统计列。预置数据下应找到课程 002。",
+      "title": "创建 v_course_counts",
+      "requirement": "创建 v_course_counts。按课号统计选课和到考人数。保留无人选修的课程。",
+      "hint": "",
       "optional": true,
       "starterSql": "",
-      "originalText": "创建一个按课号统计选课、到考人数的专用视图，再用第二个视图筛选有人选课但有缺考的课程。"
+      "originalText": "创建一个按课号统计选课、到考人数的专用视图，再用第二个视图筛选有人选课但有缺考的课程。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q11-second",
+      "title": "创建 v_course_absences",
+      "requirement": "创建 v_course_absences。从已预置的 v_course_counts 筛出有人缺考的课程，保留课号、选课人数和到考人数。",
+      "hint": "",
+      "optional": true,
+      "starterSql": "",
+      "originalText": "创建一个按课号统计选课、到考人数的专用视图，再用第二个视图筛选有人选课但有缺考的课程。",
+      "gradingRevision": "split"
     },
     {
       "id": "q12",
-      "title": "对比普通视图和聚合视图的可更新性",
-      "requirement": "创建普通投影视图 v_course_projection（Cno、Cname）和聚合视图 v_course_enrollment（Cno、chosen，统计已有的选课门次）。",
-      "hint": "聚合结果对应多条基表记录，因此聚合视图不可直接写入。",
+      "title": "创建 v_course_projection",
+      "requirement": "创建 v_course_projection。从 Course 投影课号和课名，建立普通视图。",
+      "hint": "",
       "optional": true,
       "starterSql": "",
-      "originalText": "各创建一个专用练习视图，一个直接投影 Course 列，另一个汇总选课人数。查询元数据，对照两个视图的 IS_UPDATABLE。"
+      "originalText": "各创建一个专用练习视图，一个直接投影 Course 列，另一个汇总选课人数。查询元数据，对照两个视图的 IS_UPDATABLE。",
+      "gradingRevision": "split"
+    },
+    {
+      "id": "q12-second",
+      "title": "创建 v_course_enrollment",
+      "requirement": "创建 v_course_enrollment。从 SC 按课号统计选课人数，建立聚合视图。",
+      "hint": "",
+      "optional": true,
+      "starterSql": "",
+      "originalText": "各创建一个专用练习视图，一个直接投影 Course 列，另一个汇总选课人数。查询元数据，对照两个视图的 IS_UPDATABLE。",
+      "gradingRevision": "split"
     },
     {
       "id": "q13",
@@ -122,5 +228,5 @@
     }
   ],
   "originalObjective": "(1）理解视图的概念。\n(2）掌握创建视图、测试、加密视图的方法。\n(3）掌握更改视图的方法。\n(4）掌握用视图管理数据的方法。",
-  "originalNotes": "原题写作 stuv4，指前文的 stuview4。原题插入示例的学号 20110005 与 20110006 在扩展练习库中已占用。可先在只装入原表 5—7 的练习库验证，或在副本中使用未占用的学号；保留原题所给的班级、性别和日期。"
+  "originalNotes": "原题写作 stuv4，指前文的 stuview4。许华和赵静的原题学号在各自的判题沙箱中预先释放。"
 }

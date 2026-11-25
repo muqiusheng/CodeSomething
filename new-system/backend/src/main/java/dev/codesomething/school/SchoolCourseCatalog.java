@@ -20,9 +20,13 @@ class SchoolCourseCatalog {
                String originalObjective, String originalNotes, List<SourceTable> sourceTables, String fixtureSql) {}
     record SourceTable(String title, List<String> columns, List<List<String>> rows) {}
     record Question(String id, String title, String requirement, String hint, boolean optional, String starterSql,
-                    String originalText) {}
+                    String originalText, String gradingRevision) {
+        String gradingId(String labId) {
+            return labId + "-" + id + (gradingRevision == null ? "" : "-" + gradingRevision);
+        }
+    }
 
-    record LabCheck(String id, String referenceSql, String setupSql, List<ExamCatalog.Check> checks) {}
+    record LabCheck(String id, String referenceSql, String setupSql, List<ExamCatalog.Check> checks, String explanation) {}
 
     private final Path directory;
     private final JsonMapper json;
@@ -82,7 +86,9 @@ class SchoolCourseCatalog {
         for (var check : json.readValue(path.toFile(), LabCheck[].class)) {
             if (definitions.putIfAbsent(check.id(), check) != null || check.referenceSql().isBlank()
                 || !check.checks().stream().map(ExamCatalog.Check::points).toList().equals(List.of(2, 5, 3))
-                || !check.checks().getFirst().kind().equals("execution")
+                || !(check.checks().getFirst().kind().equals("execution")
+                    || check.checks().stream().allMatch(rule -> rule.kind().equals("expected_error")
+                        && rule.sql() != null && !rule.expectedErrorCodes().isEmpty()))
                 || check.checks().getLast().variantSql() == null || check.checks().getLast().variantSql().isBlank())
                 throw new IllegalStateException("Invalid lab check: " + check.id());
         }
@@ -91,8 +97,8 @@ class SchoolCourseCatalog {
         var questions = new LinkedHashMap<String, ExamCatalog.Question>();
         for (var question : lab.questions()) {
             var definition = definitions.get(question.id());
-            questions.put(question.id(), new ExamCatalog.Question(lab.id() + "-" + question.id(), "sql",
-                10, question.requirement(), lab.id(), List.of(question.title()), "", null, null, null,
+            questions.put(question.id(), new ExamCatalog.Question(question.gradingId(lab.id()), "sql",
+                10, question.requirement(), lab.id(), List.of(question.title()), Objects.toString(definition.explanation(), ""), null, null, null,
                 null, definition.referenceSql(), definition.setupSql(), definition.checks()));
         }
         return Collections.unmodifiableMap(questions);

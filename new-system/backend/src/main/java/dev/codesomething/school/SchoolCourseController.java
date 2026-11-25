@@ -18,6 +18,7 @@ public class SchoolCourseController {
     record SaveRequest(long revision, Map<String, String> drafts) {}
     record RunRequest(long revision, Map<String, String> drafts, String questionId, String selection, String database) {}
     record GradeRequest(long revision, Map<String, String> drafts, String questionId, String selection, Integer offset) {}
+    record LabDebugRequest(String sql, String mode, Integer offset) {}
     record RunResponse(SchoolDraftStore.Draft work, Map<String, SchoolLabRunner.RunResult> results) {}
     record ResetRequest(boolean empty) {}
 
@@ -56,7 +57,7 @@ public class SchoolCourseController {
     private CourseDetails details(SchoolCourseCatalog.Course course) {
         var progress = course.labs().stream().map(outline -> {
             var lab = catalog.lab(course, outline.id());
-            var work = drafts.read(course.id(), outline.id());
+            var work = drafts.read(course.id(), lab);
             boolean grading = catalog.hasLabChecks(course, lab);
             var required = lab.questions().stream().filter(question -> !question.optional()).toList();
             int count = (int) required.stream().filter(question -> {
@@ -73,7 +74,7 @@ public class SchoolCourseController {
         var course = catalog.course(courseId);
         var lab = catalog.lab(course, labId);
         return new LabDetails(course, catalog.outline(course, labId), lab,
-            drafts.read(courseId, labId), student.identity(), runner.database(course), catalog.hasLabChecks(course, lab));
+            drafts.read(courseId, lab), student.identity(), runner.database(course), catalog.hasLabChecks(course, lab));
     }
 
     @PostMapping("/{courseId}/environment/activity")
@@ -86,8 +87,8 @@ public class SchoolCourseController {
     synchronized SchoolDraftStore.Draft save(@PathVariable String courseId, @PathVariable String labId, @RequestBody SaveRequest body) {
         var lab = catalog.lab(catalog.course(courseId), labId);
         var scripts = validate(lab, body.drafts());
-        var current = drafts.read(courseId, labId);
-        return drafts.save(courseId, labId, body.revision(), scripts, current.executions());
+        var current = drafts.read(courseId, lab);
+        return drafts.save(courseId, lab, body.revision(), scripts, current.executions());
     }
 
     @PostMapping("/{courseId}/labs/{labId}/run")
@@ -95,7 +96,7 @@ public class SchoolCourseController {
         var course = catalog.course(courseId);
         var lab = catalog.lab(course, labId);
         var scripts = validate(lab, body.drafts());
-        var current = drafts.read(courseId, labId);
+        var current = drafts.read(courseId, lab);
         if (current.revision() != body.revision()) throw SchoolDraftStore.conflict();
         var chosen = new LinkedHashMap<String, String>();
         if (body.questionId() != null && !scripts.containsKey(body.questionId()))
@@ -119,7 +120,7 @@ public class SchoolCourseController {
                 if (previous == null || previous.grade() == null || !Objects.equals(previous.sql(), chosen.get(id)))
                     executions.put(id, new SchoolDraftStore.Execution(chosen.get(id), result));
             });
-            return new RunResponse(drafts.save(courseId, labId, body.revision(), scripts, executions), outcomes);
+            return new RunResponse(drafts.save(courseId, lab, body.revision(), scripts, executions), outcomes);
         } catch (MysqlEnvironment.Failure e) {
             throw environmentFailure(e);
         }
@@ -130,7 +131,7 @@ public class SchoolCourseController {
         var course = catalog.course(courseId);
         var lab = catalog.lab(course, labId);
         var scripts = validate(lab, body.drafts());
-        var current = drafts.read(courseId, labId);
+        var current = drafts.read(courseId, lab);
         if (current.revision() != body.revision()) throw SchoolDraftStore.conflict();
 
         var definitions = catalog.labChecks(course, lab);
@@ -167,7 +168,33 @@ public class SchoolCourseController {
         var previous = executions.get(id);
         if (!status.equals("unavailable") || previous == null || previous.grade() == null || !Objects.equals(previous.sql(), script))
             executions.put(id, new SchoolDraftStore.Execution(script, output, grade));
-        return new RunResponse(drafts.save(courseId, labId, body.revision(), scripts, executions), Map.of(id, output));
+        return new RunResponse(drafts.save(courseId, lab, body.revision(), scripts, executions), Map.of(id, output));
+    }
+
+    @PostMapping("/{courseId}/labs/{labId}/questions/{questionId}/debug")
+    ExamSqlRunner.Debug debug(@PathVariable String courseId, @PathVariable String labId,
+                              @PathVariable String questionId, @RequestBody LabDebugRequest body) {
+        var course = catalog.course(courseId);
+        var question = catalog.labChecks(course, catalog.lab(course, labId)).get(questionId);
+        if (question == null) throw ApiException.invalid("questionId", "找不到这道 SQL 实验题。");
+        String mode = Objects.toString(body.mode(), "");
+        if (!Set.of("run", "selection", "trace").contains(mode))
+            throw ApiException.invalid("mode", "请选择一种 SQL 调试操作。");
+        String sql = Objects.toString(body.sql(), "");
+        if (sql.isBlank()) throw ApiException.invalid("sql", "请先输入要运行的 SQL。");
+        int offset = body.offset() == null ? 0 : body.offset();
+        if (offset < 0 || offset > 8192) throw ApiException.invalid("offset", "选区行号无效。");
+        return grader.debug(courseId, question, sql, mode, mode.equals("selection") ? offset : 0);
+    }
+
+    record LabSolution(String referenceSql, String explanation) {}
+
+    @GetMapping("/{courseId}/labs/{labId}/questions/{questionId}/solution")
+    LabSolution solution(@PathVariable String courseId, @PathVariable String labId, @PathVariable String questionId) {
+        var course = catalog.course(courseId);
+        var question = catalog.labChecks(course, catalog.lab(course, labId)).get(questionId);
+        if (question == null) throw ExamCatalog.missing();
+        return new LabSolution(question.referenceSql(), question.explanation());
     }
 
     @GetMapping("/{courseId}/labs/{labId}/questions/{questionId}/tables")

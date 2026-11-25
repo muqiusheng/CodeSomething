@@ -381,6 +381,10 @@ html[data-motion="reduce"] .workspace-divider > span { transition: none; }
  display:grid;place-items:center;min-height:28px;width:28px;padding:0;cursor:pointer;
  color:var(--text-secondary);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
 }
+.editor-toolbar .editor-suggestions {
+ display:inline-flex;align-items:center;gap:5px;width:auto;padding-inline:7px;white-space:nowrap;font:12px/1.35 var(--font-sans, sans-serif);
+}
+.editor-toolbar .editor-suggestions[aria-pressed=true] {color:var(--primary-ink);background:var(--primary-soft);border-color:var(--primary-border);}
 .editor-shortcuts {position:relative;margin:0;}
 
 .editor-shortcuts span {
