@@ -2,9 +2,9 @@
 import {useState,useEffect,useRef} from 'react';
 import {useNavigate,useLocation} from 'react-router-dom';
 import {Command} from 'cmdk';
-import {Search,ArrowUpRight,BookOpen,GraduationCap,Home,Folder,Compass,RotateCcw,Trophy,Settings,UserRound} from 'lucide-react';
+import {Bookmark,Search,ArrowUpRight,BookOpen,GraduationCap,Home,Folder,Compass,RotateCcw,Trophy,Settings,UserRound} from 'lucide-react';
 import {Modal} from '../ui/modal';
-const destinations=[['课内实战','/school',GraduationCap,'校园 课程作业 数据库原理 作业 school'],['任务数据实验室','/projects/sql-foundations',BookOpen,'mysql sql 数据库 查询'],['继续学习','/learn',Home,'home'],['学习路径','/path',Compass,'path'],['后端入门实验室','/projects/backend-foundations',BookOpen,'json http 基础 章节'],['项目','/projects',Folder,'projects'],['复习','/reviews',RotateCcw,'review'],['作品','/portfolio',Trophy,'portfolio'],['学习画像','/profile',UserRound,'profile'],['设置','/settings',Settings,'settings']] as const;
+const destinations=[['首页','/learn',Home,'学习 工作台 home'],['课内实验','/school',GraduationCap,'课内实战 校园 课程作业 数据库原理 school'],['复习与错题','/reviews',RotateCcw,'备考 考试 review'],['我的收藏','/bookmarks',Bookmark,'稍后再看 书签 收藏 bookmarks'],['课外项目库','/projects',Folder,'课外探索 projects'],['拓展路线','/path',Compass,'学习路径 path'],['HTTP / JSON 基础','/projects/backend-foundations',BookOpen,'http 后端入门 基础 章节'],['SQL 项目','/projects/sql-foundations',BookOpen,'mysql sql 数据库 查询'],['独立作品','/portfolio',Trophy,'portfolio'],['个人中心','/profile',UserRound,'学习画像 profile'],['设置','/settings',Settings,'settings']] as const;
 export function QuickNavigation(){const [open,setOpen]=useState(false);const navigate=useNavigate();const location=useLocation();const trigger=useRef<HTMLButtonElement>(null);
  useEffect(()=>{function key(e:KeyboardEvent){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();setOpen(previous=>!previous)}}document.addEventListener('keydown',key);return()=>document.removeEventListener('keydown',key)},[]);
  useEffect(()=>setOpen(false),[location.pathname]);

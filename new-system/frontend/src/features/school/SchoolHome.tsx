@@ -1,23 +1,20 @@
 import {PageSkeleton} from '../../components/shared/LoadingState';
-import {useScopedRead,visibleRefreshInterval} from '../../hooks/useScopedRead';
+import {useSchoolCourses} from './SchoolLearningProgress';
 import {ArrowUpRight, Check, Database, GraduationCap} from 'lucide-react';
 import {Link} from 'react-router-dom';
-import {schoolRequest, type CourseGroup} from './school-api';
 import {Tabs,TabsContent,TabsList,TabsTrigger} from '../../components/ui/tabs';
 import {examApi,examRoute,useExamRead,type Overview} from './exams/exam-api';
 import {ExamReadState} from './exams/ExamShared';
 import {useState,type ReactNode} from 'react';
 import '../../styles/school.css';
 
-const readCourses=()=>schoolRequest<CourseGroup[]>('/api/school/courses');
-
 export function SchoolHome() {
-  const {data:groups,error,reload}=useScopedRead('/api/school/courses',readCourses,{persist:true,interval:visibleRefreshInterval});
+  const {data:groups,error,reload}=useSchoolCourses();
 
   return <div className="page school-home">
     <div className="school-heading">
       <span className="school-icon"><GraduationCap aria-hidden="true" size={22}/></span>
-      <div><h1>课内实战</h1><p>课程实验、作业与课程设计</p></div>
+      <div><h1>课内实验</h1><p>课程实验、作业与课程设计</p></div>
     </div>
     {error ? <div className="note" role="alert"><p>{error}</p><button className="button secondary" onClick={reload}>重试</button></div>
       : !groups ? <PageSkeleton variant="cards" label="正在读取课程…"/> : groups.length === 0 ? <p>暂无已接入课程。</p> : groups.map(group =>
@@ -58,7 +55,7 @@ function CourseRoutes({courseId,examCount,children}:{courseId:string;examCount?:
       <TabsTrigger value="exams">考试冲刺备考</TabsTrigger>
     </TabsList>
     <TabsContent value="labs" className="exam-route-panel">
-      <p className="exam-route-caption">预置环境与数据表，沉浸式逐题重温 7 个课内实验</p>
+      <p className="exam-route-caption">使用预置数据表逐题练习，按必做题记录进度。</p>
       {children}
     </TabsContent>
     <TabsContent value="exams" className="exam-route-panel">

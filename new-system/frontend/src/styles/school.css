@@ -523,3 +523,27 @@ html[data-motion=reduce] .school-practice-grid {transition: none;}
 }
 
 .school-practice-prompt .school-question-requirement {white-space: pre-line; overflow-wrap: anywhere;}
+
+.school-practice-prompt .school-table-specs {margin-block:10px 0;}
+.school-practice-prompt .school-lab-data {margin-block:10px 0; padding-bottom:0;}
+.school-practice-prompt .school-lab-data > .school-table-disclosure:not([open]) > div {display:none;}
+.lab-celebration {
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:calc(var(--z-modal) + 2);
+  pointer-events:none;
+}
+.lab-celebration-setting {display:grid;gap:8px;grid-template-columns:repeat(2,minmax(0,1fr));}
+.lab-celebration-option.btn {
+  display:grid;grid-template-columns:minmax(0,1fr) auto;justify-items:start;align-content:center;
+  gap:6px;min-height:70px;height:auto;padding:8px 10px;
+  border:1px solid var(--border);border-radius:var(--radius-inset);
+  color:var(--text);background:var(--surface);white-space:normal;text-align:start;
+}
+.lab-celebration-option.btn:is(:hover,[aria-pressed=true]) {border-color:var(--primary-ink);background:var(--primary-soft);}
+.lab-celebration-option.btn:focus-visible {outline:2px solid var(--focus);outline-offset:2px;}
+.lab-celebration-swatches {grid-column:1/-1;display:flex;gap:4px;align-items:center;min-height:13px;}
+.lab-celebration-swatches i {height:11px;width:11px;border:1px solid color-mix(in srgb,var(--text) 25%,transparent);border-radius:50%;}
+.lab-celebration-off {color:var(--text-secondary);line-height:1;}

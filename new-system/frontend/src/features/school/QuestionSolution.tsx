@@ -12,17 +12,26 @@ type Solution = {
   acceptedBlanks?: string[][];
 };
 
-export function SqlPreview({sql}: {sql: string}) {
-  const [formatted, setFormatted] = useState<string>();
-  const code = useRef<HTMLElement>(null);
+function useFormattedSql(sql: string) {
+  const [formatted, setFormatted] = useState<{source:string;value:string}>();
   useEffect(() => {
+    if (!sql) return;
     let active = true;
     void import('./reference-sql.mjs').then(({formatReferenceSql}) => {
-      if (active) setFormatted(formatReferenceSql(sql));
+      if (active) setFormatted({source:sql,value:formatReferenceSql(sql)});
     }).catch(() => undefined);
     return () => {active = false;};
   }, [sql]);
-  const display = formatted ?? sql;
+  return formatted?.source === sql ? formatted.value : sql;
+}
+
+export function SqlPreview({sql}: {sql: string}) {
+  const display = useFormattedSql(sql);
+  return <HighlightedSql display={display}/>;
+}
+
+function HighlightedSql({display}: {display: string}) {
+  const code = useRef<HTMLElement>(null);
   useEffect(() => {
     let active = true;
     void loadEditor().then(async monaco => {
@@ -35,20 +44,23 @@ export function SqlPreview({sql}: {sql: string}) {
   return <pre className="school-solution-sql" tabIndex={0} aria-label="参考 SQL"><code key={display} ref={code}>{display}</code></pre>;
 }
 
-export function QuestionSolution({endpoint, options, value, onFill, disabled}: {
+export function QuestionSolution({endpoint, options, value, onFill, disabled, placement = 'prompt'}: {
   endpoint: string;
   options?: {id: string; text: string}[];
   value?: string;
   onFill?: (sql: string) => void;
   disabled?: boolean;
+  placement?: 'prompt' | 'results';
 }) {
   const id = useId();
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const [confirmationContainer,setConfirmationContainer] = useState<HTMLElement>();
   const [notice, setNotice] = useState('');
   const request = useCallback(() => schoolRequest<Solution>(endpoint), [endpoint]);
   const {data, error, reload} = useScopedRead(open ? endpoint : null, request, {staleTime: Infinity});
-  const sql = data?.referenceSql;
+  const rawSql = data?.referenceSql;
+  const sql = useFormattedSql(rawSql ?? '');
 
   async function copy(text: string) {
     try {
@@ -59,16 +71,10 @@ export function QuestionSolution({endpoint, options, value, onFill, disabled}: {
     }
   }
 
-  return <div className="school-solution">
-    <button type="button" className="btn btn-ghost school-reference-row school-solution-toggle" aria-expanded={open} aria-controls={id}
-      onClick={() => {setOpen(!open); setNotice('');}}>
-      <ChevronRight size={14} aria-hidden="true"/>{open ? '收起参考答案' : '查看参考答案'}
-    </button>
-    <div id={id} hidden={!open}>
-      {open && (error ? <p role="alert">{error} <button type="button" className="button secondary" onClick={reload}>重试</button></p>
+  const content = open && (error ? <p role="alert">{error} <button type="button" className="button secondary" onClick={reload}>重试</button></p>
         : !data ? <p role="status">正在读取参考答案…</p>
-        : <section className="card school-solution-card" aria-label="参考答案与解析">
-          {sql && <SqlPreview key={sql} sql={sql}/>}
+        : <section className="card school-solution-card" aria-label={placement === 'prompt' ? '参考答案与解析' : '参考答案'}>
+          {sql && <HighlightedSql display={sql}/>}
           {data.correct?.map(answer => {
             const index = options?.findIndex(option => option.id === answer) ?? -1;
             const label = answer === 'true' ? '对' : answer === 'false' ? '错'
@@ -84,17 +90,17 @@ export function QuestionSolution({endpoint, options, value, onFill, disabled}: {
             <button type="button" className="btn btn-ghost btn-sm school-solution-action" onClick={() => void copy(sql)}>
               <Copy size={14} aria-hidden="true"/>复制参考 SQL
             </button>
-            <button type="button" className="btn btn-ghost btn-sm school-solution-action" disabled={disabled} onClick={() => {
-              if (value?.trim() && value !== sql) setConfirm(true);
-              else onFill(sql);
+            <button type="button" className="btn btn-ghost btn-sm school-solution-action" disabled={disabled} onClick={event => {
+              if (value?.trim() && value !== sql) {
+                setConfirmationContainer(event.currentTarget.closest<HTMLDialogElement>('dialog[open]') ?? undefined);
+                setConfirm(true);
+              } else onFill(sql);
             }}>填入编辑器试运行</button>
           </div>}
           {notice && <p role="status">{notice}</p>}
-          <h3>解题思路</h3>
-          <p>{data.explanation}</p>
-        </section>)}
-    </div>
-    {confirm && sql && onFill && <Modal open={confirm} onOpenChange={setConfirm} title="覆盖当前 SQL？"
+          {placement === 'prompt' && <><h3>解题思路</h3><p>{data.explanation}</p></>}
+        </section>);
+  const confirmation = confirm && sql && onFill && <Modal open={confirm} onOpenChange={setConfirm} container={confirmationContainer} title="覆盖当前 SQL？"
       description="填入参考 SQL 后，当前编辑器中的代码将被替换。">
       <div className="school-solution-actions">
         <button type="button" className="button secondary" onClick={() => setConfirm(false)}>保留当前代码</button>
@@ -102,6 +108,21 @@ export function QuestionSolution({endpoint, options, value, onFill, disabled}: {
           确认填入
         </button>
       </div>
-    </Modal>}
+    </Modal>;
+
+  if (placement === 'results') {
+    return <details className="school-solution" onToggle={event=>setOpen(event.currentTarget.open)}>
+      <summary>参考答案</summary>
+      {content}
+      {confirmation}
+    </details>;
+  }
+  return <div className="school-solution">
+    <button type="button" className="btn btn-ghost school-reference-row school-solution-toggle" aria-expanded={open} aria-controls={id}
+      onClick={() => {setOpen(!open); setNotice('');}}>
+      <ChevronRight size={14} aria-hidden="true"/>{open ? '收起参考答案' : '查看参考答案'}
+    </button>
+    <div id={id} hidden={!open}>{content}</div>
+    {confirmation}
   </div>;
 }

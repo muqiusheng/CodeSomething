@@ -52,7 +52,9 @@ export function ExamQuestion({question,answer,onAnswer,endpoint,allowCheck,allow
     {error && <p className="note" role="alert">{error}</p>}
     {checked && (question.kind==='sql'||checked.key===key) && <>
       {checked.key!==key && <p className="exam-stale" role="status">代码已修改，判分结果可能已过时</p>}
-      <ItemFeedback key={checked.key+':'+checked.item.score+':'+checked.item.status} item={checked.item} compact={question.kind==='sql'}/>
+      <ItemFeedback key={checked.key+':'+checked.item.score+':'+checked.item.status} item={checked.item} compact={question.kind==='sql'}
+        solution={question.kind==='sql' && allowSolution ? {endpoint:endpoint+'/solution',
+          value:answer[0],onFill:sql=>onAnswer([sql]),disabled:disabled || checking} : undefined}/>
     </>}
   </>;
 

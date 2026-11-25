@@ -463,3 +463,18 @@ details[open] > .school-reference-row > svg, .school-reference-row[aria-expanded
 @media (pointer: coarse) {
   .school-reference-row, .school-solution .btn.school-solution-action {min-height: 44px;}
 }
+
+/* Reference disclosures share one line box and one separator regardless of content type. */
+.sql-practice-reference .exam-question-tables {display:block; gap:0; margin-block:0;}
+.sql-practice-reference .school-reference-row {
+  min-height:36px;
+  padding:7px 8px;
+  line-height:1.45;
+}
+.sql-practice-reference :is(.school-table-disclosure,.school-solution,.school-source) {
+  border-top:1px solid var(--border);
+}
+.workbench-results-body pre.school-solution-sql {margin:0;}
+@media (pointer:coarse) {
+  .sql-practice-reference .school-reference-row {min-height:44px;}
+}

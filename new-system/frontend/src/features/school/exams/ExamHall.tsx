@@ -10,7 +10,7 @@ export default function ExamHall() {
   const {data,error,reload} = useExamRead<Overview>(api);
   const sample = data?.papers[0];
   return <div className="page exam-page exam-hall">
-    <ExamHeader title="考试冲刺备考" back="/school" backLabel="返回课内实战"
+    <ExamHeader title="考试冲刺备考" back="/school" backLabel="返回课内实验"
       summary={data && sample ? data.papers.length+' 套试卷 · 每套 '+sample.questionCount+' 题 / '+sample.maxScore+' 分' : undefined}
       questionCounts={sample?.questionCounts}>
       <Link className="button primary" to={base+'/mistakes'}><BookOpen size={16} aria-hidden="true"/>错题本</Link>

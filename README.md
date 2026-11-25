@@ -1,12 +1,10 @@
 # 码起步（Maqibu）
 
-码起步是面向学过 Java 基础的学习者的后端项目实战平台。每章接着上一章的工程继续开发，从 HTTP 和 JSON 起步，再练习 MySQL、Spring Boot 和业务功能，最后独立完成一个可运行、能讲清的后端作品。
+码起步帮助学生完成课内实验、回顾错题并准备考试。数据库原理课程可在网页编写和运行 SQL，逐题查看判分、参考答案和解析，并按实验记录必做题进度。考前可用专项练习和计时模拟卷复盘。
 
-例如在 HTTP 项目中，你会用 JDK 的 HttpServer 实现任务查询接口，再请求 `GET /api/tasks/1`，核对状态码和 JSON 字段。官网的公开沙盒可以先体验接口响应如何改变网页状态。学习工作台采用邀请码注册。
+课外项目按兴趣选学，包含 HTTP、SQL、Spring Boot、业务项目与独立作品。项目章节围绕同一份工程逐步开发。学习工作台采用邀请码注册。
 
 [访问码起步官网](https://try.maqibu.online/)
-
-![码起步官网公开的编码工作台演示](new-system/docs/acceptance/public-landing/maqibu-workspace-preview.png)
 
 ## 快速开始
 

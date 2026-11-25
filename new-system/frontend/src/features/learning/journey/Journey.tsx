@@ -1,3 +1,4 @@
+import {LearningBookmark} from '../../bookmarks/BookmarkButton';
 import {useEffect} from 'react';
 import {ArrowLeft,ArrowRight} from 'lucide-react';
 import {Link,useParams,useSearchParams} from 'react-router-dom';
@@ -25,7 +26,7 @@ function LessonPage({lesson,from}:{lesson:JourneyLesson;from?:string}){
   <Link className="back-link" to={journeyRoot}>← 全流程课程目录</Link>
   <div className="journey-layout">
    <article className="journey-article">
-    <header><p className="journey-module">{modules[lesson.module].name} · {lessonLabel(lesson)}</p><h1>{lesson.title}</h1></header>
+    <header><p className="journey-module">{modules[lesson.module].name} · {lessonLabel(lesson)}</p><div className="bookmark-heading"><h1>{lesson.title}</h1><LearningBookmark title={lesson.title} source={modules[lesson.module].name} href={lessonHref(lesson.id)}/></div></header>
     {practiceStage&&<VerifiedPractice stage={practiceStage}/>}
     <LessonContent lesson={lesson} from={from}/>
     {references.length>0&&<details className="journey-references"><summary>查阅本模块教程</summary><ul>{references.map(([title,url])=><li key={url}><a href={url} target="_blank" rel="noreferrer">{title}</a></li>)}</ul></details>}

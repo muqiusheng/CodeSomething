@@ -1,11 +1,11 @@
 import {ArrowLeft, BookOpen, ChevronRight, Download, Printer} from 'lucide-react';
-import {Fragment, useContext, useState, type ReactNode} from 'react';
+import {Fragment, useContext, useState, type ComponentProps, type ReactNode} from 'react';
 import {Link} from 'react-router-dom';
 import {Modal} from '../../../components/ui/modal';
 import {PageSkeleton} from '../../../components/shared/LoadingState';
 import {ExpandedResults} from '../WorkbenchControls';
 import {WorkbenchResultGrid} from '../WorkbenchResultGrid';
-import {SqlPreview} from '../QuestionSolution';
+import {QuestionSolution,SqlPreview} from '../QuestionSolution';
 import {resultMarkdown} from '../result-grid.mjs';
 import {kindNames,kinds,stateNames,type Item,type Kind,type Summary} from './exam-api';
 import {isDuplicateSqlErrorCheck,primaryQueryPreview,sqlItemDiagnostic} from './exam-state.mjs';
@@ -166,19 +166,112 @@ export function HistoryList({history,base}: {history:Summary[];base:string}) {
   </>;
 }
 
-function checkSummary(check: Item['checks'][number]) {
+const genericCheckLabels = new Set([
+  '核对数据或对象状态','核对变式数据或对象状态','核对对象与数据状态',
+  '变式数据与边界验证','核对结果集','基础结果与对象状态','变式数据','查询结果','变式查询结果',
+  '基础数据与对象状态','种子数据结果','变更数据后仍符合题意','变式数据校验','基础查询结果',
+]);
+
+const preciseCheckLabels: Record<string,string> = {
+  '成绩范围、可空与外键': '字段约束检查（成绩范围、是否允许为空、外键）',
+  '列、类型与复合主键': '字段名称、类型与复合主键符合要求',
+  '新增字段类型和可空属性': '新增字段的类型和是否允许为空符合要求',
+  '拒绝不存在的选课组合': '外键拒绝不存在的学生或课程',
+  '合法边界可写、超限不可写': '允许写入边界值，拒绝超出范围的值',
+  '视图数据和投影': '视图返回要求的行和列',
+  '新课程及缺考后按基表更新': '新增课程或缺考记录后，视图随原表更新',
+  '同一会话获取两个 OUT': '在同一会话中读出两个输出参数',
+  '空课程返回两个零': '课程无人选修时，两个输出参数均为零',
+  '及格与不及格边界': '及格分数附近的成绩分类正确',
+  'NULL 分支': '缺考成绩（NULL）得到正确处理',
+  '触发器时机和目标表': '触发器绑定正确的表和操作，在指定时机执行',
+  '只记录变化，包括 NULL 转数值': '只记录有变化的成绩，也记录从缺考改为有分数',
+  '审计记录随事务回滚': '撤销成绩修改时一并撤销对应的审计记录',
+  '更新父键同步到子表': '更新主表编号后，相关记录的外键同步更新',
+  '只修改指定课号': '只修改指定课程的记录',
+  '计划记录正确': '写入的计划记录符合要求',
+  '允许改姓名，禁止改出院系': '允许修改姓名，拒绝把学生改到视图范围以外的院系',
+  '聚合视图结果': '视图中的分组统计结果正确',
+  '保留合法边界并拦截低分': '允许达到最低分数的成绩，拒绝低于下限的成绩',
+  '筛选条件和列顺序': '返回符合筛选条件的记录，列顺序正确',
+  '允许合法更新，拒绝越界写入': '允许符合范围的更新，拒绝超出范围的值',
+  '删除课程清除对应选课，学生仍存在': '删除课程时一并删除对应选课记录，保留学生信息',
+  '过程返回正确的审计计数': '过程返回正确的审计日志条数',
+  '更新指定记录并接受 NULL 和重复值': '更新指定记录，允许空值和重复值',
+  '缺少选课时拒绝且保留成绩': '没有选课记录时拒绝操作，保留原有成绩',
+  '不存在的学号被触发器拒绝': '触发器拒绝不存在的学号',
+  '不存在的课号被触发器拒绝': '触发器拒绝不存在的课程号',
+  '变式中仍触发相同约束': '更换数据后仍会报出同类错误',
+};
+
+function checkCopy(item:Item, check:Item['checks'][number]) {
+  const prompt = questionHeading(item.question.prompt);
+  const changedInput = /变式|变更数据/.test(check.label);
+  let label = preciseCheckLabels[check.label] ?? check.label;
+  let detail = '检查实际结果是否满足「'+label+'」这一项要求。';
+
+  if (check.kind==='execution' || /执行成功|完整执行|完整执行 SQL/.test(check.label)) {
+    label = 'SQL 语句可以正常执行';
+    detail = '运行提交的 SQL，检查每条语句能否执行完成。';
+  } else if (check.kind==='expected_error' || /运行原实验语句|预期错误/.test(check.label)) {
+    label = changedInput ? '更换数据后仍会报出同类错误' : '执行时出现题目要求的错误';
+    detail = '执行指定操作，并核对 MySQL 报出的错误类型是否符合题意。';
+  } else if (check.kind==='negative_check' && !preciseCheckLabels[check.label]
+      && (genericCheckLabels.has(check.label) || /约束边界/.test(check.label))) {
+    label = changedInput ? '更换数据后仍能拒绝不合规的值' : '字段约束能区分合法和不合法的数据';
+    detail = '用符合条件的值和违反约束的值测试，核对数据库是否接受或拒绝这些操作。';
+  } else if (genericCheckLabels.has(check.label)) {
+    if (check.kind==='result_set' || /结果集|查询结果/.test(check.label)) {
+      label = changedInput ? '换一组数据，查询结果仍然正确' : '查询结果与预期一致';
+      detail = '比较 SQL 返回的行和列。题目指定列名或排序时，也会核对相应要求。';
+    } else if (/触发器/.test(prompt)) {
+      label = changedInput ? '换一组数据，触发器仍按要求执行' : '触发器的设置与执行结果符合要求';
+      detail = '执行题目指定的操作，检查触发器及它对数据产生的结果。';
+    } else if (/过程|函数|游标|PROCEDURE|CALL\s/i.test(prompt)) {
+      label = changedInput ? '更换输入后，过程或函数仍按要求工作' : '过程或函数的操作结果符合要求';
+      detail = '按题意核对过程或函数的创建、删除、参数、返回值或数据结果。';
+    } else if (/视图/.test(prompt)) {
+      label = changedInput ? '换一组数据，视图仍按要求工作' : '视图定义或查询结果符合要求';
+      detail = '核对题目要求的视图设置，或比较视图返回的数据。';
+    } else if (/建表|创建[^。；\n]{0,36}表|主键|外键|约束|新增字段|修改字段|列类型|表结构|ALTER\s+TABLE/i.test(prompt)
+        && check.kind!=='post_query') {
+      label = changedInput ? '换一组数据，表结构仍符合要求' : '表结构符合题目要求';
+      detail = '查看表的字段、类型、键和约束，核对题目指定的结构。';
+    } else if (check.kind==='post_query' || /插入|删除|更新|写入|新增|修改/.test(prompt)) {
+      label = changedInput ? '换一组数据，变更结果仍然正确' : '数据变更结果正确';
+      detail = '运行 SQL 后查看受影响的记录，核对哪些数据应当变化，以及变更后的值。';
+    } else if (/数据库/.test(prompt)) {
+      label = '数据库的名称和设置符合要求';
+      detail = '核对操作后数据库的名称、字符集或题目指定的设置。';
+    } else {
+      label = '操作后的结果符合题目要求';
+      detail = '查看执行后的结果，并与题目要求逐项比较。';
+    }
+    if (changedInput) detail += ' 本项使用另一组样例数据。';
+  } else if (check.label==='成绩范围、可空与外键') {
+    detail = '检查成绩能否留空，超出规定范围时是否被拒绝，并核对学号与课程号是否引用已有记录。';
+  }
+
+  const message = check.diff && check.message==='查询结果或对象状态与要求不符。'
+    ? '本次输出与预期有差异，可对照下面的结果。' : check.message;
+  return {label,detail,message};
+}
+
+function checkSummary(check: Item['checks'][number], message: string) {
   const {diff} = check;
-  if (!diff) return check.advice || check.message;
+  if (!diff) return check.advice || message;
   const differences = [
     diff.missing.length ? `缺失 ${diff.missing.length} 行` : '',
     diff.extra.length ? `多余 ${diff.extra.length} 行` : '',
     diff.columnsDiffer ? '列名或列数不同' : '',
     diff.orderDiffers ? '行顺序不同' : '',
   ].filter(Boolean);
-  return differences.join('，') || check.advice || check.message;
+  return differences.join('，') || check.advice || message;
 }
 
-export function ItemFeedback({item, compact = false}: {item:Item; compact?:boolean}) {
+export function ItemFeedback({item, compact = false, solution}: {
+  item:Item; compact?:boolean; solution?:Omit<ComponentProps<typeof QuestionSolution>,'placement'>;
+}) {
   const expanded = useContext(ExpandedResults);
   const condensed = compact && !expanded;
   const option = item.question.options.findIndex(value=>value.id===item.correct[0]);
@@ -198,15 +291,17 @@ export function ItemFeedback({item, compact = false}: {item:Item; compact?:boole
         ? <details><summary>MySQL 原始报错</summary><pre>{diagnostic.raw}</pre></details>
         : <pre>{diagnostic.raw}</pre>)}
     </div>}
-    {!diagnostic && failed && <p>{checkSummary(failed)} <span className="exam-muted">（展开检查点查看明细）</span></p>}
+    {!diagnostic && failed && <p>{checkSummary(failed,checkCopy(item,failed).message)} <span className="exam-muted">（展开检查点查看明细）</span></p>}
     {correct && <p>正确答案　{correct}</p>}
     {!!item.acceptedBlanks.length && <ol>{item.acceptedBlanks.map((answers,i)=><li key={i}><code>{answers.join(' ／ ')}</code></li>)}</ol>}
-    {item.explanation && (condensed
+    {item.explanation && (compact
       ? <details><summary>题目解析</summary><p>{item.explanation}</p></details>
       : <p>{item.explanation}</p>)}
+    {solution ? <QuestionSolution {...solution} placement="results"/>
+      : item.referenceSql && <details><summary>参考答案</summary><SqlPreview key={item.referenceSql} sql={item.referenceSql}/></details>}
     {preview && <div className="exam-result-preview">
       <div className="exam-result-preview-head">
-        <strong>本次查询结果（{preview.label}）</strong>
+        <strong>本次查询结果（{checkCopy(item,preview).label}）</strong>
         <span className="exam-muted">共 {preview.actual.reduce((sum,table)=>sum+table.rows.length,0)} 行</span>
       </div>
       {previewTables?.map((table,i)=>table.columns.length
@@ -215,16 +310,17 @@ export function ItemFeedback({item, compact = false}: {item:Item; compact?:boole
       {condensed && (preview.actual.length > 2 || preview.actual.some(table=>table.rows.length>8)) &&
         <p className="exam-muted">预览最多 2 个结果集，每组最多 8 行。放大查看完整结果。</p>}
     </div>}
-    {item.referenceSql && <details><summary>参考 SQL</summary><SqlPreview key={item.referenceSql} sql={item.referenceSql}/></details>}
     {item.checks.map((check,index)=>{
       const repeated = isDuplicateSqlErrorCheck(check, diagnostic);
+      const copy = checkCopy(item,check);
       return <details key={index}>
-        <summary>{check.label} <span className={check.status==='passed'?'exam-check-pass':''}>· {check.status==='passed'?'通过':'未通过'}（{check.score}/{check.points} 分）</span>{check.status!=='passed' && !repeated && check.diff && <small> · {checkSummary(check)}</small>}</summary>
+        <summary>{copy.label} <span className={check.status==='passed'?'exam-check-pass':''}>· {check.status==='passed'?'通过':'未通过'}（{check.score}/{check.points} 分）</span>{check.status!=='passed' && !repeated && check.diff && <small> · {checkSummary(check,copy.message)}</small>}</summary>
+        <p>{copy.detail}</p>
         {check.status!=='passed' && (repeated
           ? <p className="exam-muted">因上方 SQL 执行出错，未能执行本检查点。</p>
           : <>
-            <p>{check.message}</p>
-            {check.advice && check.advice!==check.message && <p className="exam-muted">{check.advice}</p>}
+            <p>{copy.message}</p>
+            {check.advice && check.advice!==copy.message && <p className="exam-muted">{check.advice}</p>}
           </>)}
         {check.status!=='passed' && check.diff && <p>缺失 {check.diff.missing.length} 行 · 多余 {check.diff.extra.length} 行
           {check.diff.columnsDiffer && ' · 列名或列数不同'}{check.diff.orderDiffers && ' · 行顺序不同'}</p>}
@@ -270,7 +366,8 @@ export function itemMarkdown(item:Item) {
   }
   for (const check of item.checks) {
     const repeated = isDuplicateSqlErrorCheck(check, diagnostic);
-    lines.push('- '+check.label+' '+check.score+'/'+check.points+' · '+(repeated?'因 SQL 执行出错未执行':check.message));
+    const copy = checkCopy(item,check);
+    lines.push('- '+copy.label+' '+check.score+'/'+check.points+' · '+copy.detail+(check.status==='passed'?'': ' '+(repeated?'因 SQL 执行出错未执行':copy.message)));
     if (check.diff) lines.push('缺失 '+check.diff.missing.length+' 行，多余 '+check.diff.extra.length+' 行'
       +(check.diff.columnsDiffer?'，列名或列数不同':'')+(check.diff.orderDiffers?'，行顺序不同':''));
     if (check.expected.length) lines.push('期望结果',...check.expected.map(table=>resultMarkdown(table.columns,table.rows)));

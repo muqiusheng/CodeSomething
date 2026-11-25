@@ -1,4 +1,5 @@
-import {useState} from 'react';
+import {BookmarkButton} from '../../bookmarks/BookmarkButton';
+import {useEffect,useRef,useState} from 'react';
 import {Link,useNavigate,useParams,useSearchParams} from 'react-router-dom';
 import {errorMessage,schoolRequest} from '../school-api';
 import {discardExamDraft,draftPath,examApi,examRoute,kindNames,kinds,useExamRead,type Mistake,type Overview,type Work} from './exam-api';
@@ -16,6 +17,7 @@ export default function ExamMistakes() {
   const [batchBusy,setBatchBusy] = useState(false);
   const [batchError,setBatchError] = useState('');
   const navigate = useNavigate();
+  const linkedQuestion = params.get('question');
   const lab = params.get('lab')??'';
   const tag = params.get('tag')??'';
   const type = params.get('type')??'';
@@ -88,7 +90,7 @@ export default function ExamMistakes() {
         {batchError && <p className="note" role="alert">{batchError}</p>}
       </section>
       <div className="exam-review-list">
-        {filtered.length ? filtered.map(mistake=><MistakeCard key={mistake.item.question.id} mistake={mistake} base={base} api={api}
+        {filtered.length ? filtered.map(mistake=><MistakeCard key={mistake.item.question.id} mistake={mistake} base={base} api={api} courseId={courseId} selected={linkedQuestion===mistake.item.question.id}
           onChange={next=>setData(all.map(m=>m.item.question.id===next.item.question.id?next:m))}/>)
           : <section className="card exam-panel"><h2>{all.length?'当前筛选没有错题':'暂时没有错题'}</h2>
             <p>{all.length?'调整筛选条件即可查看其他错题。':'交卷后，未满分的题会自动收录在这里。'}</p></section>}
@@ -97,7 +99,13 @@ export default function ExamMistakes() {
   </div>;
 }
 
-function MistakeCard({mistake,base,api,onChange}:{mistake:Mistake;base:string;api:string;onChange:(mistake:Mistake)=>void}) {
+function MistakeCard({mistake,base,api,courseId,selected,onChange}:{mistake:Mistake;base:string;api:string;courseId:string;selected:boolean;onChange:(mistake:Mistake)=>void}) {
+  const card = useRef<HTMLElement>(null);
+  useEffect(()=>{
+    if (!selected) return;
+    const frame=requestAnimationFrame(()=>card.current?.scrollIntoView({block:'start'}));
+    return ()=>cancelAnimationFrame(frame);
+  },[selected]);
   const [rework,setRework] = useState(false);
   const [answer,setAnswer] = useState<string[]>([]);
   const [busy,setBusy] = useState(false);
@@ -110,18 +118,21 @@ function MistakeCard({mistake,base,api,onChange}:{mistake:Mistake;base:string;ap
     catch (error) {setError(errorMessage(error));}
     finally {setBusy(false);}
   }
-  return <article className="card exam-panel">
+  return <article ref={card} className="card exam-panel exam-bookmark-entry">
     <p className="exam-muted">{kindNames[item.question.kind]} · 错 {mistake.count} 次 · {item.question.tags.join('、')}</p>
     <h2>{questionHeading(item.question.prompt)}</h2>
     <p><Link to={base+'/'+mistake.paperId}>{mistake.paperTitle}</Link> · <strong>{mistake.mastered?'已掌握':'待攻克'}</strong></p>
     <div className="exam-actions exam-screen">
+      <BookmarkButton target={{id:['school-mistake',courseId,item.question.id].join('.'),category:'school',
+        source:mistake.paperTitle+' · 错题本',title:questionHeading(item.question.prompt),
+        href:base+'/mistakes?question='+encodeURIComponent(item.question.id)}}/>
       <button type="button" className="button secondary" aria-expanded={rework} onClick={()=>setRework(!rework)}>单题重做</button>
       <button type="button" className="button secondary" disabled={busy} onClick={()=>void mark()}>{mistake.mastered?'标为待攻克':'标为已掌握'}</button>
     </div>
     {error && <p className="note" role="alert">{error}</p>}
     {rework && <div className="exam-screen"><ExamQuestion question={item.question} answer={answer} onAnswer={setAnswer} endpoint={endpoint} allowCheck
       onChecked={result=>{if(result.score===result.question.points)onChange({...mistake,mastered:true});}}/></div>}
-    <details className="exam-item"><summary>最近作答、错因与解析</summary>
+    <details className="exam-item" open={selected||undefined}><summary>最近作答、错因与解析</summary>
       <p>最近作答</p><pre>{item.answer.map(value=>item.question.kind==='choice'?item.question.options.find(o=>o.id===value)?.text??value
         : item.question.kind==='boolean'?value==='true'?'对':'错':value).join('\n')||'未作答'}</pre>
       <ItemFeedback item={item}/>

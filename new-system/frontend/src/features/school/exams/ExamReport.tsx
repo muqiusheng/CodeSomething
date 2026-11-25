@@ -1,11 +1,15 @@
+import {BookmarkButton} from '../../bookmarks/BookmarkButton';
+import type {BookmarkTarget} from '../../bookmarks/BookmarksProvider';
 import {useEffect,useRef,useState} from 'react';
-import {Link,useParams} from 'react-router-dom';
+import {Link,useParams,useSearchParams} from 'react-router-dom';
 import {examApi,examRoute,kindNames,kinds,stateNames,useExamRead,type Attempt,type Item,type Kind,type PaperInfo} from './exam-api';
 import {ExamHeader,ExamReadState,ExportActions,HistoryList,ItemFeedback,itemMarkdown,SyntaxGuide,questionHeading,QuestionTables} from './ExamShared';
 import {ExamQuestion} from './ExamQuestion';
 
 export default function ExamReport() {
   const {courseId='',paperId='',attemptId=''} = useParams();
+  const [params] = useSearchParams();
+  const linkedQuestion = params.get('question');
   const base = examRoute(courseId);
   const paperApi = examApi(courseId)+'/'+encodeURIComponent(paperId);
   const api = paperApi+'/attempts/'+encodeURIComponent(attemptId);
@@ -74,7 +78,10 @@ export default function ExamReport() {
       </div>
       <div className="exam-review-list">
         {items.map((item,index)=><ReportQuestion item={item} key={item.question.id} index={index}
-          visible={matches(item)} expansion={expansion}
+          visible={matches(item)} expansion={expansion} selected={linkedQuestion===item.question.id}
+          target={{id:['school-exam',courseId,paperId,attemptId,item.question.id].join('.'),category:'school',
+            source:summary.title+' · 阅卷报告',title:questionHeading(item.question.prompt),
+            href:paper+'/attempts/'+attemptId+'?question='+encodeURIComponent(item.question.id)}}
           endpoint={api+'/questions/'+item.question.id}/>)}
         {!items.some(matches) && <p className="exam-muted" role="status">当前筛选没有题目。</p>}
       </div>
@@ -82,13 +89,19 @@ export default function ExamReport() {
   </div>;
 }
 
-function ReportQuestion({item,index,endpoint,visible,expansion}:{item:Item;index:number;endpoint:string;visible:boolean;
+function ReportQuestion({item,index,endpoint,visible,expansion,selected,target}:{item:Item;index:number;endpoint:string;visible:boolean;selected:boolean;target:BookmarkTarget;
   expansion?:{open:boolean;revision:number}}) {
   const [retry,setRetry] = useState(false);
   const [answer,setAnswer] = useState(item.answer);
   const details=useRef<HTMLDetailsElement>(null);
   useEffect(()=>{if (details.current && expansion) details.current.open=expansion.open;},[expansion]);
-  return <details ref={details} className="exam-item" hidden={!visible} open={index===0||undefined}>
+  useEffect(()=>{
+    if (!selected || !details.current) return;
+    const frame = requestAnimationFrame(()=>details.current?.scrollIntoView({block:'start'}));
+    return ()=>cancelAnimationFrame(frame);
+  },[selected]);
+  return <div className="exam-bookmark-entry" hidden={!visible}>
+    <details ref={details} className="exam-item" open={selected||index===0||undefined}>
     <summary><span>{index+1}. {kindNames[item.question.kind]} · {questionHeading(item.question.prompt)}</span>
       <strong>{stateNames[item.status]} · {item.score}/{item.question.points} 分</strong></summary>
     {item.question.options.length>0 && <ol className="exam-report-options" type="A">
@@ -103,5 +116,7 @@ function ReportQuestion({item,index,endpoint,visible,expansion}:{item:Item;index
       <button type="button" className="button secondary" aria-expanded={retry} onClick={()=>setRetry(!retry)}>调试与对比</button>
       {retry && <ExamQuestion question={item.question} answer={answer} onAnswer={setAnswer} endpoint={endpoint} allowCheck/>}
     </div>}
-  </details>;
+    </details>
+    <div className="exam-screen"><BookmarkButton target={target}/></div>
+  </div>;
 }

@@ -1,35 +1,45 @@
 import {useState} from 'react';
-import {Check, Radio, CircleAlert} from 'lucide-react';
 
-const states = {
- 200:{label:'200 OK',body:{id:1,title:'学习制作任务接口'}},
- 404:{label:'404 Not Found',body:{error:'未找到这条任务'}},
- 500:{label:'500 Internal Server Error',body:{error:'服务暂时无法读取任务'}},
-} as const;
+const modes = [
+  {id:'all',label:'全部记录',line:'SELECT Sno, Cno, Grade',from:'FROM sc;'},
+  {id:'where',label:'WHERE 筛选',line:'SELECT Sno, Cno, Grade',from:'FROM sc',clause:'WHERE Grade >= 80;'},
+  {id:'group',label:'GROUP BY 分组',line:'SELECT Cno, COUNT(*) AS enrolled',from:'FROM sc',clause:'GROUP BY Cno;'},
+  {id:'order',label:'ORDER BY 排序',line:'SELECT Sno, Cno, Grade',from:'FROM sc',clause:'ORDER BY Grade DESC;'},
+] as const;
+const records = [
+  {student:'240101',course:'001',grade:78},
+  {student:'240102',course:'002',grade:91},
+  {student:'240103',course:'001',grade:86},
+  {student:'240104',course:'002',grade:73},
+];
 
-export function HomePlayground(){
- const [status,setStatus]=useState<keyof typeof states>(200);
- const [done,setDone]=useState(false);
- const sample=states[status];
- const body=status===200?{...states[200].body,completed:done}:sample.body;
- const fields=Object.entries(body);
- return <div className="home-sandbox">
-  <div className="sandbox-controls"><div className="sandbox-request"><Radio size={16} aria-hidden="true"/><code>GET /api/tasks/1</code></div>
-  <div className="sandbox-states" role="group" aria-label="HTTP 响应状态">
-   {([200,404,500] as const).map(code=><button key={code} type="button" className="btn button secondary" aria-pressed={status===code} onClick={()=>setStatus(code)}>{code}</button>)}
-  </div></div>
-  <div className="home-example-flow">
-   <div className="home-example-response home-code-card"><div className="sandbox-response-heading"><h3>模拟 JSON 响应</h3><span className="home-status" data-status={status}>{sample.label}</span></div><pre><code>{'{\n'}{fields.map(([key,value],index)=><span key={key}>
-     {'  '}<span className="sandbox-json-key">{JSON.stringify(key)}</span>{': '}
-     <span className={typeof value==='string'?'sandbox-json-string':'sandbox-json-value'}>{JSON.stringify(value)}</span>
-     {index<fields.length-1?',\n':'\n'}
-    </span>)}{'}'}</code></pre></div>
-   <div className="home-example-preview">
-    <div className="home-example-task" data-completed={status===200&&done} role="status">
-     {status===200?<><span className="home-example-check" aria-hidden="true">{done&&<Check size={16}/>}</span><span>{done?<s>{states[200].body.title}</s>:states[200].body.title}<small>{done?'已完成':'待完成'}</small></span></>:<><CircleAlert size={18} aria-hidden="true"/><span>{status===404?states[404].body.error:states[500].body.error}</span></>}
+export function HomePlayground() {
+  const [id,setId] = useState<(typeof modes)[number]['id']>('all');
+  const mode = modes.find(candidate=>candidate.id===id)!;
+  const grouped = id==='group';
+  const selected = id==='where' ? records.filter(row=>row.grade>=80)
+    : id==='order' ? [...records].sort((a,b)=>b.grade-a.grade) : records;
+  const counts = new Map<string,number>();
+  if (grouped) records.forEach(row=>counts.set(row.course,(counts.get(row.course) ?? 0)+1));
+
+  return <div className="home-sandbox">
+    <div className="sandbox-states" role="group" aria-label="SQL 查询方式">
+      {modes.map(option=><button key={option.id} className="btn button secondary" type="button"
+        aria-pressed={id===option.id} onClick={()=>setId(option.id)}>{option.label}</button>)}
     </div>
-    {status===200&&<button type="button" className="btn button secondary" aria-pressed={done} onClick={()=>setDone(value=>!value)}>切换完成</button>}
-   </div>
-  </div>
- </div>;
+    <div className="home-example-flow">
+      <div className="home-code-card sandbox-sql">
+        <pre aria-label="示例 SQL"><code><span data-active={id==='all'}>{mode.line}</span>{'\n'}{mode.from}
+          {'clause' in mode && <>{'\n'}<span data-active="true">{mode.clause}</span></>}</code></pre>
+      </div>
+      <div className="sandbox-sql-results">
+        <div className="section-heading"><strong>查询结果</strong><span role="status">示例数据 · {grouped ? counts.size : selected.length} 行</span></div>
+        <table className="table table-xs" aria-label="选课表查询结果">
+          <thead><tr>{(grouped ? ['课程号','选课人数'] : ['学号','课程号','成绩']).map(column=><th key={column} scope="col">{column}</th>)}</tr></thead>
+          <tbody>{grouped ? [...counts].map(([course,count])=><tr key={course}><td>{course}</td><td>{count}</td></tr>)
+            : selected.map(row=><tr key={row.student}><td>{row.student}</td><td>{row.course}</td><td>{row.grade}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>;
 }

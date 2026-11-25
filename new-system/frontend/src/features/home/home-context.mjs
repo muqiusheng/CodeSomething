@@ -1,5 +1,5 @@
 const projects={
- 'http-json-basics':{title:'后端入门实验室',project:'backend-foundations',prefix:'/learn/http-json/1.1/',development:'在本地IDE继续同一份Java工程；网页连接源码、保存并检查。'},
+ 'http-json-basics':{title:'HTTP / JSON 基础',project:'backend-foundations',prefix:'/learn/http-json/1.1/',development:'在本地IDE继续同一份Java工程；网页连接源码、保存并检查。'},
  'sql-foundations':{title:'任务数据实验室',project:'sql-foundations',prefix:'/learn/sql/1.0/',development:'在本地继续SQL脚本，保存后导入本章文件；网页试运行与正式检查分开。'},
  'boot-foundations':{title:'接口启动实验室',project:'boot-foundations',prefix:'/learn/boot-foundations/1.0/'},
  'task-manager':{title:'个人任务管理',project:'task-manager',prefix:'/learn/task-manager/1.0/'},
@@ -13,10 +13,10 @@ export function homeContext(resume, lesson){
  }
  if(!session&&!resume?.progress?.completedCount&&resume?.progress?.passedPractices?.includes('workspace')){
   const hasHttp=resume.progress.passedPractices.includes('workspace-http-text');
-  return {courseId,title:hasHttp?'看见浏览器发来了请求':'让浏览器显示你写的文字',href:hasHttp?'/learn/journey/03':'/learn/journey/02',action:hasHttp?'继续第 3 节':'继续第 2 节',location:'后端入门实验室',development:'沿用已经通过检查的 Java 工程。',projectHref:'/projects/backend-foundations',links:[],firstVisit:false};
+  return {courseId,title:hasHttp?'看见浏览器发来了请求':'让浏览器显示你写的文字',href:hasHttp?'/learn/journey/03':'/learn/journey/02',action:hasHttp?'继续第 3 节':'继续第 2 节',location:'HTTP / JSON 基础',development:'沿用已经通过检查的 Java 工程。',projectHref:'/projects/backend-foundations',links:[],firstVisit:false};
  }
  if(!session&&!resume?.progress?.completedCount&&!resume?.progress?.passedPractices?.length){
-  return {courseId,title:'让 Java 打印你的第一句话',href:'/learn/journey/01',action:'开始第 1 节',location:'后端入门实验室',development:'在自己的 Java 工程里运行第一份程序。下一节，让浏览器显示你写的文字。',projectHref:'/projects/backend-foundations',links:[],firstVisit:true};
+  return {courseId,title:'让 Java 打印你的第一句话',href:'/learn/journey/01',action:'开始第 1 节',location:'HTTP / JSON 基础',development:'在自己的 Java 工程里运行第一份程序。下一节，让浏览器显示你写的文字。',projectHref:'/projects/backend-foundations',links:[],firstVisit:true};
  }
  const project=projects[courseId];
  if(!project)return {courseId,title:'选择学习项目',href:'/projects',action:'查看项目',location:'此项目请从项目目录继续',development:'在项目页查看当前开发与检查方式。',projectHref:'/projects',links:[]};

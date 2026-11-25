@@ -17,7 +17,7 @@ const views = [
   {key: 'overview', label: '概览', icon: LayoutDashboard, screen: AdminOverview},
   {key: 'users', label: '用户管理', icon: UsersRound, screen: AdminUsers},
   {key: 'submissions', label: '评测作业', icon: Activity, screen: AdminSubmissions},
-  {key: 'school', label: '课内实战', icon: GraduationCap, screen: AdminSchool},
+  {key: 'school', label: '课内实验', icon: GraduationCap, screen: AdminSchool},
   {key: 'questions', label: '题库', icon: BookOpen, screen: AdminQuestions},
   {key: 'runners', label: '运行环境', icon: Server, screen: AdminRunners},
   {key: 'audit', label: '审计日志', icon: FileClock, screen: AdminAudit},

@@ -45,6 +45,43 @@ class PublicAccessTest {
         assertTrue(failure.getMessage().contains("CS_JWT_SECRET"), failure::toString);
     }
 
+    @Test void bookmarksPersistPerLearnerAndCanBeRemovedIdempotently() throws Exception {
+        String root = "/api/v1/bookmarks";
+        String id = "school-lab.database-systems.lab-03-single-query.q01";
+        String bookmark = """
+            {"id":"school-lab.database-systems.lab-03-single-query.q01","category":"school",
+             "title":"查询全体学生","source":"数据库原理 · 实验三",
+             "href":"/school/database-systems/lab-03-single-query?question=q01"}
+            """;
+        var firstPassword = "Acceptance-Student-92";
+        try (var app = start()) {
+            String admin = token(login(app, "admin", "Initial-Admin-Password-92"));
+            String first = token(register(app, "bookmark-one", invite(app, admin)));
+            String second = token(register(app, "bookmark-two", invite(app, admin)));
+            assertEquals(401, request(app, "GET", root, null, null, null).statusCode());
+            assertEquals(401, request(app, "POST", root, bookmark, null, null).statusCode());
+            assertEquals(403, request(app, "GET", root, null, admin, null).statusCode());
+            assertEquals(400, request(app, "POST", root, bookmark.replace(
+                "/school/database-systems/lab-03-single-query?question=q01", "//example.org"), first, null).statusCode());
+            var created = request(app, "POST", root, bookmark, first, null);
+            assertEquals(200, created.statusCode(), created.body());
+            var saved = json.readTree(created.body());
+            assertEquals(id, saved.path("id").asText());
+            assertFalse(saved.path("createdAt").asText().isBlank());
+            assertEquals(saved, json.readTree(request(app, "POST", root, bookmark, first, null).body()));
+            assertEquals(0, json.readTree(request(app, "GET", root, null, second, null).body()).size());
+            assertEquals(204, request(app, "DELETE", root + "/" + id, null, second, null).statusCode());
+            assertEquals(saved, json.readTree(request(app, "GET", root, null, first, null).body()).get(0));
+        }
+        try (var app = start()) {
+            String owner = token(login(app, "bookmark-one", firstPassword));
+            assertEquals(id, json.readTree(request(app, "GET", root, null, owner, null).body()).get(0).path("id").asText());
+            assertEquals(204, request(app, "DELETE", root + "/" + id, null, owner, null).statusCode());
+            assertEquals(204, request(app, "DELETE", root + "/" + id, null, owner, null).statusCode());
+            assertEquals(0, json.readTree(request(app, "GET", root, null, owner, null).body()).size());
+        }
+    }
+
     @Test void labGradingPreservesDraftWhenMysqlIsUnavailableAndDoesNotExposeRules() throws Exception {
         try (var app = start()) {
             String admin = token(login(app, "admin", "Initial-Admin-Password-92"));

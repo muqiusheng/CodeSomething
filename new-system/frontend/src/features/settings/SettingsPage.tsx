@@ -58,7 +58,7 @@ export function SettingsPage() {
       </form>
     </section>
     <div id="model" tabIndex={-1} className="settings-section-anchor"><TutorConnection/></div>
-    <section className="profile-panel"><div className="section-heading"><h2>项目与 IDE</h2><span className="text-pill">本地工程与网页检查</span></div><p>先在本地IDE创建与开发工程，再在网页连接同一份源码、保存和检查。HTTP、Boot及项目A/B支持网页编辑写回授权文件；SQL使用脚本导入，其他项目按页面说明操作。</p></section>
+    <section className="profile-panel"><div className="section-heading"><h2>课外项目与 IDE</h2><span className="text-pill">本地工程与网页检查</span></div><p>课内数据库实验可直接在网页编写、运行和判分。课外项目可按需选学。本机工程模式可用 IDE 编辑同一份源码，网页可连接授权目录并提交检查。</p></section>
     <MotionSettings value={saved?.motion} onSave={saveMotion} disabled={loading || saving}/>
   </div>;
 }

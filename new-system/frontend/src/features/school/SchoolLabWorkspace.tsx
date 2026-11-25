@@ -1,13 +1,17 @@
+import {BookmarkButton} from '../bookmarks/BookmarkButton';
 import {useScopedRead} from '../../hooks/useScopedRead';
 import {refreshLearning} from '../../api/learning-api';
 import {PageSkeleton} from '../../components/shared/LoadingState';
 import {localState, sessionState} from '../../api/browser-state.mjs';
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {ArrowLeft, Check, ChevronRight, Database, FileText, ListTree, PanelLeftClose, PanelLeftOpen, Play, RotateCcw, Save, ScanLine, TextQuote} from 'lucide-react';
-import {Link, useParams} from 'react-router-dom';
+import {Link, useParams, useSearchParams} from 'react-router-dom';
 import {CodeEditor, type CodeEditorHandle} from '../../components/code/CodeEditor';
 import {Modal} from '../../components/ui/modal';
 import {ReportExportModal} from './ReportExportModal';
+import {currentLabGrade,justCompletedLab} from './lab-progress.mjs';
+import {rememberSchoolLab} from './school-api';
+import {celebrations,celebrationPalettes,useLabCelebration,type CelebrationStyle} from './useLabCelebration';
 import {QuestionSolution} from './QuestionSolution';
 import {LabTablePreview} from './LabTablePreview';
 import {SchoolOriginalMaterials} from './SchoolOriginalMaterials';
@@ -30,7 +34,7 @@ export function SchoolLabWorkspace() {
   if (details) return <LabWorkspace key={url} details={details} url={url}
     updateWork={work=>setData({...details,work})}/>;
   return <div className="page school-workspace">
-    <Link to="/school" className="back-link">返回课内实战</Link>
+    <Link to="/school" className="back-link">返回课内实验</Link>
     {error ? <div className="note" role="alert"><p>{error}</p><button className="button secondary" onClick={reload}>重试</button></div> : <PageSkeleton variant="course" label="正在读取实验…"/>}
   </div>;
 }
@@ -45,6 +49,9 @@ function recover(url: string, work: Work) {
 
 function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: string; updateWork: (value: Work) => void}) {
   const {lab, course, outline} = details;
+  const [params] = useSearchParams();
+  const celebration = useLabCelebration();
+  useEffect(() => rememberSchoolLab(course.id,outline.id), [course.id,outline.id]);
   const directoryKey = 'cs-school-lab-directory-open';
   const [directoryOpen, setDirectoryOpen] = useState(() => {
     try {return localState.getItem(directoryKey) === 'true';}
@@ -59,7 +66,10 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
   const firstUnfinished = () => lab.questions.find(question => details.grading
     ? details.work.executions[question.id]?.grade?.status !== 'correct'
     : details.work.executions[question.id]?.result.status !== 'ok')?.id ?? lab.questions[0].id;
-  const [selectedId, setSelected] = useState(firstUnfinished);
+  const [selectedId, setSelected] = useState(() => {
+    const requested = params.get('question');
+    return lab.questions.find(question => question.id === requested)?.id ?? firstUnfinished();
+  });
   const selected = lab.questions.some(question => question.id === selectedId) ? selectedId : firstUnfinished();
   const [busy, setBusy] = useState('');
   const active = useRef(false);
@@ -79,6 +89,7 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
   const [activeStep, setActiveStep] = useState(0);
   const [resultRevision, setResultRevision] = useState(0);
   const editor = useRef<CodeEditorHandle>(null);
+  const [celebrationSettings, setCelebrationSettings] = useState(false);
   const [report, setReport] = useState(false);
   const [reset, setReset] = useState(false);
   const [objectsOpen, setObjectsOpen] = useState(false);
@@ -97,13 +108,10 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
   const debug = labDebug?.questionId === selected && labDebug.sql === value ? labDebug : undefined;
   const traceStep = debug?.mode==='trace' ? debug.result.steps[activeStep] : undefined;
   const preview = selectionRun?.questionId === selected && selectionRun.sql === value ? selectionRun.result : undefined;
-  const gradeFor = (id: string) => {
-    const grade = resultFor(id) ? work.executions[id]?.grade : undefined;
-    const revision = lab.questions.find(item=>item.id===id)?.gradingRevision;
-    return revision && grade?.question.id !== `${outline.id}-${id}-${revision}` ? undefined : grade;
-  };
+  const gradeFor = (id: string) => currentLabGrade(outline.id,lab.questions.find(item=>item.id===id)!,work,drafts[id] ?? '');
   const passed = (id: string) => details.grading ? gradeFor(id)?.status === 'correct' : resultFor(id)?.status === 'ok';
   const grade = !preview && !debug && resetFeedback !== selected ? gradeFor(selected) : undefined;
+  const solutionEndpoint = url+'/questions/'+encodeURIComponent(selected)+'/solution';
   const result = preview ?? (!details.grading ? resultFor(selected) : undefined);
   const required = lab.questions.filter(item => !item.optional);
   const executed = required.filter(item => passed(item.id)).length;
@@ -193,6 +201,8 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
         if (result) setSelectionRun({questionId: selected, sql: value, result});
         return;
       }
+      if (details.grading && !all && justCompletedLab(outline.id,required,work,response.work,selected,
+        response.results[selected]?.status === 'ok')) celebration.play();
       applyWork(response.work);
       refreshLearning('school');
       if (Object.values(response.results).some(result=>result.status==='unavailable')) setError('隔离 MySQL 不可用，已保留作答，请稍后重试。');
@@ -332,7 +342,12 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
       <section className="sql-practice-reference school-pane school-practice-prompt" aria-labelledby="school-question" tabIndex={0}
         key={selected}>
         <div className="school-question-header">
-          <h2 id="school-question"><QuestionText text={question.title}/></h2>
+          <div className="bookmark-heading">
+            <h2 id="school-question"><QuestionText text={question.title}/></h2>
+            <BookmarkButton target={{id:['school-lab',course.id,outline.id,question.id].join('.'),category:'school',
+              source:course.title+' · '+outline.title,title:question.title,
+              href:'/school/'+course.id+'/'+outline.id+'?question='+encodeURIComponent(question.id)}}/>
+          </div>
           {next && <button type="button" className="btn btn-ghost sql-practice-quiet school-question-next" disabled={!!busy} onClick={() => setSelected(next.id)}>
             下一题<ChevronRight size={15} aria-hidden="true"/>
           </button>}
@@ -348,7 +363,7 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
           </p>}
         </details>}
         {details.grading && !hasTableSpecs && <LabTablePreview url={url} question={question}/>}
-        {details.grading && <QuestionSolution endpoint={url+'/questions/'+encodeURIComponent(selected)+'/solution'}
+        {details.grading && <QuestionSolution endpoint={solutionEndpoint}
           value={value} onFill={edit} disabled={!!busy}/>}
         {hasOriginalData && <SchoolOriginalMaterials lab={lab} question={question} collapsed={!!details.grading}/>}
       </section>
@@ -407,6 +422,7 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
                   <button type="button" disabled={!!busy || !Object.values(drafts).some(text => text.trim())} onClick={() => run(true)}>运行全部</button>
                   <button type="button" disabled={!!busy} onClick={() => setReset(true)}>重置练习库</button>
                 </>}
+                {details.grading && <button type="button" disabled={!!busy} onClick={() => setCelebrationSettings(true)}>通关彩带 · {celebrations[celebration.style]}</button>}
                 <button type="button" disabled={!!busy} onClick={openReport}><FileText size={14} aria-hidden="true"/>导出实验报告</button>
               </WorkbenchMenu>
             </div>
@@ -426,7 +442,7 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
           {(preview || debug?.mode==='selection') && <p>选中代码执行结果</p>}
           {debug && <WorkbenchDebugResult result={debug.result} trace={debug.mode==='trace'}
             active={activeStep} setActive={setActiveStep}/>}
-          {grade && !busy && <ItemFeedback key={selected + ':' + resultRevision} item={grade} compact/>}
+          {grade && !busy && <ItemFeedback key={selected + ':' + resultRevision} item={grade} compact solution={{endpoint:solutionEndpoint,value,onFill:edit,disabled:!!busy}}/>}
           {result && <LabResult key={selected + ':' + resultRevision} result={result} database={details.database}/>}
           {complete && <div className="school-completion">
             <span className="school-completion-icon"><Check size={20} aria-hidden="true"/></span>
@@ -440,9 +456,25 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
               </div>
             </div>
           </div>}
+
         </WorkbenchResults>
       </div>
     </div>
+    {celebrationSettings && <Modal className="lab-celebration-modal" open onOpenChange={setCelebrationSettings} title="通关彩带"
+      description="完成实验全部必做题时播放。切换样式可预览。">
+      <div className="lab-celebration-setting" role="group" aria-label="彩带样式">
+        {(Object.keys(celebrations) as CelebrationStyle[]).map(style=><button key={style} type="button"
+          className="btn btn-outline lab-celebration-option" aria-pressed={celebration.style===style}
+          onClick={()=>celebration.choose(style)}>
+          <span className="lab-celebration-swatches" aria-hidden="true">
+            {style==='off' ? <span className="lab-celebration-off">—</span>
+              : celebrationPalettes[style].map(color=><i key={color} style={{backgroundColor:color}}/>)}
+          </span>
+          <span>{celebrations[style]}</span>
+          {celebration.style===style && <Check size={15} aria-hidden="true"/>}
+        </button>)}
+      </div>
+    </Modal>}
     {objectsOpen && <Modal open onOpenChange={setObjectsOpen} title="课程练习库"
       description="这里的对象独立于每题判分使用的初始数据。" className="school-objects-modal">
       <WorkbenchNavigator courseId={course.id} revision={schemaRevision}

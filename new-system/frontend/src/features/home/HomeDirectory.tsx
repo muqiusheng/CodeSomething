@@ -1,10 +1,10 @@
-import {ArrowRight,BookOpen,Boxes,Route} from 'lucide-react';
+import {ArrowRight,Bookmark,GraduationCap,RotateCcw} from 'lucide-react';
 import {Link} from 'react-router-dom';
 
 const destinations=[
- {to:'/path',title:'学习路径',description:'看清当前阶段和下一步',icon:Route,tone:'primary'},
- {to:'/learn/journey',title:'全部课次',description:'按章节找到要学的一节',icon:BookOpen,tone:'secondary'},
- {to:'/projects',title:'项目库',description:'查看各项目要做出的成果',icon:Boxes,tone:'accent'},
+ {to:'/school',title:'课内实验',description:'按课次练习，查看必做进度',icon:GraduationCap,tone:'primary'},
+ {to:'/reviews',title:'复习与错题',description:'回顾错题，做专项练习与模拟卷',icon:RotateCcw,tone:'secondary'},
+ {to:'/bookmarks',title:'我的收藏',description:'回看收藏的题目与章节',icon:Bookmark,tone:'accent'},
 ] as const;
 
 export function HomeDirectory(){

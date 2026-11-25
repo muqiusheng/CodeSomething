@@ -34,7 +34,7 @@ export function ProgressTrail({activeCourse}:{activeCourse?:string}){
  const counts=data??{};
  const loading=data===null;
  return <section className="home-trail" aria-labelledby="home-trail-title">
-  <h2 id="home-trail-title">模块进度</h2>
+  <h3 id="home-trail-title" className="sr-only">课外模块进度</h3>
   <ol>{modules.map(({title,courses,href})=>{
    const current=activeCourse !== undefined && courses.includes(activeCourse);
    const available=courses.every(id=>counts[id]);
@@ -43,7 +43,7 @@ export function ProgressTrail({activeCourse}:{activeCourse?:string}){
    const complete=available&&total>0&&done>=total;
    const percentage=available&&total>0?Math.min(100,Math.floor(100*done/total)):null;
    return <li key={title}><Link to={href} data-complete={complete} aria-current={current?'step':undefined}>
-    <span className="trail-top"><span className="trail-state"><span className="trail-dot" aria-hidden="true"/>{current?'当前阶段':complete?'已完成':''}</span><strong title={available?`${done}/${total} 项已通过`:'进度暂未读取'}>{percentage===null?'—':percentage+'%'}</strong></span>
+    <span className="trail-top"><span className="trail-state"><span className="trail-dot" aria-hidden="true"/>{current?'正在选学':complete?'已完成':''}</span><strong title={available?`${done}/${total} 项已通过`:'进度暂未读取'}>{percentage===null?'—':percentage+'%'}</strong></span>
     <span className="trail-name">{title}</span>
     <progress aria-label={title+'进度'} max={100} value={percentage??0} hidden={percentage===null}/>
     {percentage===null&&<span className="trail-placeholder" aria-hidden="true">{loading&&<span className="loading-delay"><span className="loading-line"/></span>}</span>}

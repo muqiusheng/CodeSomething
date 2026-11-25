@@ -14,7 +14,7 @@ const appEntry: Plugin = {
 function routeApp(req: import('node:http').IncomingMessage, _res: import('node:http').ServerResponse, next: () => void) {
   const url = new URL(req.url || '/', 'http://localhost');
   if (/^(GET|HEAD)$/.test(req.method || '') &&
-      /^\/(learn|path|projects|school|reviews|portfolio|profile|settings|login|register|change-password|admin)(\/|$)/.test(url.pathname)) {
+      /^\/(learn|path|projects|school|reviews|portfolio|profile|bookmarks|settings|login|register|change-password|admin)(\/|$)/.test(url.pathname)) {
     req.url = '/app.html' + url.search;
   }
   next();

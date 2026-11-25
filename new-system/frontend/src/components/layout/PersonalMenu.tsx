@@ -7,7 +7,7 @@ import {logout} from '../../api/auth-api';
 import {useAuth} from '../../features/auth/AuthContext';
 import {ChartNoAxesCombined,SlidersHorizontal,Palette,Bot,Settings,ChevronRight} from 'lucide-react';
 import '../../styles/personal-center.css';
-const items=[{title:'学习画像与数据',to:'/profile',icon:ChartNoAxesCombined},{title:'学习偏好',to:'/settings#learning',icon:SlidersHorizontal},{title:'外观与交互',to:'/settings#appearance',icon:Palette},{title:'模型连接',to:'/settings#model',icon:Bot},{title:'设置',to:'/settings',icon:Settings}];
+const items=[{title:'学习进度与数据',to:'/profile',icon:ChartNoAxesCombined},{title:'学习偏好',to:'/settings#learning',icon:SlidersHorizontal},{title:'外观与交互',to:'/settings#appearance',icon:Palette},{title:'模型连接',to:'/settings#model',icon:Bot},{title:'设置',to:'/settings',icon:Settings}];
 export function PersonalMenu({compact=false,onNavigate}:{compact?:boolean;onNavigate?:()=>void}){
  const {user,config}=useAuth();
  const [logoutError,setLogoutError]=useState('');

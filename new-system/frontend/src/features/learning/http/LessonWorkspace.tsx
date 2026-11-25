@@ -1,3 +1,4 @@
+import {LearningBookmark} from '../../bookmarks/BookmarkButton';
 import {useCourseRead} from '../../../hooks/useCourseRead';
 import {PageSkeleton} from '../../../components/shared/LoadingState';
 import {CodeCompletion} from '../shared/CodeCompletion';
@@ -65,7 +66,7 @@ export function LessonWorkspace(){
  return <TutorProvider key={identity} scope={tutorScope} submissionId={currentCheck?.submissionId} job={currentCheck?.job} token={currentCheck?.token}><div className="lesson-page foundation-lesson" data-practice={tab==='任务'}><nav className="http-workspace-location" aria-label="当前位置">
   <Link to={foundationProjectRoute}>{project.title}</Link><ChevronRight size={13} aria-hidden="true"/><span aria-current="page">{!isLegacy&&milestoneTitles[chapter.stageId]||'第'+(index+1)+'章 · '+chapter.phase}</span>
  </nav><header className="lesson-header-bar"><div className="header-title-group">
- <div className="lesson-title"><div><h1>{legacy?.title||milestoneTitles[chapter.stageId]||chapter.title}</h1></div></div></div><div className="header-action-group"><div className="lesson-title-tools"><LessonTutorDrawer/></div>
+ <div className="lesson-title"><div><h1>{legacy?.title||milestoneTitles[chapter.stageId]||chapter.title}</h1></div></div></div><div className="header-action-group"><div className="lesson-title-tools"><LearningBookmark title={legacy?.title||milestoneTitles[chapter.stageId]||chapter.title} source={project.title}/><LessonTutorDrawer/></div>
  <details className="coding-chapters"><summary>章节目录</summary><nav className="chapter-strip" aria-label="项目章节">{project.chapters.map((item,position)=>{
   const complete=completedStages.has(item.stageId);
   const current=!isLegacy&&position===index;

@@ -116,7 +116,7 @@ export function AdminUsers() {
         <h3>课程进度</h3>
         {profile.data.profile.summary?.courses ? <CourseCoverage progress={profile.data.profile.summary.courses}/>
           : <p>该账号还没有学习记录。</p>}
-        <h3>课内实战</h3>
+        <h3>课内实验</h3>
         {profile.data.school.length ? <ul>{profile.data.school.map(lab => <li key={lab.courseId + lab.labId}>{lab.title} · {lab.completed}/{lab.required}</li>)}</ul> : <p>暂无实验记录。</p>}
         {!!profile.data.profile.knowledge?.length && <details><summary>学习画像证据</summary><ul>
           {profile.data.profile.knowledge.map(item => <li key={item.skill.courseId+item.skill.stageId}><strong>{item.skill.title||item.skill.name||item.skill.stageId}</strong> · {item.reason}</li>)}

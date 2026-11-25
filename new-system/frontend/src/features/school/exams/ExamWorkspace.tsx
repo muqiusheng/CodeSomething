@@ -1,6 +1,7 @@
+import {BookmarkButton} from '../../bookmarks/BookmarkButton';
 import {ArrowLeft,Bookmark,ChevronLeft,ChevronRight,ClipboardList,Clock3} from 'lucide-react';
 import {useCallback,useEffect,useRef,useState} from 'react';
-import {Link,useBlocker,useNavigate,useParams,useSearchParams} from 'react-router-dom';
+import {Link,Navigate,useBlocker,useNavigate,useParams,useSearchParams} from 'react-router-dom';
 import {sessionState} from '../../../api/browser-state.mjs';
 import {currentAccess} from '../../../api/auth-api';
 import {useMysqlActivity} from '../../../hooks/useMysqlActivity';
@@ -17,9 +18,11 @@ export default function ExamWorkspace() {
   const [params,setParams] = useSearchParams();
   const id = params.get('draft');
   const fromAttempt = params.get('from');
+  const linkedQuestion = params.get('question');
   const api = examApi(courseId)+'/'+encodeURIComponent(paperId);
   const base = examRoute(courseId);
   const work = useExamWork(id ? api+'/drafts/'+encodeURIComponent(id) : null);
+  const archived = useExamRead<Attempt>(id && linkedQuestion ? api+'/attempts/'+encodeURIComponent(id) : null);
   const {data:currentWork,setData:setWork} = work;
   const publishDraft = useCallback((draft:Draft)=>{
     if (currentWork) setWork({...currentWork,draft});
@@ -50,7 +53,9 @@ export default function ExamWorkspace() {
       </section>
     </div>;
   }
-  if (id) return work.data ? <ActiveExam key={id} work={work.data} api={api+'/drafts/'+id} base={base}
+  if (id && archived.data && linkedQuestion) return <Navigate replace
+    to={base+'/'+paperId+'/attempts/'+id+'?question='+encodeURIComponent(linkedQuestion)}/>;
+  if (id) return work.data ? <ActiveExam key={id} linkedQuestion={linkedQuestion} work={work.data} api={api+'/drafts/'+id} base={base}
     onSaved={publishDraft} onDiscard={returnToStart}/>
     : <div className="page exam-page"><ExamHeader title="试卷作答" back={base}/>
       <ExamReadState error={work.error} reload={work.reload} label="正在恢复作答…"/>
@@ -128,9 +133,10 @@ function backup(key:string,account:string,value?:string) {
 }
 const formatTime = (seconds:number) => [Math.floor(seconds/60),seconds%60].map(unit=>String(unit).padStart(2,'0')).join(':');
 
-function ActiveExam({work,api,base,onSaved,onDiscard}:{
-  work:Work;api:string;base:string;onSaved:(draft:Draft)=>void;onDiscard:()=>void;
+function ActiveExam({work,api,base,linkedQuestion,onSaved,onDiscard}:{
+  work:Work;api:string;base:string;linkedQuestion:string|null;onSaved:(draft:Draft)=>void;onDiscard:()=>void;
 }) {
+  const {courseId = ''} = useParams();
   const {draft,questions} = work;
   const key = 'school-exam:'+api;
   const account = useRef(currentAccess().user?.userId??'').current;
@@ -152,7 +158,7 @@ function ActiveExam({work,api,base,onSaved,onDiscard}:{
   const [discardError,setDiscardError] = useState('');
   const [confirm,setConfirm] = useState(false);
   const [drawer,setDrawer] = useState(false);
-  const [position,setPosition] = useState(0);
+  const [position,setPosition] = useState(()=>Math.max(0,questions.findIndex(q=>q.id===linkedQuestion)));
   const [questionSessions,setQuestionSessions] = useState<Record<string,QuestionSession>>({});
   const heading = useRef<HTMLHeadingElement>(null);
   const skew = useRef(work.serverNow-(work.receivedAt??Date.now()));
@@ -321,10 +327,15 @@ function ActiveExam({work,api,base,onSaved,onDiscard}:{
   const questionPrompt = <>
         <div className="exam-question-head">
           <p>{kindNames[question.kind]} · 第 {position+1}/{questions.length} 题 · {question.points} 分</p>
+          <div className="bookmark-heading">
+          <BookmarkButton target={{id:['school-exam',courseId,draft.paperId,draft.id,question.id].join('.'),category:'school',
+            source:draft.title,title:questionHeading(question.prompt),
+            href:base+'/'+draftPath(draft.paperId,draft.id)+'&question='+encodeURIComponent(question.id)}}/>
           <button type="button" className="button secondary" disabled={ended||busy||discarding} aria-pressed={values.stars.includes(question.id)} onClick={()=>
             update({...values,stars:values.stars.includes(question.id) ? values.stars.filter(id=>id!==question.id) : [...values.stars,question.id]})}>
             <Bookmark size={16} aria-hidden="true"/>{values.stars.includes(question.id)?'已标存疑':'标记存疑'}
           </button>
+          </div>
         </div>
         <h2 className="exam-question-prompt" tabIndex={-1} ref={heading}><QuestionText text={questionHeading(question.prompt)}/></h2>
   </>;

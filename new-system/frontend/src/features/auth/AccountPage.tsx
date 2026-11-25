@@ -65,6 +65,7 @@ export function AccountPage({mode}: {mode: Mode}) {
     <main className="access-shell">
       <section className="access-panel" aria-labelledby="account-title">
         <h1 id="account-title">{title}</h1>
+        {!changing && <p>完成课内实验、回顾错题与考前复习，也可按兴趣选学课外项目。</p>}
         {changing && user?.passwordChangeRequired && <p>首次使用临时密码登录后，请设置新密码。</p>}
         <form className="access-fields" onSubmit={submit} aria-busy={busy}>
           {!changing && <label>用户名<input className="csx-input" name="username" autoComplete="username" spellCheck={false} required maxLength={32} pattern={registration ? '[A-Za-z0-9_\\-]{3,32}' : undefined}/></label>}

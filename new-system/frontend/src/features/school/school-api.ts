@@ -1,6 +1,7 @@
 import type {Item} from './exams/exam-api';
+import {localState} from '../../api/browser-state.mjs';
 import {apiFetch} from '../../api/auth-api';
-export type LabProgress = {id: string; title: string; questions: number; executed: number; totalQuestions: number};
+export type LabProgress = {id: string; title: string; questions: number; executed: number; totalQuestions: number; review?: {id:string;title:string}[]};
 export type SchoolCourse = {id: string; title: string; school: string; major: string; summary: string; engine: 'mysql' | 'manual'};
 export type CourseGroup = {term: string; title: string; courses: {course: SchoolCourse; labs: LabProgress[]; examCount?: number}[]};
 export type Question = {id: string; title: string; requirement: string; hint: string; optional: boolean; starterSql: string; originalText?: string | null; gradingRevision?: string | null };
@@ -56,10 +57,28 @@ export async function schoolRequest<T>(url: string, body?: unknown, signal?: Abo
     method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body),
   })});
   const data = await response.json().catch(() => null);
-  if (!response.ok || data === null) throw new Error(data?.message || '无法读取课内实战服务，请重试。');
+  if (!response.ok || data === null) throw new Error(data?.message || '无法读取课内实验服务，请重试。');
   return data as T;
 }
 
 export function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : '操作失败，请重试。';
+}
+
+export type SchoolCourseProgress = CourseGroup['courses'][number];
+const recentLabKey = 'cs-recent-school-lab';
+
+export function rememberSchoolLab(courseId: string, labId: string) {
+  try {localState.setItem(recentLabKey, JSON.stringify({courseId,labId}));}
+  catch { /* The home page can still resume from saved progress. */ }
+}
+
+export function recentSchoolLab() {
+  try {
+    const saved = JSON.parse(localState.getItem(recentLabKey) || 'null');
+    if (typeof saved?.courseId === 'string' && typeof saved?.labId === 'string') {
+      return {courseId: String(saved.courseId),labId: String(saved.labId)};
+    }
+  } catch { /* Use catalog progress when the local position is unavailable. */ }
+  return null;
 }

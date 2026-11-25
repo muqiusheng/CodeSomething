@@ -81,7 +81,7 @@ export function AdminSchool() {
   }
 
   return <>
-    <div className="admin-heading"><h1>课内实战</h1><button className="csx-btn" type="button" onClick={school.refresh}>刷新进度</button></div>
+    <div className="admin-heading"><h1>课内实验</h1><button className="csx-btn" type="button" onClick={school.refresh}>刷新进度</button></div>
     <section className="admin-card">
       <div className="admin-form">
         <label>课程包<select className="csx-select" value={course} disabled={!!busy} onChange={event => setChosen(event.target.value)}>

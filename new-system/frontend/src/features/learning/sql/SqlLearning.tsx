@@ -1,3 +1,4 @@
+import {LearningBookmark} from '../../bookmarks/BookmarkButton';
 import {useCourseRead} from '../../../hooks/useCourseRead';
 import {useLearningProgress} from '../../../hooks/useLearningProgress';
 import {useScopedRead} from '../../../hooks/useScopedRead';
@@ -76,7 +77,7 @@ export function SqlLearning({project=false}:{project?:boolean}) {
  if(!course)return <div className="page narrow"><h1>任务数据实验室</h1>{courseError?<p role="alert">{courseError}</p>:<PageSkeleton variant="course" label="正在读取课程…"/>}{courseError&&<button className="button secondary" onClick={retryCourse}>重试</button>}</div>;
  if(!project&&!chapter)return <div className="page narrow"><h1>未找到此SQL章节</h1><Link to="/projects/sql-foundations">查看课程目录</Link></div>;
  return <TutorProvider key={stage} scope={{courseId:'sql-foundations',courseVersion:'1.0.0',stageId:stage}} sqlReportId={attempt?.stageId===stage&&attempt.report?attempt.id:undefined}><div className={`page sql-page ${project?'':'sql-workbench'}`}><Link className="back-link" to={project?'/projects':'/projects/sql-foundations'}>← {project?'返回项目':'任务数据实验室'}</Link>
-  <div className={project?"page-title":"page-title lesson-header-bar"}><div className="header-title-group"><span className="sql-eyebrow">{project?'基础项目 · 6章':`第${index+1}章 · ${chapter!.minutes}分钟`}</span><h1>{project?course.title:chapter!.title}</h1></div>{!project&&<div className="header-action-group"><LessonTutorDrawer/><span className="text-pill">{complete?'编码已完成':`${progress?.completedCount??0}/6关达标`}</span><details className="coding-chapters">
+  <div className={project?"page-title":"page-title lesson-header-bar"}><div className="header-title-group"><span className="sql-eyebrow">{project?'基础项目 · 6章':`第${index+1}章 · ${chapter!.minutes}分钟`}</span><div className="bookmark-heading"><h1>{project?course.title:chapter!.title}</h1><LearningBookmark title={project?course.title:chapter!.title} source={project?"课外项目库":course.title}/></div></div>{!project&&<div className="header-action-group"><LessonTutorDrawer/><span className="text-pill">{complete?'编码已完成':`${progress?.completedCount??0}/6关达标`}</span><details className="coding-chapters">
    <summary>章节目录</summary>
    <nav className="boot-chapters" aria-label="SQL课程章节">{course.chapters.map((c,i)=>
     <Link key={c.stageId} to={route(c.stageId)} aria-current={c.stageId===stage?'step':undefined}>

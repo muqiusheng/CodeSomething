@@ -1,0 +1,62 @@
+.study-profile,.study-review {display:grid;gap:24px;max-width:1200px;}
+.study-profile p,.study-review p {margin:0;}
+.study-heading {display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.study-heading h1 {margin:0 0 3px;}
+.study-heading .daily {color:var(--text-secondary);font-size:.8125rem;}
+.study-panel {
+  display:grid;
+  align-content:start;
+  gap:12px;
+  min-width:0;
+  padding:18px 20px;
+  border:1px solid var(--border);
+  border-radius:var(--radius-panel);
+  color:var(--text);
+  background:var(--surface);
+}
+.study-panel :is(h2,h3,p,ul,dl),.study-section>h2 {margin:0;}
+.study-panel h3 svg {margin-inline-end:8px;}
+.study-panel .section-heading>span,.study-list span {color:var(--text-secondary);font-size:.8125rem;}
+.study-progress {
+  appearance:none;
+  display:block;
+  width:100%;
+  height:7px;
+  border:0;
+  border-radius:999px;
+  background:var(--surface-muted);
+  color:var(--primary);
+  overflow:hidden;
+}
+.study-progress::-webkit-progress-bar {background:var(--surface-muted);}
+.study-progress::-webkit-progress-value {background:var(--primary);border-radius:999px;}
+.study-progress::-moz-progress-bar {background:var(--primary);border-radius:999px;}
+.study-section,.school-progress-list {display:grid;gap:12px;min-width:0;}
+.study-section[hidden] {display:none;}
+.study-list {list-style:none;padding:0;}
+.study-list li+li {border-top:1px solid var(--border);}
+.study-list li a {display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;min-height:44px;padding:7px 4px;}
+.study-list li a:hover {background:var(--surface-muted);border-radius:var(--radius-control);}
+.study-list span {max-inline-size:min(44vw,17rem);text-align:end;}
+.study-list strong {font-size:.875rem;font-weight:550;}
+.study-list span svg {color:var(--success);margin-inline-end:3px;}
+.study-optional {margin-inline-start:6px;font-size:.75rem;font-weight:500;color:var(--text-secondary);}
+.study-metrics,.study-summary-columns {display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr));}
+.study-summary-columns {grid-template-columns:1.35fr 1fr;}
+.study-summary-primary {background:color-mix(in oklab,var(--primary-soft) 46%,var(--surface));}
+.study-metrics {grid-template-columns:repeat(4,minmax(0,1fr));}
+.study-profile .study-metrics div {display:flex;flex-direction:column;align-items:flex-start;min-width:0;gap:2px;padding:12px 10px;background:var(--surface-muted);border-radius:var(--radius-control);}
+.study-metrics dt {font-size:.8125rem;color:var(--text-secondary);}
+.study-metrics dd {margin:2px 0 0;font-size:1.65rem;font-weight:650;font-variant-numeric:tabular-nums;}
+.study-profile .study-profile-tabs {margin:0 0 18px;max-width:100%;}
+.study-profile-tabs button {min-height:40px;}
+.study-profile .capability-page {display:grid;gap:18px;min-width:0;}
+@media (max-width:760px) {
+  .study-summary-columns {grid-template-columns:1fr;}
+  .study-metrics {grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media (max-width:480px) {
+  .study-panel {padding-inline:13px;}
+  .study-list li a {grid-template-columns:minmax(0,1fr) auto;}
+  .study-list li a>svg {display:none;}
+}

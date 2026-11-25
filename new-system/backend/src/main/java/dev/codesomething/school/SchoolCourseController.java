@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/school/courses")
 public class SchoolCourseController {
     record CourseGroup(String term, String title, List<CourseDetails> courses) {}
-    record LabProgress(String id, String title, int questions, int executed, int totalQuestions) {}
+    record LabReview(String id, String title) {}
+    record LabProgress(String id, String title, int questions, int executed, int totalQuestions,
+                       List<LabReview> review) {}
     record CourseDetails(SchoolCourseCatalog.Course course, List<LabProgress> labs, int examCount) {}
     record LabDetails(SchoolCourseCatalog.Course course, SchoolCourseCatalog.LabOutline outline,
                       SchoolCourseCatalog.Lab lab, SchoolDraftStore.Draft work, SchoolStudent.Identity student, String database, boolean grading) {}
@@ -64,7 +66,12 @@ public class SchoolCourseController {
                 var execution = work.executions().get(question.id());
                 return execution != null && execution.completed(grading);
             }).count();
-            return new LabProgress(outline.id(), outline.title(), required.size(), count, lab.questions().size());
+            var review = grading ? lab.questions().stream().filter(question -> {
+                var execution = work.executions().get(question.id());
+                return execution != null && Objects.equals(work.drafts().get(question.id()), execution.sql())
+                    && execution.grade() != null && Set.of("wrong", "partial").contains(execution.grade().status());
+            }).map(question -> new LabReview(question.id(), question.title())).toList() : List.<LabReview>of();
+            return new LabProgress(outline.id(), outline.title(), required.size(), count, lab.questions().size(), review);
         }).toList();
         return new CourseDetails(course, progress, exams.papers(course.id()).size());
     }

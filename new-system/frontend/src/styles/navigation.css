@@ -163,3 +163,22 @@ html[data-motion=reduce] :is(#root,.mobile-nav-slot) {transition:none;}
  .mobile-nav-slot .header-navigation :is(.coding-brand,.coding-quick-links) {display:none}
  .mobile-nav-slot .history-controls button {width:44px}
 }
+
+.sidebar-group-title {
+  min-height: 19px;
+  margin: 10px 0 3px;
+  padding-inline: 12px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+@media (width > 640px) {
+  .sidebar[data-expanded=false] .sidebar-group-title {
+    margin: 9px 10px 5px;
+    padding: 0;
+    min-height: 0;
+    height: 1px;
+    overflow: hidden;
+    border-top: 1px solid var(--border);
+  }
+}
