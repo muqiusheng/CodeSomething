@@ -6,6 +6,12 @@
 
 目录与命令入口见README.md及docs/15-工程目录与维护约定.md。前端按src/features组织业务组件，components只保留共享实现；CSS集中src/styles。阶段检查放new-system/tooling/checks，工具测试放tooling/tests；前端单元测试和浏览器验收分放tests/unit、tests/browser。常用命令由scripts/project.ps1调用。保持已发布课程、运行数据和历史验收证据的路径与内容稳定。
 
+### 临时产物清理
+
+- 谁产生，谁收尾。发布打包、Docker镜像导出、浏览器或IDEA沙箱验收、临时QA和源码镜像克隆结束后，先把验收结论及必要证据写入文档，再立即清理本次在`new-system/runtime/`生成的一次性目录、镜像包（`*.tar.gz`）、重复的`idea-sandbox`、构建副本和临时日志。
+- 清理前逐项列出确切路径和预计释放空间，核对路径位于本工作区内、用途明确、任务已结束且无进程占用。保护白名单包括所有Git跟踪文件、Git元数据、`docs/`、`new-system/docs/acceptance/`、`new-system/course-packs/`、`new-system/curriculum/`、`new-system/frontend/public/`、`new-system/runtime/data/`、`new-system/runtime/maven-repository/`和`new-system/runtime/backups/`，清理时不得删除、清空或覆盖。正在使用、占用无法核实或用途不明的内容一律保留。严禁清空整个`new-system/runtime/`或用宽泛通配符直接删除。
+- 本地`new-system/runtime/releases/`如需暂存发布JAR，最多保留最近1～2个版本。更早的归档按同一保护规则及时清理。
+
 ## 当前决策
 
 2026年11月10日客户选择从零设计系统。当前有效的产品与建设方案是根目录PRODUCT.md、DESIGN.md和docs/01—06。旧项目`code-something/`及其内部文档、数据、阶段报告均为历史材料。
@@ -34,7 +40,7 @@
 
 ## 实施纪律
 
-线上常规发布只同步两台 Instabox：`codesomething` 运行生产版本，`maqibu` 保存对应版本的前端、后端、课程包、运行配置和可恢复数据，专用于备份及手动恢复。悉尼、上海应用仅在重大故障时人工启用，退出例行发布、同步和流量接管。2026-11-25 生产入口迁移至 Cloudflare Worker，直接访问 Instabox 私有源站。悉尼公网网关已停用。Cloudflare 只读状态检查窗口为北京时间 05:00–13:00 和 15:00–23:00，对应 UTC 前一天 21:00–当天 05:00 和当天 07:00–15:00。取消全天保活，计划任务不请求应用源站。
+2026年11月26日确认沿用现网分工。`codesomething` 运行生产应用，保存账号、会话、草稿、进度和判题结果。`maqibu` 执行基础 Java 判题，`maqibu2` 执行 MySQL 练习。上海接收自动备份及同批版本恢复包，用于隔离恢复和人工接管。悉尼仅在重大故障时人工启用。公网入口由 Cloudflare Worker 直接转发至 Instabox 私有源站。北京时间 09:00–12:30、14:00–17:30、18:30–次日 01:00 开放。状态定时任务在开放时段只读查询平台管理 API。
 
 按R阶段交付可运行的垂直流程。核心判定和数据一致性有行为测试；文案和样式做相称检查。记录版本、命令、结果、截图和未解决项；未运行的检查标为待验收。
 

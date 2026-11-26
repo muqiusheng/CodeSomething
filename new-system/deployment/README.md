@@ -1,10 +1,10 @@
 # 码起步 公网部署
 
-公网账户模式使用 Spring Boot 4 和 SQLite V23。前端与 API 走同一 HTTPS 域名。Compose 默认将入口绑定到回环地址。生产实例须由实际运维方提供专用 Linux 主机、DNS 和受信任的 TLS 证书。
+公网账户模式使用 Spring Boot 4 和 SQLite。前端与 API 走同一 HTTPS 域名。
 
 ## Instabox 主站
 
-2026年11月22日启用免费机器 `codesomething`，当前前端 0.32.0、后端 0.7.3 和 SQLite V23。对外统一使用 [try.maqibu.online 主站](https://try.maqibu.online)。Cloudflare Worker 为公网 HTTPS 入口，直接通过 HTTPS 访问 Instabox 私有端口 17680。Compose 使用生产文件和 `docker-compose.instabox.yml`，后端和MySQL由专用rootless Docker运行。
+2026年11月26日，生产运行前端 0.37.0、后端 0.11.0 和 SQLite V28.1。Cloudflare Worker 将公网请求转发至 `codesomething` 私有端口 17680。主站 Compose 依次加载 `docker-compose.prod.yml`、`docker-compose.instabox.yml`、`docker-compose.mysql-executor.yml` 和 `docker-compose.java-judge.yml`，保留独立的 Java、MySQL 执行节点。[节点职责与生产验收](../../docs/40-节点分工与时段切换记录.md)。
 
 - 悉尼和上海的备用应用已停止，应用数据库与容器保留供人工恢复。悉尼的 `codesomething-https.socket` 已停用并禁用启动，`codesomething-domain-gateway` 已停止。
 - Cloudflare 管理主域名的证书与路由，正式 Worker 的回源凭据位于 Cloudflare Secrets。区域网关配置保留供冷备恢复。
