@@ -36,7 +36,7 @@ function LabHero({course,lab}: {course:SchoolCourseProgress['course'];lab:LabPro
   const previewTitle = previewQuestion?.title || (data ? '必做题已完成' : error ? '题目摘要暂未加载' : '正在读取题目');
   const previewDescription = previewQuestion?.requirement.split('\n\n### 涉及数据表：',1)[0]
     || (data ? '打开实验可查看全部题目与选做内容。' : '打开实验可查看要求和题目。');
-  return <section className="learning-home-task home-hero" aria-labelledby="resume-title">
+  return <section className="learning-home-task home-hero" data-tour="home-hero" aria-labelledby="resume-title">
     <div className="home-hero-copy">
       <p className="learning-home-location">{course.title}</p>
       <h2 id="resume-title">{lab.title}</h2>
@@ -61,7 +61,7 @@ function LabHero({course,lab}: {course:SchoolCourseProgress['course'];lab:LabPro
 }
 
 function LabTrail({entry,active}: {entry:SchoolCourseProgress;active?:string}) {
-  return <section className="home-trail home-lab-trail" aria-label={entry.course.title+'实验进度'}>
+  return <section className="home-trail home-lab-trail" data-tour="home-trail" aria-label={entry.course.title+'实验进度'}>
     <div className="section-heading"><h2>课内课程与实验进度</h2><Link to="/school">{entry.course.title}<ArrowRight size={14} aria-hidden="true"/></Link></div>
     <ol>{entry.labs.map(lab=>{
       const current = lab.id === active;
@@ -90,7 +90,7 @@ export function Dashboard({duration}:{duration:string}) {
   const trail = current?.entry ?? courses.find(course=>course.labs.length);
   const review = trail?.examCount ? trail : courses.find(course=>course.examCount);
 
-  return <div className="page learning-home">
+  return <div className="page learning-home" data-tour-ready={data||error?'home':undefined}>
     <header className="learning-home-heading">
       <div><h1>继续学习</h1><p>完成课内实验，回顾错题，准备考试。</p></div>
       <Link className="daily home-daily" to="/settings"><Clock3 size={19} aria-hidden="true"/>每日 {duration} 分钟计划</Link>
@@ -101,7 +101,7 @@ export function Dashboard({duration}:{duration:string}) {
           <p role="status" className="sr-only">正在读取课内进度…</p>
           <div className="home-hero-copy home-hero-skeleton loading-delay"><LoadingLines widths={[16,58,84,60]}/></div>
           <div className="home-deliverable home-deliverable-skeleton loading-delay"><LoadingLines widths={[32,58,64,50]}/></div>
-        </section> : <section className="learning-home-task home-hero">
+        </section> : <section className="learning-home-task home-hero" data-tour="home-hero">
           <div className="home-hero-copy">
             <h2>{error && !data ? '实验进度暂未加载' : trail ? '必做实验已全部通关' : '课内实验'}</h2>
             <p>{error && !data ? '可以重新读取进度，或直接打开课程目录。' : trail ? '可以回顾错题，或用模拟卷检查掌握情况。' : '课程接入后，实验会出现在这里。'}</p>
@@ -112,7 +112,7 @@ export function Dashboard({duration}:{duration:string}) {
           </div>
         </section>}
       {trail && <LabTrail entry={trail} active={current?.lab.id}/>}
-      <div className="home-interactions">
+      <div className="home-interactions" data-tour="home-interactions">
         <section className="learning-home-example" aria-labelledby="example-title">
           <h2 id="example-title">SQL 查询互动沙盒</h2><HomePlayground/>
         </section>

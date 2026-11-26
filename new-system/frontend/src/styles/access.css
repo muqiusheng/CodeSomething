@@ -3,7 +3,7 @@
 @import "tailwindcss/utilities.css" layer(utilities);
 @plugin "daisyui" {
   themes: false;
-  include: button, input, textarea, select, alert, table, badge;
+  include: button, input, textarea, select, alert, table, badge, progress;
   prefix: csx-;
   logs: false;
 }

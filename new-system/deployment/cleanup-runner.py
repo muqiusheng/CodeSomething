@@ -70,7 +70,8 @@ def main(data):
     data = data.resolve(strict=True)
     # Match RunnerInventory.scopeLabel on the Linux host and in the API container.
     scope = "codesomething.scope=" + hashlib.sha256(os.fsencode(data)).hexdigest()
-    print(docker("container", "prune", "-f", "--filter", "until=168h", "--filter", f"label={scope}"))
+    print(docker("container", "prune", "-f", "--filter", "until=168h", "--filter", f"label={scope}",
+                 "--filter", "label!=codesomething.mysql-disk=1"))
     print(docker("image", "prune", "-f", "--filter", "until=168h", "--filter", "label=codesomething.deployment=true"))
     mounts = set()
     # Container mount sources are authoritative on the dedicated runner daemon.

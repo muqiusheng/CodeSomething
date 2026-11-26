@@ -6,16 +6,19 @@ import {Tabs,TabsContent,TabsList,TabsTrigger} from '../../components/ui/tabs';
 import {examApi,examRoute,useExamRead,type Overview} from './exams/exam-api';
 import {ExamReadState} from './exams/ExamShared';
 import {useState,type ReactNode} from 'react';
+import {useOnboarding} from '../onboarding/OnboardingProvider';
 import '../../styles/school.css';
 
 export function SchoolHome() {
   const {data:groups,error,reload}=useSchoolCourses();
+  const onboarding=useOnboarding();
 
   return <div className="page school-home">
     <div className="school-heading">
       <span className="school-icon"><GraduationCap aria-hidden="true" size={22}/></span>
       <div><h1>课内实验</h1><p>课程实验、作业与课程设计</p></div>
     </div>
+    {onboarding?.workbenchReplayPending && <p className="note" role="status">打开任一数据库实验即可开始工作台导览。</p>}
     {error ? <div className="note" role="alert"><p>{error}</p><button className="button secondary" onClick={reload}>重试</button></div>
       : !groups ? <PageSkeleton variant="cards" label="正在读取课程…"/> : groups.length === 0 ? <p>暂无已接入课程。</p> : groups.map(group =>
       <section className="school-term" key={group.term} aria-labelledby={'term-' + group.term}>

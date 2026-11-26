@@ -118,7 +118,9 @@ public class SchoolCourseController {
                 var full = body.questionId() == null ? null : chosen.get(body.questionId());
                 if (full == null || body.selection().isBlank() || !full.contains(body.selection()))
                     throw ApiException.invalid("selection", "请选择当前题的 SQL 片段后重试。");
-                return new RunResponse(current, runner.run(course, Map.of(body.questionId(), body.selection()), body.database()));
+                var result=runner.run(course,Map.of(body.questionId(),body.selection()),body.database());
+                drafts.activity(courseId,labId,"run");
+                return new RunResponse(current,result);
             }
             var outcomes = runner.run(course, chosen, body.database());
             var executions = new LinkedHashMap<>(current.executions());
@@ -127,7 +129,7 @@ public class SchoolCourseController {
                 if (previous == null || previous.grade() == null || !Objects.equals(previous.sql(), chosen.get(id)))
                     executions.put(id, new SchoolDraftStore.Execution(chosen.get(id), result));
             });
-            return new RunResponse(drafts.save(courseId, lab, body.revision(), scripts, executions), outcomes);
+            return new RunResponse(drafts.save(courseId,lab,body.revision(),scripts,executions,"run",false),outcomes);
         } catch (MysqlEnvironment.Failure e) {
             throw environmentFailure(e);
         }
@@ -153,6 +155,7 @@ public class SchoolCourseController {
             int offset = body.offset() == null ? 0 : body.offset();
             if (offset < 0 || offset > 8192) throw ApiException.invalid("offset", "选区行号无效。");
             var debug = grader.debug(courseId, question, body.selection(), "selection", offset);
+            drafts.activity(courseId,labId,"run");
             var tables = debug.steps().stream().flatMap(step -> step.tables().stream()).toList();
             return new RunResponse(current, Map.of(id, new SchoolLabRunner.RunResult(debug.status(), debug.elapsedMs(), null,
                 tables, debug.error() == null ? null : debug.error().raw())));
@@ -175,7 +178,7 @@ public class SchoolCourseController {
         var previous = executions.get(id);
         if (!status.equals("unavailable") || previous == null || previous.grade() == null || !Objects.equals(previous.sql(), script))
             executions.put(id, new SchoolDraftStore.Execution(script, output, grade));
-        return new RunResponse(drafts.save(courseId, lab, body.revision(), scripts, executions), Map.of(id, output));
+        return new RunResponse(drafts.save(courseId,lab,body.revision(),scripts,executions,"grade","correct".equals(status)),Map.of(id,output));
     }
 
     @PostMapping("/{courseId}/labs/{labId}/questions/{questionId}/debug")
@@ -191,7 +194,9 @@ public class SchoolCourseController {
         if (sql.isBlank()) throw ApiException.invalid("sql", "请先输入要运行的 SQL。");
         int offset = body.offset() == null ? 0 : body.offset();
         if (offset < 0 || offset > 8192) throw ApiException.invalid("offset", "选区行号无效。");
-        return grader.debug(courseId, question, sql, mode, mode.equals("selection") ? offset : 0);
+        var result=grader.debug(courseId, question, sql, mode, mode.equals("selection") ? offset : 0);
+        drafts.activity(courseId,labId,"run");
+        return result;
     }
 
     record LabSolution(String referenceSql, String explanation) {}

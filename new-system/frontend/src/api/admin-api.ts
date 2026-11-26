@@ -20,8 +20,8 @@ export async function adminRead<T>(path: string, signal?: AbortSignal): Promise<
   return (await request(path, signal ? {signal: AbortSignal.any([signal, AbortSignal.timeout(30000)])} : {})).json();
 }
 
-export async function adminWrite<T>(path: string, method: 'POST' | 'PATCH', body: unknown = {}): Promise<T> {
-  return (await request(path, {method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)})).json();
+export async function adminWrite<T>(path: string, method: 'POST' | 'PATCH', body: unknown = {}, timeoutMs = 30000): Promise<T> {
+  return (await request(path, {method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body), signal: AbortSignal.timeout(timeoutMs)})).json();
 }
 
 export async function adminDelete(path: string) {

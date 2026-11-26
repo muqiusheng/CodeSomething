@@ -1,0 +1,20 @@
+services:
+  backend:
+    image: codesomething-instabox-backend:0.8.1-remote-mysql-20261126
+    environment:
+      CS_MYSQL_EXECUTOR: /opt/maqibu-mysql/command
+      CS_MYSQL_EXECUTOR_SOCKET: /opt/maqibu-mysql/relay/mysql.sock
+      CS_PUBLIC_MYSQL_DISK_VOLUME_PREFIX: cs-mysql-slot-maqibu2
+    volumes:
+      - type: bind
+        source: /data/codesomething/service/.remote-mysql/command
+        target: /opt/maqibu-mysql/command
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /data/codesomething/service/.remote-mysql/relay
+        target: /opt/maqibu-mysql/relay
+        read_only: true
+        bind:
+          create_host_path: false

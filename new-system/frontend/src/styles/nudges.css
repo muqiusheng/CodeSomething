@@ -1,0 +1,7 @@
+
+.learner-nudge.modal-content { max-width: min(440px, calc(100vw - 32px)); }
+.learner-nudge-meta,.learner-nudge-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+.learner-nudge-meta { margin: 0; font-size: .875rem; color: var(--muted); }
+.learner-nudge-meta svg { color: var(--primary); }
+.learner-nudge-message { margin: 12px 0 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.learner-nudge-actions button { min-height: 44px; }

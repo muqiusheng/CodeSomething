@@ -1,0 +1,16 @@
+[Unit]
+Description=Prepare the bounded Maqibu MySQL practice volumes
+Requires=codesomething-rootless-docker.service
+BindsTo=codesomething-rootless-docker.service
+PartOf=codesomething-rootless-docker.service
+After=codesomething-rootless-docker.service
+RequiresMountsFor=/data
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash /opt/maqibu-mysql-quota/mysql-quota-slots.sh /data/codesomething/mysql-quota csdeploy /run/user/1001/docker.sock cs-mysql-slot-codesomething 15
+TimeoutStartSec=5min
+
+[Install]
+WantedBy=multi-user.target

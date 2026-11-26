@@ -12,13 +12,17 @@
 
 - 持久目录为 `/data/codesomething`，部署、数据库、快照分别在 `release`、`database`、`backups`。部署账号为 `csdeploy`，私有环境文件为 `release/deployment/site.env`。
 - `codesomething-rootless-docker.service` 在专用挂载命名空间内为守护进程提供可用于容器嵌套的 `/proc`，然后以 `csdeploy` 启动 rootless Docker。保留宿主挂载及容器的cgroup v2资源限制。
-- Cloudflare Worker `codesomething-instabox-health` 使用 [Wrangler 配置](instabox/wrangler.jsonc)。`*/10 21-23,0-4 * * *` 覆盖北京时间 05:00–13:00（UTC 前一天 21:00–当天 05:00），`*/10 7-14 * * *` 覆盖北京时间 15:00–23:00（UTC 当天 07:00–15:00）。只向 Instabox 平台 API 查询状态。通过 Worker Secrets 设置只读 `INSTABOX_READ_TOKEN` 和 `INSTABOX_MACHINE_ID`。缺少绑定时仅记录配置缺失。免费档运行上限和冷却以[平台规则](https://instabox.sh/docs/machines/auto-pause)为准。
+- Cloudflare Worker `codesomething-instabox-health` 在 UTC 01:00–04:30、06:00–09:30 和 10:30–17:00 每十分钟触发一次，各时段的结束分钟不触发。具体表达式见 [Wrangler 配置](instabox/wrangler.jsonc)。状态检查仅访问 InstaBox 管理 API。主站、判题节点和构建节点分别配置自己的机器 ID 与只读凭据。11 月 26 日三个账户均完成直接 API 读取验证和 Worker 绑定，Worker 定时调用仍出现请求异常。单台是否冷却以管理 API 的实时 `cooldownUntil` 为准。
 - 悉尼快照保存在 `backups/sydney-20261122T060017Z.tar.gz`。主站登录使用快照中的账号和密码，已有会话需要重新登录。悉尼应用留在8443，上海 `learn.maqibu.online` 通过SSH隧道私用。两处均可手动接管。需要接续主站最新数据时，恢复同一批次的主库和学员库并撤销旧会话。悉尼接管时先切到支持本站注册的备用网关镜像，再将443的转发目标改回8443。
 - 两台备用网关使用 `standby-registration-map.conf` 和 `standby-registration.conf` 将注册入口指向主站并阻断注册、发码写入。启用备用站接管前恢复同批次数据，再切换到支持本站注册的网关镜像。
 
-Instabox 主站的常驻 MySQL 练习池上限为 6。悉尼与上海使用各自的容量配置。
+2026年11月26日，Instabox 主站启用后端 0.8.1、12 个常驻 MySQL 名额及 15 个高峰名额。已有练习实例随正常休眠回收，新实例使用定额卷。前端继续使用 0.34.0，SQLite 保持 V25。
 
-线上常规发布只同步两台 Instabox：`codesomething` 运行生产版本，`maqibu` 保存对应版本的前端、后端、课程包、运行配置和可恢复数据，专用于备份及手动恢复。悉尼、上海应用仅在重大故障时人工启用，退出例行发布、同步和流量接管。公网路由由 Cloudflare Worker 和 Instabox 主节点提供。
+定额磁盘池候选配置为 `CS_PUBLIC_MYSQL_DISK=true`、`CS_PUBLIC_MYSQL_DISK_VOLUME_PREFIX=cs-mysql-slot-codesomething`、`CS_PUBLIC_MYSQL_POOL_LIMIT=12` 和 `CS_PUBLIC_MYSQL_POOL_PEAK=15`。常驻名额用尽时先回收符合空闲条件的实例，全部仍活跃时可借用三个高峰名额。宿主由 `instabox/mysql-quota-slots.sh` 在当前 rootless Docker 的挂载空间内准备固定 384 MiB 卷，后端只分配已验证大小且未被任何容器占用的卷。休眠时先原子保存逻辑快照，再移除容器并归还卷。卷分给另一个学员前清空旧内容。已有磁盘实例在普通停止后重用原卷。
+
+磁盘池最多同时初始化三个 MySQL 容器，名额检查与启动提交在同一临界区内完成。宿主通过 `codesomething-mysql-quota.service` 和对应的 Docker 单元补充配置，在 dedicated daemon 重启后重挂定额文件系统。清理任务保留停止但仍属于学员的 MySQL 容器，避免提前释放含数据的卷。切换候选版本前，主站需留存原 Compose、运行参数及镜像，并在 `maqibu` 校验同批恢复资产。当前线上版本和配置见实施追踪。
+
+目前 `codesomething` 运行生产版本，上海 ECS 实际恢复后已接手例行备份及手动恢复。旧归档继续保存在 `maqibu`。Java 判题和 MySQL 分别通过了隔离试跑，线上学员仍使用主站执行节点。构建包已经在 `maqibu2` 产出。切换与回滚记录见[节点分工与时段切换记录](../../docs/40-节点分工与时段切换记录.md)。
 
 公开介绍页使用 `index.html`，工作台和账户路由使用 `app.html`。实例环境的 `CS_ALLOW_INDEXING` 默认为 `0`。仅当前承担 `try.maqibu.online` 的 Instabox 主站设为 `1`，请求还须经过域名网关。悉尼备用应用与上海私用应用保持 `0`。网关更新时随镜像一起使用新版双入口构建产物和提供 `GET /api/v1/auth/session` 的后端。
 
@@ -28,7 +32,7 @@ Instabox 主站的必应站长验证文件保存在部署目录的 `BingSiteAuth
 
 [边缘入口 Worker](instabox/gateway-worker.mjs) 与 [Wrangler 配置](instabox/wrangler.gateway.jsonc) 用于替换悉尼网关。接入 `try.maqibu.online` 前先激活 Cloudflare DNS 区域、核对所有原记录、配置 Worker Secrets `INSTABOX_PORT_TOKEN` 和 `CS_INGRESS_TOKEN`，再通过同域名验证 TLS、窗口外 503、登录、回源和 SQL 判分。2026年11月25日已启用 `try.maqibu.online/*` Worker 路由及 DNS 代理，失败模式为关闭。`try` 的代理 A 记录已使用 Cloudflare 保留占位地址 192.0.2.0，线上配置无悉尼回源。原悉尼 A 记录值留在迁移备份内。2026年11月25日已验证直连回源、学员登录和实验三第 4 题判分，停用悉尼网关后复验三项均通过。
 
-Cloudflare Worker 执行单主站服务时段。北京时间 05:00–13:00 和 15:00–23:00（UTC 前一天 21:00–当天 05:00、当天 07:00–15:00）允许回源。其余时间所有新请求在网关收到带服务时段的 503，午休公网验收已通过。线上独立备份接收服务沿用现有配置，库存及恢复验收见[备份与恢复说明](peer-backup.md)。
+Cloudflare Worker 在北京时间 09:00–12:30、14:00–17:30、18:30–次日 01:00 放行新请求。结束时刻起网关返回带时段说明的 503。在途请求按原有连接收尾。网关与状态 Worker 共用 [服务时段](instabox/service-hours.mjs)。当前备份接收和恢复记录见[备份与恢复说明](peer-backup.md)。
 
 ## 2 GiB ECS 试学配置
 

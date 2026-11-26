@@ -76,8 +76,17 @@ public final class LearningDataSource extends AbstractDataSource {
     }
 
     static Flyway migrations(DataSource source) {
-        return Flyway.configure().dataSource(source).locations("classpath:db/migration")
-            .validateMigrationNaming(true).load();
+        var config = Flyway.configure().dataSource(source).locations("classpath:db/migration")
+            .validateMigrationNaming(true);
+        var flyway = config.load();
+        // The public bookmarks release shipped V25 before the V24 interactive lessons.
+        var skipped = java.util.Arrays.stream(flyway.info().all())
+            .filter(migration -> migration.getState() == org.flywaydb.core.api.MigrationState.IGNORED)
+            .toList();
+        if (skipped.size() == 1 && "24".equals(String.valueOf(skipped.getFirst().getVersion()))) {
+            return config.outOfOrder(true).load();
+        }
+        return flyway;
     }
 
     public DataSource primary() { return primary; }

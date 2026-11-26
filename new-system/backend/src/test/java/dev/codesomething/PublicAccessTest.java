@@ -11,6 +11,137 @@ import tools.jackson.databind.json.JsonMapper;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PublicAccessTest {
+    @Test void snapshotPruningPreservesJobsAndProtectsPendingAndSharedSource() throws Exception {
+        try (var app = start()) {
+            String admin = token(login(app, "admin", "Initial-Admin-Password-92"));
+            var storage = app.getBean(dev.codesomething.storage.LearningDataSource.class);
+            String old = java.time.Instant.now().minusSeconds(25 * 3600).toString();
+            String fresh = java.time.Instant.now().toString();
+            storage.inLearningTransaction("admin", jdbc -> {
+                jdbc.update("INSERT INTO workspace_bindings VALUES('prune-binding','browser','http-json-basics','1.1.0','run-server','hash',?)", old);
+                for (String id : java.util.List.of("shared", "single"))
+                    jdbc.update("INSERT INTO submissions VALUES(?,'prune-binding','http-json-basics','1.1.0','run-server','digest',x'616263',?)", id, old);
+                jdbc.update("""
+                    INSERT INTO check_jobs(id,submission_id,binding_id,idempotency_key,status,report,created_at)
+                    VALUES('old','shared','prune-binding','old','compile_error','{}',?),
+                          ('running','shared','prune-binding','running','running','{}',?),
+                          ('fresh','single','prune-binding','fresh','passed','{}',?)
+                    """, old, old, fresh);
+                jdbc.update("INSERT INTO stage_completions VALUES('keep-java','http-json-basics','1.1.0','run-server','single','fresh',NULL,'digest','rule',?)", fresh);
+                jdbc.update("""
+                    INSERT INTO sql_attempts(id,course_version,stage_id,mode,source,digest,idempotency_key,status,report,created_at)
+                    VALUES('sql-fresh','1.0.0','select','check','SELECT 1','digest','sql-fresh','passed','{}',?)
+                    """, fresh);
+                jdbc.update("INSERT INTO sql_completions VALUES('keep-sql','1.0.0','select','sql-fresh',NULL,'digest','rule',?)", fresh);
+                return null;
+            });
+            awaitAdmin(app, "/admin/jobs", admin, node -> node.path("total").asInt() == 4);
+            var expired = request(app, "POST", "/admin/jobs/prune-snapshots", "{}", admin, null);
+            assertEquals(200, expired.statusCode(), expired.body());
+            assertEquals(1, json.readTree(expired.body()).path("prunedJobs").asInt());
+            assertTrue(adminJson(app, "/admin/jobs/old", admin).path("pruned").asBoolean());
+            assertEquals("abc", adminJson(app, "/admin/jobs/running", admin).path("source").asText());
+            assertEquals(409, request(app, "POST", "/admin/jobs/old/retry", "{}", admin, null).statusCode());
+            var all = request(app, "POST", "/admin/jobs/prune-snapshots", "{\"scope\":\"all\"}", admin, null);
+            assertEquals(2, json.readTree(all.body()).path("prunedJobs").asInt());
+            assertEquals(4, adminJson(app, "/admin/jobs", admin).path("total").asInt());
+            assertEquals(1, storage.learning("admin").queryForObject("SELECT count(*) FROM stage_completions WHERE id='keep-java'", Integer.class));
+            assertEquals(1, storage.learning("admin").queryForObject("SELECT count(*) FROM sql_completions WHERE id='keep-sql'", Integer.class));
+            assertEquals(0, storage.learning("admin").queryForObject("SELECT length(source) FROM submissions WHERE id='single'", Integer.class));
+            assertEquals(2, adminJson(app, "/admin/audit?action=snapshots_pruned", admin).path("total").asInt());
+        }
+    }
+    @Test void scheduledSnapshotSweepUsesDefaultDayAndScansLearnerDatabases() throws Exception {
+        try (var app = start("--cs.admin.snapshot-initial-delay-ms=100", "--cs.admin.snapshot-interval-ms=500")) {
+            String admin = token(login(app, "admin", "Initial-Admin-Password-92"));
+            token(register(app, "scheduled-prune", invite(app, admin)));
+            String owner = adminJson(app, "/admin/users?keyword=scheduled-prune", admin)
+                .path("items").get(0).path("id").asText();
+            var storage = app.getBean(dev.codesomething.storage.LearningDataSource.class);
+            var now = java.time.Instant.now();
+            storage.inLearningTransaction(owner, jdbc -> {
+                for (var fixture : java.util.List.of(
+                    new String[]{"expired","passed",now.minusSeconds(25 * 3600L).toString()},
+                    new String[]{"recent","passed",now.minusSeconds(23 * 3600L).toString()},
+                    new String[]{"protected","cancelling",now.minusSeconds(26 * 3600L).toString()})) {
+                    jdbc.update("""
+                        INSERT INTO sql_attempts(id,course_version,stage_id,mode,source,digest,idempotency_key,status,report,created_at)
+                        VALUES(?,'1.0.0','select','check','SELECT 1','digest',?,?,'{}',?)
+                        """, fixture[0],fixture[0],fixture[1],fixture[2]);
+                }
+                return null;
+            });
+            long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(18);
+            boolean cleared = false;
+            while (!cleared && System.nanoTime() < deadline) {
+                var jobs = adminJson(app, "/admin/jobs?userId=" + owner, admin).path("items");
+                for (var item : jobs) if ("expired".equals(item.path("id").asText())) cleared = item.path("pruned").asBoolean();
+                if (!cleared) Thread.sleep(150);
+            }
+            assertTrue(cleared, "Scheduled task should prune the expired learner snapshot");
+            for (String id : java.util.List.of("recent","protected"))
+                assertEquals("SELECT 1", adminJson(app, "/admin/jobs/"+id+"?userId="+owner, admin).path("source").asText());
+        }
+    }
+
+    @Test void nudgesAreDeliveredAndAcknowledgedOnlyByTheTargetLearner() throws Exception {
+        try (var app = start()) {
+            String unread = "/api/v1/nudges/unread";
+            String admin = token(login(app, "admin", "Initial-Admin-Password-92"));
+            var registration = register(app, "nudge-target", invite(app, admin));
+            String learner = token(registration);
+            String second = token(register(app, "nudge-second", invite(app, admin)));
+            String target = adminJson(app, "/admin/users?keyword=nudge-target", admin)
+                .path("items").get(0).path("id").asText();
+            String send = "/admin/users/" + target + "/nudge";
+            String payload = """
+                {"kind":"lab","title":"实验提醒","message":"记得提交实验。"}
+                """;
+            assertEquals(401, request(app, "GET", unread, null, null, null).statusCode());
+            assertEquals(401, request(app, "GET", "/admin/nudges", null, null, null).statusCode());
+            assertEquals(403, request(app, "GET", unread, null, admin, null).statusCode());
+            assertEquals(403, request(app, "POST", send, payload, learner, null).statusCode());
+            var sent = request(app, "POST", send, payload, admin, null);
+            assertEquals(201, sent.statusCode(), sent.body());
+            String id = json.readTree(sent.body()).path("id").asText();
+            assertEquals(id, adminJson(app, unread, learner).get(0).path("id").asText());
+            assertEquals(0, adminJson(app, unread, second).size());
+            String ack = "/api/v1/nudges/" + id + "/ack";
+            assertEquals(404, request(app, "POST", ack, "{}", second, null).statusCode());
+            assertEquals(204, request(app, "POST", ack, "{}", learner, null).statusCode());
+            assertEquals(204, request(app, "POST", ack, "{}", learner, null).statusCode());
+            assertEquals(0, adminJson(app, unread, learner).size());
+            assertFalse(adminJson(app, "/admin/nudges?userId=" + target, admin)
+                .get(0).path("acknowledged_at").asText("").isBlank());
+            assertEquals(1, adminJson(app, "/admin/audit?action=learner_nudged", admin).path("total").asInt());
+        }
+    }
+    @Test void onboardingPersistsAcrossSessionsWithoutSharingAcrossLearners() throws Exception {
+        try (var app=start()) {
+            String path="/api/v1/onboarding";
+            assertEquals(401,request(app,"GET",path,null,null,null).statusCode());
+            String admin=token(login(app,"admin","Initial-Admin-Password-92"));
+            assertEquals(403,request(app,"GET",path,null,admin,null).statusCode());
+            String first=token(register(app,"tour-first",invite(app,admin)));
+            String second=token(register(app,"tour-second",invite(app,admin)));
+            var defaults=adminJson(app,path,first);
+            assertEquals(0,defaults.path("homeTourVersion").asInt(-1));
+            assertEquals("",defaults.path("lastSeenChangelog").asText());
+            assertEquals(200,request(app,"PATCH",path,"{\"homeTourVersion\":1}",first,null).statusCode());
+            assertEquals(200,request(app,"PATCH",path,"{\"workbenchTourVersion\":2,\"lastSeenChangelog\":\"2026.11.26\"}",first,null).statusCode());
+            assertEquals(400,request(app,"PATCH",path,"{\"homeTourVersion\":1.5}",first,null).statusCode());
+            assertEquals(400,request(app,"PATCH",path,"{\"workbenchTourVersion\":1001}",first,null).statusCode());
+            assertEquals(400,request(app,"PATCH",path,"{\"lastSeenChangelog\":\"<invalid>\"}",first,null).statusCode());
+            assertEquals(200,request(app,"PATCH",path,"{\"homeTourVersion\":0,\"lastSeenChangelog\":\"2026.9.30\"}",first,null).statusCode());
+            String again=token(login(app,"tour-first","Acceptance-Student-92"));
+            var saved=adminJson(app,path,again);
+            assertEquals(1,saved.path("homeTourVersion").asInt(-1));
+            assertEquals(2,saved.path("workbenchTourVersion").asInt(-1));
+            assertEquals("2026.11.26",saved.path("lastSeenChangelog").asText());
+            assertFalse(saved.path("updatedAt").asText().isBlank());
+            assertEquals(0,adminJson(app,path,second).path("workbenchTourVersion").asInt(-1));
+        }
+    }
     @TempDir Path data;
     private final HttpClient client = HttpClient.newHttpClient();
     private final JsonMapper json = JsonMapper.builder().build();
@@ -640,21 +771,112 @@ class PublicAccessTest {
     @Test void adminExportsReportsThroughABackgroundArchive() throws Exception {
         try(var app=start()) {
             String admin=token(login(app,"admin","Initial-Admin-Password-92"));
-            var response=request(app,"POST","/admin/school/reports",json.writeValueAsString(java.util.Map.of("courseId","database-systems","format","markdown")),admin,null);
+            var account=json.readTree(register(app,"report-student",invite(app,admin)).body());
+            String owner=account.path("userId").asText();
+            String lab="lab-03-single-query";
+            var definition=json.readTree(java.nio.file.Files.readString(Path.of("../course-packs/school/database-systems/labs/"+lab+".json")));
+            var drafts=new java.util.LinkedHashMap<String,String>();
+            var executions=new java.util.LinkedHashMap<String,Object>();
+            for (var question:definition.path("questions")) {
+                if (question.path("optional").asBoolean()) continue;
+                String id=question.path("id").asText(), sql="SELECT 1;";
+                String revision=question.path("gradingRevision").asText("");
+                String gradingId=lab+"-"+id+(revision.isEmpty()?"":"-"+revision);
+                drafts.put(id,sql);
+                executions.put(id,java.util.Map.of("sql",sql,
+                    "result",java.util.Map.of("status","ok","elapsedMs",1,"tables",java.util.List.of()),
+                    "grade",java.util.Map.of("status","correct","score",10,"question",
+                        java.util.Map.of("id",gradingId,"points",10,"blankCount",0))));
+            }
+            var storage=app.getBean(dev.codesomething.storage.LearningDataSource.class);
+            storage.learning(owner).update("INSERT INTO school_lab_drafts VALUES('database-systems',?,1,?)",lab,
+                json.writeValueAsString(java.util.Map.of("revision",1,"drafts",drafts,"executions",executions)));
+            var response=request(app,"POST","/admin/school/reports",json.writeValueAsString(java.util.Map.of(
+                "courseId","database-systems","format","markdown","labId",lab,"userId",owner)),admin,null);
             assertEquals(202,response.statusCode(),response.body());
             String path="/admin/school/reports/"+json.readTree(response.body()).path("id").asText();
-            awaitAdmin(app,path,admin,node->"ready".equals(node.path("status").asText()));
-            var zip=request(app,"GET",path+"/download",null,admin,null);
+            var status=awaitAdmin(app,path,admin,node->"ready".equals(node.path("status").asText()));
+            assertEquals(owner,status.path("userId").asText());
+            assertEquals(lab,status.path("labId").asText());
+            assertEquals(1,adminJson(app,"/admin/school/reports",admin).size());
+            int port=app.getEnvironment().getRequiredProperty("local.server.port",Integer.class);
+            var download=HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+port+"/api/v1"+path+"/download"))
+                .header("Authorization","Bearer "+admin).GET().build();
+            var zip=client.send(download,HttpResponse.BodyHandlers.ofByteArray());
             assertEquals(200,zip.statusCode());
             assertEquals("application/zip",zip.headers().firstValue("Content-Type").orElse(""));
-            assertTrue(zip.body().startsWith("PK"));
+            try(var archive=new java.util.zip.ZipInputStream(new java.io.ByteArrayInputStream(zip.body()))) {
+                assertEquals(owner+"/"+lab+".md",archive.getNextEntry().getName());
+                assertTrue(new String(archive.readAllBytes(),java.nio.charset.StandardCharsets.UTF_8).contains("SELECT 1;"));
+                assertNull(archive.getNextEntry());
+            }
+        }
+    }
+
+    @Test void adminIndexBackfillsV25SchoolAnalyticsAndTracksBookmarkChanges() throws Exception {
+        String owner=java.util.UUID.randomUUID().toString();
+        var primary=fixtureDatabase(data.resolve("codesomething.db"),"25");
+        var tenant=fixtureDatabase(java.nio.file.Files.createDirectory(data.resolve("learners")).resolve(owner+".db"),"25");
+        String now=java.time.Instant.now().toString();
+        primary.update("""
+            INSERT INTO users(id,username,password_hash,role,status,created_at,updated_at)
+            VALUES(?,'historical-student','fixture-only','ROLE_STUDENT','active',?,?)
+            """,owner,now,now);
+        tenant.update("INSERT INTO learner_bookmarks VALUES('one','school','实验一','数据库原理','/school/example',1)");
+        tenant.update("""
+            INSERT INTO school_lab_drafts VALUES('database-systems','lab-03-single-query',1,?)
+            ""","""
+            {"revision":1,"drafts":{"q01":"SELECT * FROM student;"}, "executions":{"q01":{
+                "sql":"SELECT * FROM student;","result":{"status":"ok","elapsedMs":3,"tables":[]},"grade":{
+                  "status":"correct","question":{"id":"lab-03-single-query-q01-split"}}}}}
+            """);
+        tenant.update("""
+            INSERT INTO school_exam_attempts VALUES('database-systems','one','exam-lab-01',?,
+                '{"score":80,"maxScore":100,"elapsedSeconds":10,"completeGrading":true,"mode":"exam"}')
+            """, System.currentTimeMillis());
+        tenant.update("INSERT INTO school_exam_drafts VALUES('database-systems','two','exam-lab-02',0,'{}')");
+        tenant.update("""
+            INSERT INTO school_exam_mistakes VALUES('database-systems','wrong-one',
+                '{"paperId":"exam-lab-01","item":{"question":{"prompt":"Example question"}},"count":2,"mastered":false,"updatedAt":1}')
+            """);
+        tenant.update("""
+            INSERT INTO tutor_requests(id,course_id,course_version,stage_id,help_level,question,context_manifest,prompt,
+                fingerprint,idempotency_key,status,created_at)
+            VALUES('tutor-1','http-json-basics','1','run-server','hint','q','{}','p','f','one','completed',?),
+                  ('tutor-2','http-json-basics','1','run-server','hint','q','{}','p','f','two','failed',?)
+            """,now,now);
+        try (var app=start()) {
+            String admin=token(login(app,"admin","Initial-Admin-Password-92"));
+            var user=adminJson(app,"/admin/users?keyword=historical-student",admin).path("items").get(0);
+            assertEquals(1,user.path("bookmarkCount").asInt());
+            assertEquals(80,user.path("examBestScore").asInt());
+            assertTrue(user.path("schoolRequired").asInt()>0);
+            assertEquals(1,user.path("schoolCompleted").asInt());
+            var overview=adminJson(app,"/admin/analytics/overview",admin);
+            assertEquals(1,overview.path("examCount").asInt());
+            assertEquals(1,overview.path("bookmarkCount").asInt());
+            assertEquals(1,overview.path("schoolCompleted").asInt());
+            assertEquals(1,overview.path("examDraftCount").asInt());
+            assertEquals(2,overview.path("mistakes").get(0).path("mistakes").asInt());
+            assertEquals(2,overview.path("tutor").path("total").asInt());
+            assertEquals(1,overview.path("tutor").path("succeeded").asInt());
+            assertEquals(1,overview.path("tutor").path("failed").asInt());
+            assertEquals(1,overview.path("tutor").path("learners").asInt());
+            assertEquals(30,adminJson(app,"/admin/analytics/activity-timeline?hours=720",admin).size());
+            var storage=app.getBean(dev.codesomething.storage.LearningDataSource.class);
+            storage.learning(owner).update("DELETE FROM learner_bookmarks WHERE id='one'");
+            awaitAdmin(app,"/admin/analytics/overview",admin,node->node.path("bookmarkCount").asInt(-1)==0);
         }
     }
 
     private org.springframework.jdbc.core.JdbcTemplate fixtureDatabase(Path file) {
+        return fixtureDatabase(file,"18");
+    }
+
+    private org.springframework.jdbc.core.JdbcTemplate fixtureDatabase(Path file,String version) {
         var sqlite=new org.sqlite.SQLiteDataSource();
         sqlite.setUrl("jdbc:sqlite:"+file);
-        org.flywaydb.core.Flyway.configure().dataSource(sqlite).target("18").load().migrate();
+        org.flywaydb.core.Flyway.configure().dataSource(sqlite).target(version).load().migrate();
         return new org.springframework.jdbc.core.JdbcTemplate(sqlite);
     }
 
@@ -826,10 +1048,40 @@ class PublicAccessTest {
             String route="/reviews/supplemental/"+id+"/answer";
             assertEquals(409,request(app,"POST",route,"{\"revision\":1,\"option\":0}",student,null).statusCode());
             assertTrue(json.readTree(request(app,"POST",route,"{\"revision\":2,\"option\":5}",student,null).body()).path("correct").asBoolean());
+            assertEquals(200,request(app,"POST",route,"{\"revision\":2,\"option\":1}",student,null).statusCode());
+            var stats=adminJson(app,"/admin/questions?status=published",admin).path("items").get(0);
+            assertEquals(2,stats.path("attempts").asInt());
+            assertEquals(1,stats.path("correct").asInt());
+            assertEquals(1,stats.path("learners").asInt());
             String archive=publish.replace("\"published\"","\"archived\"").replace("\"revision\":1","\"revision\":2");
             assertEquals(200,request(app,"PATCH","/admin/questions/"+id,archive,admin,null).statusCode());
             assertEquals(404,request(app,"POST",route,"{\"revision\":3,\"option\":0}",student,null).statusCode());
             assertTrue(request(app,"GET","/admin/audit?action=question_updated",null,admin,null).body().contains(id));
+            assertEquals(204,request(app,"DELETE","/admin/questions/"+id,null,admin,null).statusCode());
+            assertEquals(0,adminJson(app,"/admin/questions?status=archived",admin).path("total").asInt());
+        }
+    }
+
+    @Test void invitationRevocationPreservesRegistrationsAndAppearsInFilteredAudit() throws Exception {
+        try(var app=start()) {
+            String admin=token(login(app,"admin","Initial-Admin-Password-92"));
+            var creation=request(app,"POST","/admin/invitations","{\"maxUses\":2,\"hours\":1,\"note\":\"数据库实验\"}",admin,null);
+            assertEquals(200,creation.statusCode(),creation.body());
+            String code=json.readTree(creation.body()).path("code").asText();
+            String student=token(register(app,"invite-linked",code));
+            var invitation=adminJson(app,"/admin/invitations?status=active",admin).get(0);
+            String id=invitation.path("id").asText();
+            assertEquals("数据库实验",invitation.path("note").asText());
+            assertEquals("invite-linked",invitation.path("registered").get(0).asText());
+            assertEquals(403,request(app,"DELETE","/admin/invitations/"+id,null,student,null).statusCode());
+            assertEquals(204,request(app,"DELETE","/admin/invitations/"+id,null,admin,null).statusCode());
+            assertEquals(400,register(app,"invite-blocked",code).statusCode());
+            assertEquals(200,login(app,"invite-linked","Acceptance-Student-92").statusCode());
+            assertEquals(id,adminJson(app,"/admin/invitations?status=revoked",admin).get(0).path("id").asText());
+            var csv=request(app,"GET","/admin/audit/export?action=invite_revoked&operator=admin&keyword="+id,null,admin,null);
+            assertEquals(200,csv.statusCode(),csv.body());
+            assertTrue(csv.body().contains(id));
+            assertFalse(csv.body().contains("invite_created"));
         }
     }
 

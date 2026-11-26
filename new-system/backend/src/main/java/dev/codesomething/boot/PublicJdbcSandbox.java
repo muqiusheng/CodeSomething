@@ -25,6 +25,7 @@ public final class PublicJdbcSandbox {
                                     String image,String bootstrapPassword) {
         return new String[]{"run","-d","--pull=never","--name",db,"--label="+ownerLabel,"--label="+jobLabel,
             "--label="+RunnerInventory.scopeLabel(root.getParent()),"--label=codesomething.check-job="+job,
+            "--label="+RunnerInventory.ownerLabel(),
             "--network=container:"+app,"--read-only","--user=999:999","--memory=512m","--memory-swap=512m",
             "--cpus=1","--pids-limit=64","--cap-drop=ALL","--security-opt=no-new-privileges","--log-driver=none",
             "--tmpfs=/var/lib/mysql:rw,nosuid,nodev,size=256m,mode=1777",
@@ -43,6 +44,7 @@ public final class PublicJdbcSandbox {
         });
         if (!args.contains("--network=none")) throw new IllegalStateException("Expected isolated app network");
         args.add("--label=codesomething.check-job="+job);
+        args.add("--label="+RunnerInventory.ownerLabel());
         args.add("--label="+RunnerInventory.scopeLabel(root.getParent()));
     }
 

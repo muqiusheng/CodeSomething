@@ -1,4 +1,4 @@
-import {localState} from '../../api/browser-state.mjs';
+import {localState,scopedKey} from '../../api/browser-state.mjs';
 import {useEffect,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {Trophy,ArrowRight,FolderOpen,BookOpen,Check,ShieldCheck,Monitor,Accessibility} from 'lucide-react';
@@ -10,6 +10,14 @@ export function MotionSettings({value,onSave,disabled=false}:{value?:string;onSa
  const [preference,setPreference]=useState(()=>{try{return localState.getItem('cs-motion')||'system'}catch{return 'system'}});
  const [status,setStatus]=useState('');const [saving,setSaving]=useState(false);
  useEffect(()=>{if(value)setPreference(value)},[value]);
+ useEffect(()=>{
+   function sync(event:StorageEvent){
+     if(event.key===scopedKey('cs-motion')||event.key===null)
+       setPreference(event.newValue==='reduce'?'reduce':'system');
+   }
+   window.addEventListener('storage',sync);
+   return ()=>window.removeEventListener('storage',sync);
+ },[]);
  async function change(next:string){
    setPreference(next);document.documentElement.dataset.motion=next;setStatus('');
    let cached=false;try{localState.setItem('cs-motion',next);cached=true}catch{}

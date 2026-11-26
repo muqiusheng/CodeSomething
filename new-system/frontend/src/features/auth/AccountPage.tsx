@@ -18,7 +18,7 @@ function safeDestination(value: string | null, role?: User['role']) {
       && (!role || adminPath === (role === 'ROLE_ADMIN')))
       return url.pathname + url.search + url.hash;
   }
-  return role === 'ROLE_ADMIN' ? '/admin/overview' : '/learn';
+  return role === 'ROLE_ADMIN' ? '/admin' : '/learn';
 }
 
 export function AccountPage({mode}: {mode: Mode}) {

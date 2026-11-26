@@ -1,47 +1,73 @@
 import {InlineSpinner} from '../../components/shared/LoadingState';
 import {useState, type FormEvent} from 'react';
-import {adminWrite, query, type Page} from '../../api/admin-api';
+import {adminDelete, adminWrite, query, type Page} from '../../api/admin-api';
 import {Modal} from '../../components/ui/modal';
-import {DataState, Pager, TableFrame, message, useAdminData, useAdminFilters} from './admin-controls';
+import {AdminNotice, ConfirmAction, DataState, Pager, RowActions, SearchFilter, TableFrame, message, useAdminData, useAdminFilters, type Confirmation} from './admin-controls';
 import {questionTopics} from '../reviews/SupplementalPractice';
 
 type Question = {
   id: string; topic: string; prompt: string; options: string[]; answer: number; explanation: string; status: string; revision: number;
+  attempts?:number;correct?:number;learners?:number;
 };
 const states = {draft:'草稿',published:'已发布',archived:'已归档'};
 const blank: Question = {id:'',topic:'http',prompt:'',options:['','','',''],answer:0,explanation:'',status:'draft',revision:0};
 
 export function AdminQuestions() {
-  const {filters, applied, page, setPage, setFilter, apply} = useAdminFilters({topic:'',status:'',keyword:''});
+  const {filters, applied, page, pageSize, setPage, setFilter, apply, reset} = useAdminFilters({topic:'',status:'',keyword:''});
   const [editing,setEditing] = useState<Question | null>(null);
   const [notice,setNotice] = useState('');
-  const entries = useAdminData<Page<Question>>('/questions'+query({page,...applied}));
+  const [error,setError] = useState('');
+  const [busy,setBusy] = useState('');
+  const [confirmation,setConfirmation] = useState<Confirmation|null>(null);
+  const entries = useAdminData<Page<Question>>('/questions'+query({page,size:pageSize,...applied}));
+  async function changeState(question:Question) {
+    setError('');setBusy(question.id);
+    const status=question.status==='published'?'archived':'published';
+    try {
+      await adminWrite('/questions/'+question.id+'/status','PATCH',{status,revision:question.revision});
+      setNotice(status==='archived'?'题目已归档。':'题目已发布。');
+      entries.refresh();
+    } catch(failure) {setError(message(failure));}
+    finally {setBusy('');}
+  }
   return <>
     <div className="admin-heading"><h1>题库</h1><button className="csx-btn csx-btn-primary" type="button" onClick={() => setEditing(blank)}>创建题目</button></div>
-    <section className="admin-card">
-      <form className="admin-form" onSubmit={event=>{event.preventDefault();apply();}}>
-        <label>题干检索<input className="csx-input" type="search" value={filters.keyword} maxLength={1000}
-          onChange={event=>setFilter('keyword',event.target.value)}/></label>
-        <label>主题<select className="csx-select" value={filters.topic} onChange={event=>setFilter('topic',event.target.value)}>
+    <section className="admin-card admin-list">
+      <form className="admin-form admin-filter-bar" onSubmit={event=>{event.preventDefault();apply();}}>
+        <SearchFilter label="题干检索" placeholder="按题干搜索…" value={filters.keyword} maxLength={1000}
+          onChange={event=>setFilter('keyword',event.target.value)}/>
+        <label>主题<select className="csx-select" value={filters.topic} onChange={event=>apply({topic:event.target.value})}>
           <option value="">全部主题</option>{Object.entries(questionTopics).map(([key,title])=><option key={key} value={key}>{title}</option>)}
         </select></label>
-        <label>状态<select className="csx-select" value={filters.status} onChange={event=>setFilter('status',event.target.value)}>
+        <label>状态<select className="csx-select" value={filters.status} onChange={event=>apply({status:event.target.value})}>
           <option value="">全部状态</option>{Object.entries(states).map(([key,title])=><option key={key} value={key}>{title}</option>)}
         </select></label>
         <button className="csx-btn" type="submit">检索</button>
+        <button className="csx-btn csx-btn-ghost" type="button" onClick={reset}>重置筛选</button>
       </form>
-      {notice && <p role="status">{notice}</p>}
+      <AdminNotice text={notice} onClose={()=>setNotice('')}/>
+      {error && <p role="alert">{error}</p>}
       <DataState loading={!entries.data} error={entries.error} retry={entries.refresh}/>
-      {entries.data && (entries.data.items.length ? <TableFrame name="题库列表"><table className="csx-table">
-        <thead><tr><th scope="col">题目</th><th scope="col">主题</th><th scope="col">状态</th><th scope="col">操作</th></tr></thead>
+      {entries.data && (entries.data.items.length ? <TableFrame name="题库列表"><table className="csx-table admin-data-table">
+        <thead><tr><th scope="col">题目</th><th scope="col">主题</th><th scope="col">状态</th><th scope="col">作答</th><th scope="col">正确率</th><th scope="col">操作</th></tr></thead>
         <tbody>{entries.data.items.map(question=><tr key={question.id}><th scope="row">{question.prompt}</th><td>{questionTopics[question.topic]}</td>
-          <td>{states[question.status as keyof typeof states]}</td><td><button className="csx-btn csx-btn-sm" type="button" onClick={()=>setEditing(question)} aria-label={'编辑 '+question.prompt}>编辑</button></td></tr>)}</tbody>
+          <td>{states[question.status as keyof typeof states]}</td>
+          <td>{question.attempts ?? 0} 次<small>{question.learners ?? 0} 人</small></td>
+          <td>{question.attempts ? ((question.correct ?? 0)*100/question.attempts).toFixed(1)+'%' : '—'}</td>
+          <td><RowActions subject={question.prompt} actions={[{label:'删除题目',destructive:true,run:()=>setConfirmation({
+            title:'删除题目',description:'题目将从题库和学员练习中移除，历史作答统计将保留。',
+            action:async()=>{await adminDelete('/questions/'+question.id);entries.refresh();setNotice('题目已删除。');},
+          })}]}>
+            <button className="csx-btn csx-btn-sm" type="button" onClick={()=>setEditing(question)} aria-label={'编辑 '+question.prompt}>编辑</button>
+            <button className="csx-btn csx-btn-sm" type="button" disabled={busy===question.id} onClick={()=>void changeState(question)}>{question.status==='published'?'归档':'发布'}</button>
+          </RowActions></td></tr>)}</tbody>
       </table></TableFrame> : <p className="admin-empty">当前筛选下没有题目。</p>)}
       {entries.data && <Pager data={entries.data} setPage={setPage}/>}
     </section>
     {editing && <QuestionEditor question={editing} onClose={()=>setEditing(null)} onSaved={()=>{
       setEditing(null);setNotice('题目已保存。');entries.refresh();
     }}/>}
+    {confirmation && <ConfirmAction confirmation={confirmation} onClose={()=>setConfirmation(null)}/>}
   </>;
 }
 
@@ -67,7 +93,7 @@ function QuestionEditor({question,onClose,onSaved}: {question:Question;onClose:(
     } catch(failure) {setError(message(failure));}
     finally {setBusy(false);}
   }
-  return <Modal open title={question.id?'编辑题目':'创建题目'} description="发布后，学员可在复习页完成这道补充练习。" onOpenChange={open=>{if(!open&&!busy)onClose();}}>
+  return <Modal open title={question.id?'编辑题目':'创建题目'} className="admin-dialog" description="发布后，学员可在复习页完成这道补充练习。" onOpenChange={open=>{if(!open&&!busy)onClose();}}>
     <form className="access-fields" onSubmit={save}>
       <label>主题<select className="csx-select" name="topic" defaultValue={question.topic}>{Object.entries(questionTopics).map(([key,title])=><option key={key} value={key}>{title}</option>)}</select></label>
       <label>题干<textarea className="csx-textarea w-full" name="prompt" rows={3} required maxLength={1000} defaultValue={question.prompt}/></label>

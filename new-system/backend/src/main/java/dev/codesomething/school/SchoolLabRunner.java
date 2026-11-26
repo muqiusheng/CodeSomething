@@ -68,15 +68,18 @@ public class SchoolLabRunner {
         requireMysql(course);
         if (!enabled) throw new MysqlEnvironment.Failure("environment_error", "当前服务已停用隔离运行。");
         var schemas = schemas(course);
-        String owner = publicMode ? "\n" + dev.codesomething.storage.LearningDataSource.owner() : "";
-        String key = MysqlEnvironment.digest(workspace + owner + "\n" + course.id() + "\n" + String.join(",", schemas)).substring(0, 24);
+        String key = instanceKey(course, schemas);
         return instances.computeIfAbsent(key, environment::schoolInstance);
     }
 
     String activeContainer(SchoolCourseCatalog.Course course) {
+        return environment.schoolInstance(instanceKey(course, schemas(course))).status().container();
+    }
+
+    private String instanceKey(SchoolCourseCatalog.Course course, List<String> schemas) {
+        String root = publicMode ? environment.publicIdentityRoot(workspace) : workspace;
         String owner = publicMode ? "\n" + dev.codesomething.storage.LearningDataSource.owner() : "";
-        String key = MysqlEnvironment.digest(workspace + owner + "\n" + course.id() + "\n" + String.join(",", schemas(course))).substring(0, 24);
-        return environment.schoolInstance(key).status().container();
+        return MysqlEnvironment.digest(root + owner + "\n" + course.id() + "\n" + String.join(",", schemas)).substring(0, 24);
     }
 
     Map<String, RunResult> run(SchoolCourseCatalog.Course course, Map<String, String> scripts, String selectedDatabase) {

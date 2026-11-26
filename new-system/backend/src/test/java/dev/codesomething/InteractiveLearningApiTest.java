@@ -26,7 +26,8 @@ class InteractiveLearningApiTest {
 
     @Test void onboardingProgressAndReplaysPersistWithoutDuplicateXp() throws Exception {
         try (var app = start(false)) {
-            assertEquals("24", app.getBean(org.flywaydb.core.Flyway.class).info().current().getVersion().getVersion());
+            assertTrue(app.getBean(org.flywaydb.core.Flyway.class).info().current().getVersion()
+                .isAtLeast("24"));
             assertEquals(0, state().at("/profile/xp").asInt());
             var profile = call("PUT", ROOT + "/onboarding", """
                 {"background":{"java":"used","http":"seen","sql":"new","boot":"new"},

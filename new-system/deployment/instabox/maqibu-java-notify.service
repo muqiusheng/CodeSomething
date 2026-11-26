@@ -1,0 +1,15 @@
+[Unit]
+Description=Notify the Java worker when a submission is waiting
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=csdeploy
+Group=csdeploy
+ExecStart=/usr/bin/python3 /opt/maqibu-java-notify.py /data/codesomething/service/.remote-java/notify.json
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/data/codesomething/database
+PrivateTmp=yes
+TimeoutStartSec=12

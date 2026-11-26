@@ -13,13 +13,16 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class RunnerInventory {
-    public record Container(String id,String name,String state,String status,String jobId,String kind) {}
+    public record Container(String id,String name,String state,String status,String jobId,String kind,String runningFor,String ownerId) {}
     private final String docker;
+    private final String mysqlDocker;
     private final String scope;
     private final JsonMapper json=JsonMapper.builder().build();
 
-    public RunnerInventory(@Value("${cs.runner.docker}") String docker,@Value("${cs.data-directory}") String data) {
-        this.docker=docker;this.scope=scopeLabel(Path.of(data));
+    public RunnerInventory(@Value("${cs.runner.docker}") String docker,
+                           @Value("${CS_MYSQL_EXECUTOR:${cs.runner.docker}}") String mysqlDocker,
+                           @Value("${cs.data-directory}") String data) {
+        this.docker=docker;this.mysqlDocker=mysqlDocker;this.scope=scopeLabel(Path.of(data));
     }
 
     public static String scopeLabel(Path data) {
@@ -37,35 +40,58 @@ public class RunnerInventory {
     public List<Container> containers() {
         var result = new ArrayList<Container>();
         result.addAll(list("codesomething.check-job", "check"));
+        result.addAll(list("codesomething.r6-scope", "generated"));
         result.addAll(list("codesomething.public-mysql=1", "mysql"));
         return result;
     }
 
+    long activeMysql() {
+        return list("codesomething.public-mysql=1","mysql").stream().filter(c->"running".equals(c.state())).count();
+    }
+
     private List<Container> list(String filter, String kind) {
-        String result = command("ps", "-a", "--filter", "label="+filter, "--filter", "label="+scope, "--format", "{{json .}}");
+        String result = commandOn(kind.equals("mysql") ? mysqlDocker : docker,
+            "ps", "-a", "--no-trunc", "--filter", "label="+filter, "--filter", "label="+scope, "--format", "{{json .}}");
         var containers = new ArrayList<Container>();
         for (String line:result.lines().filter(value->!value.isBlank()).toList()) {
             var row=json.readTree(line);
             String id=row.path("ID").asText(),name=row.path("Names").asText();
-            if (!id.matches("[0-9a-f]{12,64}") || !name.matches("cs-(r23|r33-(?:app|db)|r8-(?:app|db)|r6|sql-(?:learner|school))-[a-f0-9-]+")) continue;
+            if (!id.matches("[0-9a-f]{12,64}") || !name.matches("cs-(r23|r331|r33-(?:app|db)|r8-(?:app|db)|r6|sql-(?:learner|school))-[a-f0-9-]+")) continue;
             var labels=Arrays.asList(row.path("Labels").asText().split(","));
             if (!labels.contains(scope) || (kind.equals("mysql") && !labels.contains("codesomething.public-mysql=1"))) continue;
             String job=labels.stream()
                 .filter(label->label.startsWith("codesomething.check-job=")).map(label->label.substring(label.indexOf('=')+1))
                 .findFirst().orElse("");
             if (kind.equals("check") && job.isBlank()) continue;
-            containers.add(new Container(id,name,row.path("State").asText(),row.path("Status").asText(),job,kind));
+            if (kind.equals("generated")) job = name.substring("cs-r6-".length());
+            String owner = labels.stream().filter(label->label.startsWith("codesomething.learner="))
+                .map(label->label.substring(label.indexOf('=')+1)).findFirst().orElse("");
+            containers.add(new Container(id,name,row.path("State").asText(),row.path("Status").asText(),job,kind,row.path("RunningFor").asText(),owner));
         }
         return containers;
     }
 
     public void remove(Container container) { command("rm", "-f", container.id()); }
+    void releaseCheck(Container container) {
+        try { remove(container); }
+        catch (ApiException error) {
+            if (containers().stream().anyMatch(current -> current.id().equals(container.id()))) throw error;
+        }
+    }
+
+    public static String ownerLabel() {
+        return "codesomething.learner=" + dev.codesomething.storage.LearningDataSource.owner();
+    }
 
     private String command(String... arguments) {
+        return commandOn(docker, arguments);
+    }
+
+    private String commandOn(String executable, String... arguments) {
         Process process = null;
         try {
             var argv = new ArrayList<String>();
-            argv.add(docker);
+            argv.add(executable);
             argv.addAll(List.of(arguments));
             process = new ProcessBuilder(argv).redirectErrorStream(true).start();
             var input = process.getInputStream();

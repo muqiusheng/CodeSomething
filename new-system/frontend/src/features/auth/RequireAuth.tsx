@@ -10,6 +10,6 @@ export function RequireAuth({children, admin = false}: {children: ReactNode; adm
   if (!user) return <Navigate replace to={'/login?redirect=' + redirect}/>;
   if (user.passwordChangeRequired) return <Navigate replace to={'/change-password?redirect=' + redirect}/>;
   if (admin && user.role !== 'ROLE_ADMIN') return <Navigate replace to="/learn"/>;
-  if (!admin && user.role === 'ROLE_ADMIN') return <Navigate replace to="/admin/overview"/>;
+  if (!admin && user.role === 'ROLE_ADMIN') return <Navigate replace to="/admin"/>;
   return children;
 }

@@ -209,12 +209,16 @@ async function updateAccessLinks() {
     if (!response.ok) return;
     const {enabled, role} = await response.json();
     const admin = enabled === true && role === 'ROLE_ADMIN';
+    if (enabled === true && role === 'ROLE_STUDENT' && location.pathname === '/') {
+      location.replace('/learn');
+      return;
+    }
     const learner = enabled === false || (enabled === true && role === 'ROLE_STUDENT');
     document.querySelectorAll<HTMLElement>('[data-access-actions]').forEach(group => {
       const primary = group.querySelector<HTMLAnchorElement>('[data-register]')!;
       const secondary = group.querySelector<HTMLAnchorElement>('[data-login]')!;
       const member = admin || learner;
-      primary.href = admin ? '/admin/overview' : learner ? '/learn' : '/register';
+      primary.href = admin ? '/admin' : learner ? '/learn' : '/register';
       primary.textContent = admin ? '进入管理控制台' : learner ? '进入学习工作台' : '凭邀请码注册';
       if (member && document.activeElement === secondary) primary.focus({preventScroll: true});
       secondary.hidden = member;

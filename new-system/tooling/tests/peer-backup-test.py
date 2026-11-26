@@ -1,4 +1,5 @@
 import hashlib
+import runpy
 import sqlite3
 import subprocess
 import sys
@@ -16,6 +17,42 @@ def run(script, *args, data=None):
 
 
 class PeerBackupTest(unittest.TestCase):
+    def test_missing_live_checkpoints_do_not_publish_a_successful_archive(self):
+        backup = runpy.run_path(DEPLOYMENT / "backup-sqlite.py")["backup"]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source"
+            source.mkdir()
+            with closing(sqlite3.connect(source / "codesomething.db")) as db, db:
+                db.execute("CREATE TABLE saved (node TEXT)")
+            destination = root / "outgoing"
+            with self.assertRaises((OSError, subprocess.SubprocessError)):
+                backup(source, destination, mysql_docker_host="unix:///missing-drill-docker.sock")
+            self.assertEqual(list(destination.glob("*.tar.gz")), [])
+
+    def test_archives_completed_mysql_snapshots_but_not_partial_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source"
+            snapshots = source / "mysql-idle"
+            snapshots.mkdir(parents=True)
+            with closing(sqlite3.connect(source / "codesomething.db")) as db, db:
+                db.execute("CREATE TABLE saved (node TEXT)")
+            name = "cs-sql-school-" + ("a" * 24)
+            (snapshots / (name + ".sql")).write_bytes(b"CREATE DATABASE lab;\n")
+            (snapshots / (name + ".restoring")).touch()
+            (snapshots / "dump-incomplete.partial").write_bytes(b"incomplete")
+            backup = run(DEPLOYMENT / "backup-sqlite.py", source, root / "archive",
+                         "--include-mysql-snapshots")
+            self.assertEqual(backup.returncode, 0, backup.stderr)
+            restored = root / "destination"
+            verified = run(PEER, "restore-check", backup.stdout.decode().strip(), restored)
+            self.assertEqual(verified.returncode, 0, verified.stderr)
+            self.assertEqual(list((restored / "mysql-idle").iterdir()),
+                             [restored / "mysql-idle" / (name + ".sql")])
+            self.assertEqual((restored / "mysql-idle" / (name + ".sql")).read_bytes(),
+                             b"CREATE DATABASE lab;\n")
+
     def test_bad_checksum_and_conflicting_retry_leave_existing_backup_intact(self):
         with tempfile.TemporaryDirectory() as directory:
             inbox = Path(directory)

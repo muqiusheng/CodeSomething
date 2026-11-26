@@ -5,6 +5,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.time.Duration;
+import java.time.Instant;
 import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.*;
@@ -23,7 +24,7 @@ public class MysqlEnvironment {
     private final boolean school;
     private final boolean publicMode;
     private final String scope;
-    private final int poolLimit;
+    private final PoolSettings pool;
     private final Path snapshots;
     private final MysqlPoolActivity poolActivity;
     private final Map<String, MysqlEnvironment> sandboxes;
@@ -31,27 +32,52 @@ public class MysqlEnvironment {
     private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(MysqlEnvironment.class);
     private static final Set<String> SYSTEM_DATABASES = Set.of("mysql", "sys", "information_schema", "performance_schema");
     private static final Object PUBLIC_START_LOCK = new Object();
+    private static final Semaphore PUBLIC_DISK_STARTS = new Semaphore(3, true);
+    // A Docker output reader can block until its input writer finishes.
+    private static final Executor DOCKER_PIPE_IO = task -> Thread.ofPlatform().daemon().name("mysql-docker-pipe").start(task);
     private final SqlCourse course;
+    @Value("${cs.sql.public-identity-root:}") private String configuredIdentityRoot = "";
+    @Value("${cs.sql.public-disk-volume-prefix:}") private String diskVolumePrefix = "";
     private String ownedContainerId;
+    private boolean ownedDisk;
     private volatile String state="not_checked",message="请启动或连接教学环境。",version="";
     @Autowired
-    public MysqlEnvironment(SqlCourse course,@Value("${cs.runner.docker}") String docker,@Value("${cs.sql.container:cs-sql-learning}") String container,
+    public MysqlEnvironment(SqlCourse course,@Value("${CS_MYSQL_EXECUTOR:${cs.runner.docker}}") String docker,@Value("${cs.sql.container:cs-sql-learning}") String container,
                             @Value("${cs.public:false}") boolean publicMode,@Value("${cs.data-directory}") String data,
-                            @Value("${cs.sql.public-pool-limit:8}") int poolLimit){
-        this(course,docker,container,publicMode,data,poolLimit,
-            new MysqlPoolActivity(() -> TimeUnit.NANOSECONDS.toMillis(System.nanoTime()), Duration.ofMinutes(30)));
+                            @Value("${cs.sql.public-pool-limit:8}") int poolLimit,
+                            @Value("${cs.sql.public-pool-peak:0}") int poolPeak,
+                            @Value("${cs.sql.public-disk:false}") boolean disk){
+        this(course,docker,container,publicMode,data,new PoolSettings(poolLimit,poolPeak,disk),
+            new MysqlPoolActivity(() -> TimeUnit.NANOSECONDS.toMillis(System.nanoTime()), MysqlPoolActivity.DEFAULT_IDLE));
+    }
+
+    public MysqlEnvironment(SqlCourse course,String docker,String container,boolean publicMode,String data,int poolLimit) {
+        this(course,docker,container,publicMode,data,poolLimit,0,false);
+    }
+
+    public record PoolSettings(int normal, int peak, boolean disk) {
+        public PoolSettings {
+            int maximum = disk ? 15 : 8;
+            normal = Math.clamp(normal, 0, maximum);
+            peak = normal == 0 ? 0 : Math.clamp(peak, normal, maximum);
+        }
     }
 
     MysqlEnvironment(SqlCourse course,String docker,String container,boolean publicMode,String data,int poolLimit,
                      MysqlPoolActivity poolActivity) {
-        this(course,docker,container,false,publicMode,dev.codesomething.admin.RunnerInventory.scopeLabel(Path.of(data)),poolLimit,
+        this(course,docker,container,publicMode,data,new PoolSettings(poolLimit,0,false),poolActivity);
+    }
+
+    MysqlEnvironment(SqlCourse course,String docker,String container,boolean publicMode,String data,PoolSettings pool,
+                     MysqlPoolActivity poolActivity) {
+        this(course,docker,container,false,publicMode,dev.codesomething.admin.RunnerInventory.scopeLabel(Path.of(data)),pool,
             Path.of(data).resolve("mysql-idle"), poolActivity, new ConcurrentHashMap<>());
     }
-    private MysqlEnvironment(SqlCourse course,String docker,String container,boolean school,boolean publicMode,String scope,int poolLimit,
+    private MysqlEnvironment(SqlCourse course,String docker,String container,boolean school,boolean publicMode,String scope,PoolSettings pool,
                              Path snapshots,MysqlPoolActivity poolActivity,Map<String,MysqlEnvironment> sandboxes){
         if(!container.matches("cs-sql-[a-z0-9-]{1,70}"))throw new IllegalArgumentException("Invalid SQL container name");
         this.course=course;this.docker=docker;this.container=container;this.school=school;this.publicMode=publicMode;this.scope=scope;
-        this.poolLimit=Math.clamp(poolLimit,0,8);
+        this.pool=pool;
         this.snapshots=snapshots;this.poolActivity=poolActivity;this.sandboxes=sandboxes;
     }
     public MysqlEnvironment schoolInstance(String key) {
@@ -63,8 +89,46 @@ public class MysqlEnvironment {
         return sandbox("cs-sql-learner-"+key, false, true);
     }
     private MysqlEnvironment sandbox(String name, boolean school, boolean publicSandbox) {
-        return sandboxes.computeIfAbsent(name, value -> new MysqlEnvironment(course,docker,value,school,publicSandbox,
-            scope,poolLimit,snapshots,poolActivity,sandboxes));
+        return sandboxes.computeIfAbsent(name, value -> {
+            var environment = new MysqlEnvironment(course,docker,value,school,publicSandbox,
+                scope,pool,snapshots,poolActivity,sandboxes);
+            environment.diskVolumePrefix = diskVolumePrefix;
+            return environment;
+        });
+    }
+
+    @jakarta.annotation.PostConstruct
+    void validatePublicDiskConfiguration() {
+        if (publicMode && pool.disk() && !validDiskVolumePrefix()) {
+            throw new IllegalStateException("Public MySQL disk mode requires a managed quota volume prefix.");
+        }
+    }
+
+    private boolean validDiskVolumePrefix() {
+        return diskVolumePrefix.matches("cs-mysql-slot-[a-z0-9][a-z0-9-]{2,35}");
+    }
+
+    // Called under the admission lock. Even stopped containers retain their assigned slot.
+    private String allocateDiskMount() {
+        if (diskVolumePrefix.isEmpty()) return "--mount=type=volume,target=/var/lib/mysql";
+        if (!validDiskVolumePrefix()) throw new Failure("environment_error","定额磁盘卷配置无效。");
+        var volumes = require(command(null,5,()->false,"volume","ls",
+            "--filter","label=codesomething.mysql-slot="+diskVolumePrefix,"--format","{{.Name}}"));
+        var attached = require(command(null,5,()->false,"ps","-a","--no-trunc","--format","{{.Mounts}}"));
+        var used = new HashSet<>(Arrays.asList(attached.split("[,\\s]+")));
+        for (var name : volumes.lines().sorted().toList()) {
+            if (!name.matches(Pattern.quote(diskVolumePrefix)+"-(0[1-9]|1[0-5])") || used.contains(name)) continue;
+            String wipe = "set -eu; [ \"$(stat -f -c %T /slot)\" = ext2/ext3 ]; " +
+                "df -Pk /slot | awk 'NR==2 && $2>=300000 && $2<=393216 {ok=1} END {exit !ok}'; " +
+                "find /slot -mindepth 1 -maxdepth 1 -exec rm -rf --one-file-system -- {} +; " +
+                "test -z \"$(ls -A /slot)\"";
+            var cleaned = command(null,15,()->false,"run","--rm","--pull=never","--network=none","--read-only",
+                "--memory=64m","--cpus=0.5","--pids-limit=32","--cap-drop=ALL","--security-opt=no-new-privileges",
+                "--user=999:999","--log-driver=none","--mount=type=volume,source="+name+",target=/slot,volume-nocopy",
+                "--entrypoint=/bin/sh",IMAGE,"-c",wipe);
+            if (cleaned.code()==0) return "--mount=type=volume,source="+name+",target=/var/lib/mysql,volume-nocopy";
+        }
+        throw new Failure("environment_error","没有可用的定额磁盘卷，请稍后重试。");
     }
 
     public interface Activity extends AutoCloseable {
@@ -95,7 +159,7 @@ public class MysqlEnvironment {
 
     @org.springframework.scheduling.annotation.Scheduled(scheduler="mysqlIdleScheduler", fixedDelay=60_000, initialDelay=30_000)
     void recycleIdle() {
-        if (!publicMode || poolLimit == 0) return;
+        if (!publicMode || pool.normal() == 0) return;
         try { reclaimOldest(publicRunning()); }
         catch (Failure failure) { LOG.warn("Could not inspect the public MySQL pool: {}", failure.getMessage()); }
     }
@@ -104,7 +168,7 @@ public class MysqlEnvironment {
         for (var name : running.stream().filter(v -> v.matches("cs-sql-(school|learner)-[a-f0-9]{24}"))
                 .sorted(Comparator.comparingLong(poolActivity::lastActivity)).toList()) {
             try {
-                if (poolActivity.reclaim(name, () -> sandbox(name, name.startsWith("cs-sql-school-"), true).hibernate()))
+                if (poolActivity.reclaim(name, () -> sandbox(name, name.startsWith("cs-sql-school-"), true).hibernate(false)))
                     return true;
             } catch (Failure failure) {
                 LOG.warn("Idle MySQL sandbox retained after snapshot error: {}", failure.getMessage());
@@ -136,8 +200,49 @@ public class MysqlEnvironment {
             }).toList();
     }
 
-    private void hibernate() {
+    public record PublicActivity(boolean busy, long idleSeconds, Instant lastActiveAt) {}
+
+    public PublicActivity publicActivity(String name) {
+        long idle = poolActivity.idleMillis(name);
+        return new PublicActivity(poolActivity.busy(name), idle / 1000, Instant.now().minusMillis(idle));
+    }
+
+    public boolean releasePublic(String name, String id, boolean wait) {
+        if (!publicMode || !name.matches("cs-sql-(school|learner)-[a-f0-9]{24}") || !id.matches("[a-f0-9]{12,64}"))
+            throw new Failure("environment_error", "目标练习容器不可用。");
+        var environment = sandbox(name, name.startsWith("cs-sql-school-"), true);
+        return poolActivity.release(name, wait, () -> environment.releaseOwned(id));
+    }
+
+    private synchronized void releaseOwned(String id) {
         owned();
+        if (!ownedContainerId.startsWith(id))
+            throw new Failure("environment_error", "目标容器已更换，请刷新后重试。");
+        String running = require(command(null, 5, () -> false, "inspect", "--format={{.State.Running}}", ownedContainerId)).strip();
+        if ("true".equals(running)) {
+            hibernate(true);
+        } else if ("false".equals(running)) {
+            if (ownedDisk && !Files.exists(restoreMarker())) {
+                start();
+                if (!"ready".equals(state)) throw new Failure("environment_error", message);
+                owned();
+                if (!ownedContainerId.startsWith(id))
+                    throw new Failure("environment_error", "目标容器已更换，请刷新后重试。");
+                hibernate(true);
+                return;
+            }
+            require(command(null, 10, () -> false, "rm", "-v", ownedContainerId));
+            state = "hibernated";
+            message = "练习环境已释放。";
+        } else {
+            throw new Failure("environment_error", "无法确认练习容器状态。");
+        }
+    }
+
+    private void hibernate(boolean remove) {
+        owned();
+        if (Files.exists(restoreMarker()))
+            throw new Failure("environment_error", "练习快照尚待恢复，请启动环境后再释放。");
         var databases = snapshotSchemas();
         try {
             Files.createDirectories(snapshots);
@@ -156,6 +261,10 @@ public class MysqlEnvironment {
                 catch (IOException failure) { LOG.warn("Could not remove partial MySQL snapshot", failure); }
             }
             require(command(null, 20, () -> false, "stop", "-t", "10", ownedContainerId));
+            if (remove || ownedDisk || !diskVolumePrefix.isEmpty()) {
+                markRestore();
+                require(command(null, 10, () -> false, "rm", "-v", ownedContainerId));
+            }
             state = "hibernated";
             message = "练习库已保存。下次使用时会自动恢复。";
         } catch (IOException failure) {
@@ -218,7 +327,12 @@ public class MysqlEnvironment {
         }
     }
 
-    public int publicPoolLimit() { return poolLimit; }
+    public int publicPoolLimit() { return pool.peak(); }
+    public PoolSettings publicPoolSettings() { return pool; }
+    public long publicPoolIdleMinutes() { return MysqlPoolActivity.DEFAULT_IDLE.toMinutes(); }
+    public String publicIdentityRoot(String actualDataDirectory) {
+        return configuredIdentityRoot.isBlank() ? actualDataDirectory : configuredIdentityRoot;
+    }
     public record Environment(String status,String message,String version,String image,String container,String database) {}
     public Environment status(){return new Environment(state,message,version,IMAGE,container,PRACTICE);}
     public static String digest(String text){try{return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8)));}catch(Exception e){throw new IllegalStateException(e);}}
@@ -245,7 +359,7 @@ public class MysqlEnvironment {
                 try (var writer = process.getOutputStream()) {
                     if (input != null) writer.write(input.getBytes(StandardCharsets.UTF_8));
                 } catch (IOException e) { throw new UncheckedIOException(e); }
-            });
+            }, DOCKER_PIPE_IO);
             while(!p.waitFor(50,TimeUnit.MILLISECONDS)) {
                 if(cancelled.getAsBoolean())throw new Failure("cancelled","已停止本次SQL检查。");
                 if(System.nanoTime()>deadline)throw new Failure("timeout","SQL执行超时，请缩小查询或重试。");
@@ -275,7 +389,7 @@ public class MysqlEnvironment {
                 if (bytes.get() > 65536) throw new Failure("output_limit", "输出超过64KB，请减少返回数据。");
                 throw new Failure("environment_error", "容器输出读取失败。");
             }
-        });
+        }, DOCKER_PIPE_IO);
     }
 
     private String require(ProcessResult r){if(r.code()!=0)throw new Failure("environment_error","教学MySQL未就绪，请启动环境后重试。");return r.output();}
@@ -291,51 +405,97 @@ public class MysqlEnvironment {
                 info.path("HostConfig").path("PidsLimit").asInt() == 64;
             if((!publicMode || publicSandbox)&&"1".equals(labels.path("codesomething.sql").asText())&&IMAGE.equals(info.path("Config").path("Image").asText())&&"none".equals(info.path("HostConfig").path("NetworkMode").asText())&&info.path("HostConfig").path("PortBindings").size()==0) {
                 String id = info.path("Id").asText();
-                if (id.matches("[a-f0-9]{64}")) { ownedContainerId = id; return; }
+                if (id.matches("[a-f0-9]{64}")) {
+                    ownedDisk = "1".equals(labels.path("codesomething.mysql-disk").asText())
+                        && info.path("Mounts").valueStream().anyMatch(mount ->
+                            "volume".equals(mount.path("Type").asText()) &&
+                            "/var/lib/mysql".equals(mount.path("Destination").asText()));
+                    ownedContainerId = id;
+                    return;
+                }
             }
         }catch(Exception ignored){}
         throw new Failure("environment_error","目标容器的标签、镜像或网络不匹配，已拒绝操作。");
     }
     private String root(String sql){return require(command(sql,8,()->false,"exec","-i",container,"mysql","--protocol=socket","-uroot","--batch","--default-character-set=utf8mb4","--binary-mode=1"));}
     public synchronized void start() {
-        if (publicMode) synchronized (PUBLIC_START_LOCK) { startInternal(); }
-        else startInternal();
+        if (!publicMode) {
+            startInternal();
+        } else if (!pool.disk()) {
+            synchronized (PUBLIC_START_LOCK) { startInternal(); }
+        } else {
+            try {
+                PUBLIC_DISK_STARTS.acquire();
+                try { startInternal(); }
+                finally { PUBLIC_DISK_STARTS.release(); }
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                state = "environment_error";
+                message = "等待MySQL启动名额时被中断，请重试。";
+            }
+        }
     }
+
+    // Keep the pool count and Docker launch atomic; MySQL initialization can overlap.
+    private boolean launchContainer() {
+        var found=command(null,5,()->false,"inspect","--format","{{.State.Running}}",container);
+        boolean running = "true".equals(found.output().strip());
+        boolean exists = found.code() == 0;
+        if (publicMode && exists && (!running || Files.exists(restoreMarker()))) {
+            owned();
+            if (Files.exists(restoreMarker())) {
+                if (running) require(command(null, 20, () -> false, "stop", "-t", "10", ownedContainerId));
+                running = false;
+                if (ownedDisk || !diskVolumePrefix.isEmpty()) {
+                    require(command(null, 10, () -> false, "rm", "-v", ownedContainerId));
+                    exists = false;
+                }
+            }
+        }
+        if (publicMode && !running) {
+            if (pool.normal() == 0) throw new Failure("environment_error", "当前部署未启用常驻 MySQL 练习池。");
+            for (var active = publicRunning(); active.size() >= pool.normal(); active = publicRunning()) {
+                if (!reclaimOldest(active)) {
+                    if (active.size() < pool.peak()) break;
+                    throw new Failure("environment_error", "公网 MySQL 练习池已满，暂时没有可回收的闲置实例。");
+                }
+            }
+            if ((!exists || !ownedDisk) && Files.exists(snapshotPath())) markRestore();
+        }
+        if(!exists) {
+            var arguments=new ArrayList<>(List.of("run","-d","--pull=never","--name",container,"--label","codesomething.sql=1","--network","none","--memory","640m","--cpus","1","--pids-limit","256","--cap-drop","ALL","--cap-add","SETUID","--cap-add","SETGID","--cap-add","DAC_OVERRIDE","--security-opt","no-new-privileges","--mount","type=volume,source="+container+"-data,target=/var/lib/mysql","-e","MYSQL_ALLOW_EMPTY_PASSWORD=yes",IMAGE,"--skip-networking","--local-infile=0","--max-connections=20","--innodb-buffer-pool-size=64M","--performance-schema=OFF","--character-set-server=utf8mb4","--collation-server=utf8mb4_0900_ai_ci"));
+            if (publicMode) {
+                arguments = new ArrayList<>(List.of("run","-d","--pull=never","--name",container,
+                    "--label=codesomething.sql=1","--label=codesomething.public-mysql=1","--label="+scope,"--network=none","--read-only",
+                    "--memory=512m","--memory-swap=512m","--cpus=1","--pids-limit=64","--cap-drop=ALL",
+                    "--security-opt=no-new-privileges","--user=999:999","--log-driver=none",
+                    pool.disk() ? allocateDiskMount() :
+                        "--tmpfs=/var/lib/mysql:rw,nosuid,nodev,size=256m,mode=1777",
+                    "--tmpfs=/var/run/mysqld:rw,nosuid,nodev,size=16m,mode=1777",
+                    "--tmpfs=/tmp:rw,nosuid,nodev,size=32m,mode=1777",
+                    "--env=MYSQL_ALLOW_EMPTY_PASSWORD=yes","--env=MYSQL_ROOT_HOST=localhost",IMAGE,
+                    "--skip-networking","--local-infile=0","--secure-file-priv=NULL","--max-connections=5",
+                    "--innodb-buffer-pool-size=48M","--performance-schema=OFF","--character-set-server=utf8mb4"));
+                if (pool.disk()) {
+                    arguments.add(2, "--label=codesomething.mysql-disk=1");
+                    arguments.add("--innodb-use-native-aio=OFF");
+                }
+            }
+            if(school || publicMode)arguments.add("--skip-log-bin");
+            require(command(null,20,()->false,arguments.toArray(String[]::new)));
+        } else {owned();if(!running)require(command(null,10,()->false,"start",container));}
+        return running;
+    }
+
     private void startInternal() {
         state="starting";message="正在启动MySQL并准备示例数据…";
         try {
-            var found=command(null,5,()->false,"inspect","--format","{{.State.Running}}",container);
-            boolean running = "true".equals(found.output().strip());
-            if (publicMode && running && Files.exists(restoreMarker())) {
-                owned();
-                require(command(null, 20, () -> false, "stop", "-t", "10", ownedContainerId));
-                running = false;
+            boolean running;
+            if (publicMode && pool.disk()) {
+                synchronized (PUBLIC_START_LOCK) { running = launchContainer(); }
+            } else {
+                running = launchContainer();
             }
-            if (publicMode && !running) {
-                if (poolLimit == 0) throw new Failure("environment_error", "当前部署未启用常驻 MySQL 练习池。");
-                for (var active = publicRunning(); active.size() >= poolLimit; active = publicRunning()) {
-                    if (!reclaimOldest(active))
-                        throw new Failure("environment_error", "公网 MySQL 练习池已满，暂时没有可回收的闲置实例。");
-                }
-                if (Files.exists(snapshotPath())) markRestore();
-            }
-            if(found.code()!=0) {
-                var arguments=new ArrayList<>(List.of("run","-d","--pull=never","--name",container,"--label","codesomething.sql=1","--network","none","--memory","640m","--cpus","1","--pids-limit","256","--cap-drop","ALL","--cap-add","SETUID","--cap-add","SETGID","--cap-add","DAC_OVERRIDE","--security-opt","no-new-privileges","--mount","type=volume,source="+container+"-data,target=/var/lib/mysql","-e","MYSQL_ALLOW_EMPTY_PASSWORD=yes",IMAGE,"--skip-networking","--local-infile=0","--max-connections=20","--innodb-buffer-pool-size=64M","--performance-schema=OFF","--character-set-server=utf8mb4","--collation-server=utf8mb4_0900_ai_ci"));
-                if (publicMode) {
-                    arguments = new ArrayList<>(List.of("run","-d","--pull=never","--name",container,
-                        "--label=codesomething.sql=1","--label=codesomething.public-mysql=1","--label="+scope,"--network=none","--read-only",
-                        "--memory=512m","--memory-swap=512m","--cpus=1","--pids-limit=64","--cap-drop=ALL",
-                        "--security-opt=no-new-privileges","--user=999:999","--log-driver=none",
-                        "--tmpfs=/var/lib/mysql:rw,nosuid,nodev,size=256m,mode=1777",
-                        "--tmpfs=/var/run/mysqld:rw,nosuid,nodev,size=16m,mode=1777",
-                        "--tmpfs=/tmp:rw,nosuid,nodev,size=32m,mode=1777",
-                        "--env=MYSQL_ALLOW_EMPTY_PASSWORD=yes","--env=MYSQL_ROOT_HOST=localhost",IMAGE,
-                        "--skip-networking","--local-infile=0","--secure-file-priv=NULL","--max-connections=5",
-                        "--innodb-buffer-pool-size=48M","--performance-schema=OFF","--character-set-server=utf8mb4"));
-                }
-                if(school || publicMode)arguments.add("--skip-log-bin");
-                require(command(null,20,()->false,arguments.toArray(String[]::new)));
-            } else {owned();if(!running)require(command(null,10,()->false,"start",container));}
             owned();
             boolean ready=false;
             for(int i=0;i<90;i++) {try{

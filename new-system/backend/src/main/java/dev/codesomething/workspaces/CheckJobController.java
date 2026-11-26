@@ -18,10 +18,14 @@ public class CheckJobController {
     private final JdbcTemplate jdbc;
     private final SubmissionController submissions;
     private final WorkspaceController workspaces;
+    private final RemoteJavaJobs remoteJava;
     private final boolean enabled;
     @org.springframework.beans.factory.annotation.Value("${cs.runner.mode:local_first}") private String runnerMode;
     private final JsonMapper json=JsonMapper.builder().build();
-    public CheckJobController(JdbcTemplate jdbc,SubmissionController submissions,WorkspaceController workspaces,@Value("${cs.runner.enabled:true}") boolean enabled) {this.jdbc=jdbc;this.submissions=submissions;this.workspaces=workspaces;this.enabled=enabled;}
+    public CheckJobController(JdbcTemplate jdbc,SubmissionController submissions,WorkspaceController workspaces,
+                              RemoteJavaJobs remoteJava,@Value("${cs.runner.enabled:true}") boolean enabled) {
+        this.jdbc=jdbc;this.submissions=submissions;this.workspaces=workspaces;this.remoteJava=remoteJava;this.enabled=enabled;
+    }
     public record JobWrite(String submissionId,String idempotencyKey) {}
     public record Job(String id,String submissionId,String status,String createdAt,String message,CheckReport report,boolean stale,String freshness,CheckProgress.Progress progress) {}
     @PostMapping(value="/check-jobs",consumes="application/json")
@@ -40,11 +44,23 @@ public class CheckJobController {
             if(enabled)jdbc.update("UPDATE check_jobs SET status='queued' WHERE id=? AND status='awaiting_runner'",id);
             return read(id,authorization);
         }
+        boolean useRemoteJava = enabled && remoteJava.routes(submission);
+        var existingJobs = jdbc.queryForList("""
+            SELECT id FROM check_jobs WHERE submission_id=? AND (remote_java=1 OR ?=1)
+            ORDER BY created_at, id LIMIT 1
+            """, String.class, submission.id(), useRemoteJava ? 1 : 0);
+        if (!existingJobs.isEmpty()) return read(existingJobs.getFirst(), authorization);
+        if (submission.source().isEmpty() && Boolean.TRUE.equals(jdbc.queryForObject(
+            "SELECT EXISTS(SELECT 1 FROM check_jobs WHERE submission_id=? AND snapshot_pruned_at IS NOT NULL)",
+            Boolean.class, submission.id())))
+            throw new ApiException(HttpStatus.CONFLICT,"JOB_SNAPSHOT_PRUNED","该作业快照已清理，请重新提交当前代码。",Map.of());
         int queueLimit = "docker_only".equals(runnerMode) ? 2 : 8;
         if(jdbc.queryForObject("SELECT count(*) FROM check_jobs WHERE status IN ('queued','running','cancelling')",Integer.class)>=queueLimit)
             throw new ApiException(HttpStatus.TOO_MANY_REQUESTS,"RUNNER_BUSY","检查队列已满，请等待或取消旧作业。",Map.of());
         String id=UUID.randomUUID().toString();
-        jdbc.update("INSERT INTO check_jobs(id,submission_id,binding_id,idempotency_key,status,created_at) VALUES(?,?,?,?,?,?)",id,submission.id(),submission.bindingId(),write.idempotencyKey(),enabled?"queued":"awaiting_runner",Instant.now().toString());
+        jdbc.update("INSERT INTO check_jobs(id,submission_id,binding_id,idempotency_key,status,created_at,remote_java) VALUES(?,?,?,?,?,?,?)",
+            id,submission.id(),submission.bindingId(),write.idempotencyKey(),enabled?"queued":"awaiting_runner",
+            Instant.now().toString(),useRemoteJava?1:0);
         return read(id,authorization);
     }
     @GetMapping("/jobs/{id}")
@@ -56,9 +72,12 @@ public class CheckJobController {
         boolean stale=true;String freshness="unknown";
         try {stale=!workspaces.current(submission.bindingId(),authorization).digest().equals(submission.digest());freshness=stale?"changed":"current";}catch(ApiException ignored){}
         String status=(String)row.get("status");
+        boolean remote = ((Number)row.get("remote_java")).intValue() == 1 && remoteJava.enabled();
+        if (remote && status.equals("running") && row.get("remote_until") instanceof Number lease
+            && lease.longValue() <= Instant.now().getEpochSecond()) status = "queued";
         boolean console=ConsoleOutputCheck.applies(submission.courseId(),submission.courseVersion(),submission.stageId());
         String message=switch(status) {
-            case "queued"->"检查已排队。";case "running"->"docker_only".equals(runnerMode)
+            case "queued"->remote?"Java 检查已排队，等待判题节点接单。":"检查已排队。";case "running"->"docker_only".equals(runnerMode)
                 ?"正在隔离容器内编译并验证代码。":"正在按项目配置编译并检查接口；普通练习优先使用本机运行结果。";
             case "passed"->console?"程序正常退出，已核对实际输出。":"功能检查通过，可以保存本关编码完成记录。理解巩固可选。";
             case "compile_error"->"编译未通过，请查看错误并修改代码。";
@@ -74,7 +93,8 @@ public class CheckJobController {
     @Transactional
     public Job cancel(@PathVariable String id,@RequestHeader(value="Authorization",required=false) String authorization) {
         read(id,authorization);
-        jdbc.update("UPDATE check_jobs SET status=CASE WHEN status='running' THEN 'cancelling' ELSE 'cancelled' END WHERE id=? AND status IN ('running','queued','awaiting_runner')",id);
+        jdbc.update("UPDATE check_jobs SET status=CASE WHEN status='running' AND (remote_java=0 OR ?=0) THEN 'cancelling' ELSE 'cancelled' END WHERE id=? AND status IN ('running','queued','awaiting_runner')",
+            remoteJava.enabled()?1:0,id);
         return read(id,authorization);
     }
     @GetMapping("/submissions/{id}/jobs")

@@ -1,0 +1,19 @@
+[Unit]
+Description=Maqibu private Java judge
+After=network-online.target maqibu-rootless-docker.service
+Wants=network-online.target
+
+[Service]
+User=user
+Group=user
+UMask=0022
+EnvironmentFile=/data/maqibu-java-judge/worker.env
+ExecStart=/usr/bin/java -Xms32m -Xmx192m -jar /data/maqibu-java-judge/app.jar --remote-java-worker
+NoNewPrivileges=yes
+ReadWritePaths=/data/maqibu-java-judge/work
+ProtectSystem=strict
+PrivateTmp=yes
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

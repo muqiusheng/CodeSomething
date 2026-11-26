@@ -1,0 +1,10 @@
+[Unit]
+Description=Send Maqibu production backup to Shanghai ECS each hour
+
+[Timer]
+OnActiveSec=45s
+OnCalendar=*-*-* *:05:00
+Persistent=false
+
+[Install]
+WantedBy=timers.target

@@ -1,16 +1,24 @@
-import {inMonitoringWindow} from './worker.mjs';
+import {getServiceScheduleStatus, inServiceHours, serviceHoursMessage} from './service-hours.mjs';
+import {renderCooldownPage} from './cooldown-page.mjs';
 
-const offHours = '学习服务时段为北京时间每天 05:00–13:00、15:00–23:00（UTC 21:00–次日 05:00、07:00–15:00）。请在服务时段访问。';
 const portCookie = '__Host-instabox_port_auth=';
 
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
         if (url.host !== env.PUBLIC_HOST) return new Response(null, {status: 421});
-        if (!inMonitoringWindow(Date.now())) {
-            return new Response(offHours, {
+        const now = Date.now();
+        if (!inServiceHours(now)) {
+            const status = getServiceScheduleStatus(now);
+            const isPage = (request.method === 'GET' || request.method === 'HEAD')
+                && !url.pathname.startsWith('/api/') && (request.headers.get('Accept') || '').includes('text/html');
+            let body = null;
+            if (request.method !== 'HEAD') body = isPage ? renderCooldownPage(status) : serviceHoursMessage;
+            return new Response(body, {
                 status: 503,
                 headers: {
+                    'Content-Type': isPage ? 'text/html; charset=utf-8' : 'text/plain;charset=UTF-8',
+                    'Retry-After': String(status.retryAfterSeconds),
                     'Cache-Control': 'no-store',
                     'X-CodeSomething-Origin': 'gateway-schedule',
                     'X-Robots-Tag': 'noindex, nofollow, noarchive',

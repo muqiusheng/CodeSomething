@@ -35,7 +35,7 @@ final class AdminReportExports {
     private final AdminSchoolService school;
     private final Path directory;
 
-    public record Status(String id, String status, String message) {}
+    public record Status(String id,String status,String message,String courseId,String labId,String userId,String format,Instant createdAt) {}
     record Archive(Path file, String courseId, String format) {}
 
     private static final class Task {
@@ -43,15 +43,23 @@ final class AdminReportExports {
         final String owner;
         final String course;
         final String format;
-        volatile Status state = new Status(id,"queued","");
+        final String labId;
+        final String userId;
+        final Instant createdAt=Instant.now();
+        volatile Status state;
         volatile Instant expires = Instant.MAX;
         Path file;
 
-        Task(String owner,String course,String format) {
+        Task(String owner,String course,String format,String labId,String userId) {
             this.owner=owner;
             this.course=course;
             this.format=format;
+            this.labId=labId;
+            this.userId=userId;
+            this.state=state("queued","");
         }
+
+        Status state(String status,String message) { return new Status(id,status,message,course,labId,userId,format,createdAt); }
     }
 
     AdminReportExports(LearningDataSource storage,AdminSchoolService school,
@@ -66,22 +74,29 @@ final class AdminReportExports {
         cleanup.scheduleWithFixedDelay(this::expire,1,1,TimeUnit.MINUTES);
     }
 
-    synchronized Status start(String owner,String course,String format) {
-        school.validateExport(course,format);
+    synchronized Status start(String owner,String course,String format,String labId,String userId) {
+        school.validateExport(course,format,labId);
         expire();
         for (var task : tasks.values()) {
             if (owner.equals(task.owner) && course.equals(task.course) && format.equals(task.format)
+                && task.labId.equals(labId) && task.userId.equals(userId)
                 && IN_PROGRESS.contains(task.state.status())) return task.state;
         }
         if (tasks.size()>=8 || worker.getQueue().remainingCapacity()==0)
             throw new ApiException(HttpStatus.TOO_MANY_REQUESTS,"EXPORT_BUSY","报告归档队列已满，请稍后重试。",Map.of());
-        var task=new Task(owner,course,format);
+        var task=new Task(owner,course,format,labId,userId);
         tasks.put(task.id,task);
         worker.execute(() -> generate(task));
         return task.state;
     }
 
     synchronized Status status(String owner,String id) { return require(owner,id).state; }
+
+    synchronized java.util.List<Status> recent(String owner) {
+        expire();
+        return tasks.values().stream().filter(task->task.owner.equals(owner)).map(task->task.state)
+            .sorted(java.util.Comparator.comparing(Status::createdAt).reversed()).toList();
+    }
 
     synchronized Archive download(String owner,String id) {
         var task=require(owner,id);
@@ -99,16 +114,18 @@ final class AdminReportExports {
     }
 
     private void generate(Task task) {
-        task.state=new Status(task.id,"generating","");
+        task.state=task.state("generating","");
         try {
             task.file=Files.createTempFile(directory,"report-", ".zip");
             try (var output=Files.newOutputStream(task.file)) {
-                school.export(task.course,task.format,storage.owners(false),output);
+                var owners=task.userId.isBlank()?storage.owners(false):
+                    storage.exists(task.userId)?java.util.List.of(task.userId):java.util.List.<String>of();
+                school.export(task.course,task.format,task.labId,owners,output);
             }
-            task.state=new Status(task.id,"ready","");
+            task.state=task.state("ready","");
         } catch (Exception error) {
             delete(task.file);
-            task.state=new Status(task.id,"failed",error instanceof ApiException ? error.getMessage() : "生成归档失败，请重试。");
+            task.state=task.state("failed",error instanceof ApiException ? error.getMessage() : "生成归档失败，请重试。");
             if (!(error instanceof ApiException)) LoggerFactory.getLogger(AdminReportExports.class).warn("Report archive failed",error);
         } finally {
             task.expires=Instant.now().plus(RETENTION);

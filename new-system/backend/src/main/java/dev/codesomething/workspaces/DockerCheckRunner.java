@@ -63,7 +63,8 @@ public class DockerCheckRunner {
             harnessDigest=WorkspaceController.hash(probe);
             Files.write(input.resolve("TaskServer.java"),source);Files.write(input.resolve("Probe.java"),probe);
             var create=docker(deadline,cancelled,"create","--name",containerName(id),"--label=codesomething.check-job="+id,
-                "--label="+dev.codesomething.admin.RunnerInventory.scopeLabel(root.getParent()),"--pull=never","--network=none","--read-only",
+                "--label="+dev.codesomething.admin.RunnerInventory.scopeLabel(root.getParent()),
+                "--label="+dev.codesomething.admin.RunnerInventory.ownerLabel(),"--pull=never","--network=none","--read-only",
                 "--cpus=1","--memory=512m","--memory-swap=512m","--pids-limit=64","--cap-drop=ALL","--security-opt=no-new-privileges",
                 "--user=65534:65534","--log-driver=none","--tmpfs=/tmp:rw,nosuid,nodev,size=64m,mode=1777",
                 "--mount","type=bind,source="+input+",target=/input,readonly","--workdir=/tmp",IMAGE,"sleep",Integer.toString(hardTimeout));

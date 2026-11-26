@@ -17,6 +17,7 @@ import tools.jackson.databind.json.JsonMapper;
 public class CheckJobWorker {
     private final JdbcTemplate jdbc;
     private final DockerCheckRunner runner;
+    private final RemoteJavaJobs remoteJava;
     private final boolean enabled;
     private final LocalProjectRunner local;
     private final boolean localEnabled;
@@ -31,8 +32,9 @@ public class CheckJobWorker {
     public CheckJobWorker(JdbcTemplate jdbc,DockerCheckRunner runner,@Value("${cs.runner.enabled:true}") boolean enabled,
                           @Value("${cs.runner.docker}") String docker,@Value("${cs.data-directory}") String data,
                           LocalProjectRunner local,@Value("${cs.runner.local-enabled:true}") boolean localEnabled,
-                          LearningDataSource storage,@Value("${cs.public}") boolean publicMode,@Value("${cs.runner.mode}") String mode) {
-        this.jdbc=jdbc;this.runner=runner;this.enabled=enabled;this.local=local;
+                          LearningDataSource storage,RemoteJavaJobs remoteJava,
+                          @Value("${cs.public}") boolean publicMode,@Value("${cs.runner.mode}") String mode) {
+        this.jdbc=jdbc;this.runner=runner;this.remoteJava=remoteJava;this.enabled=enabled;this.local=local;
         this.storage=storage;this.publicMode=publicMode;this.dockerOnly="docker_only".equals(mode);
         this.localEnabled=localEnabled && !dockerOnly;
         var root=java.nio.file.Path.of(data).resolve("boot-runner");
@@ -48,7 +50,12 @@ public class CheckJobWorker {
         } else recoverCurrent();
     }
     private void recoverCurrent() {
-        for(String id:jdbc.queryForList("SELECT id FROM check_jobs WHERE status IN ('running','cancelling')",String.class)) {
+        if (!remoteJava.enabled()) jdbc.update("""
+            UPDATE check_jobs SET status='queued',remote_lease=NULL,remote_until=NULL
+            WHERE remote_java=1 AND status='running' AND remote_lease IS NOT NULL
+            """);
+        for(String id:jdbc.queryForList("SELECT id FROM check_jobs WHERE status IN ('running','cancelling') AND (remote_java=0 OR ?=0)",
+            String.class,remoteJava.enabled()?1:0)) {
             try {runner.cleanup(id);bootRecovery.recover(id);}catch(Exception ignored){}
             var row=jdbc.queryForMap("SELECT s.* FROM submissions s JOIN check_jobs j ON s.id=j.submission_id WHERE j.id=?",id);
             String image=DockerCheckRunner.IMAGE;
@@ -75,7 +82,8 @@ public class CheckJobWorker {
         }
     }
     private boolean tickCurrent() {
-        var ids=jdbc.queryForList("SELECT id FROM check_jobs WHERE status='queued' ORDER BY created_at LIMIT 1",String.class);
+        var ids=jdbc.queryForList("SELECT id FROM check_jobs WHERE status='queued' AND (remote_java=0 OR ?=0) ORDER BY created_at LIMIT 1",
+            String.class,remoteJava.enabled()?1:0);
         if(ids.isEmpty())return false;String id=ids.getFirst();
         if(jdbc.update("UPDATE check_jobs SET status='running' WHERE id=? AND status='queued'",id)!=1)return false;
         var row=jdbc.queryForMap("SELECT s.* FROM submissions s JOIN check_jobs j ON s.id=j.submission_id WHERE j.id=?",id);

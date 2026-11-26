@@ -1,0 +1,17 @@
+[Unit]
+Description=Maqibu private Java worker claim and result endpoint
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=csdeploy
+Group=csdeploy
+UMask=0077
+ExecStart=/usr/bin/python3 /opt/maqibu-java-origin.py
+NoNewPrivileges=yes
+ProtectSystem=strict
+PrivateTmp=yes
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

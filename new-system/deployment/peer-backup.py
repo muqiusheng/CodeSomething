@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Receive immutable SQLite backups and verify recovery in a fresh directory."""
+"""Receive immutable backups and verify recovery in a fresh directory."""
 import argparse
 import hashlib
 import hmac
@@ -21,6 +21,7 @@ from urllib.parse import urlsplit
 
 ARCHIVE = re.compile(r"codesomething-\d{8}T\d{6}\.\d{6}Z\.tar\.gz")
 LEARNER = re.compile(r"learners/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\.db")
+MYSQL_SNAPSHOT = re.compile(r"mysql-idle/cs-sql-(?:school|learner)-[0-9a-f]{24}\.sql")
 CHUNK_SIZE = 1024 * 1024
 MAX_ARCHIVE_BYTES = 512 * CHUNK_SIZE
 MAX_RESTORED_BYTES = 2 * 1024 * CHUNK_SIZE
@@ -148,9 +149,14 @@ def cycle(config):
         return
     retention = config.get("retention_days", 14)
     destination = Path(config["outbox"])
+    command = [sys.executable, str(Path(__file__).with_name("backup-sqlite.py")),
+               str(data), str(destination), "--retention-days", str(retention), "--rclone-destination", ""]
+    if config.get("include_mysql_snapshots") is True:
+        command.append("--include-mysql-snapshots")
+    if config.get("mysql_docker_host"):
+        command.extend(["--mysql-docker-host", config["mysql_docker_host"]])
     result = subprocess.run(
-        [sys.executable, str(Path(__file__).with_name("backup-sqlite.py")),
-         str(data), str(destination), "--retention-days", str(retention), "--rclone-destination", ""],
+        command,
         check=True, stdout=subprocess.PIPE, text=True, timeout=300,
     )
     push(Path(result.stdout.strip()), config["peer_url"], config["peer_token"], config["peer_key"])
@@ -169,6 +175,8 @@ def restore_check(archive, destination):
         raise ValueError("Expected a regular backup archive")
     seen = set()
     restored = 0
+    databases = 0
+    mysql_snapshots = 0
     destination.mkdir(mode=0o700, parents=False, exist_ok=False)
     try:
         with tarfile.open(archive, "r|gz") as backup:
@@ -176,23 +184,30 @@ def restore_check(archive, destination):
                 name = member.name
                 if member.isdir() and name == "learners":
                     continue
-                if not member.isfile() or not (name == "codesomething.db" or LEARNER.fullmatch(name)):
+                mysql = MYSQL_SNAPSHOT.fullmatch(name) is not None
+                if not member.isfile() or not (name == "codesomething.db" or LEARNER.fullmatch(name) or mysql):
                     raise ValueError(f"Unexpected archive member: {name!r}")
                 restored += member.size
                 if name in seen or restored > MAX_RESTORED_BYTES:
                     raise ValueError("Duplicate archive member or restored size limit exceeded")
+                if mysql and member.size > 32 * CHUNK_SIZE:
+                    raise ValueError("MySQL snapshot exceeds the size limit")
                 seen.add(name)
                 target = destination / name
                 target.parent.mkdir(mode=0o700, exist_ok=True)
                 with backup.extractfile(member) as source, target.open("xb") as output:
                     shutil.copyfileobj(source, output)
-                check_database(target)
+                if mysql:
+                    mysql_snapshots += 1
+                else:
+                    check_database(target)
+                    databases += 1
         if "codesomething.db" not in seen:
             raise ValueError("Backup is missing the account database")
     except BaseException:
         shutil.rmtree(destination)
         raise
-    print(f"Verified recovery of {len(seen)} database(s)")
+    print(f"Verified recovery of {databases} SQLite database(s) and {mysql_snapshots} MySQL snapshot(s)")
 
 
 def main():

@@ -1,0 +1,10 @@
+[Unit]
+Description=Check local Java queue and notify when necessary
+
+[Timer]
+OnBootSec=25sec
+OnUnitInactiveSec=15sec
+AccuracySec=1sec
+
+[Install]
+WantedBy=timers.target

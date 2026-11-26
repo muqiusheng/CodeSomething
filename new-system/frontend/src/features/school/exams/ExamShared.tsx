@@ -291,14 +291,6 @@ export function ItemFeedback({item, compact = false, solution}: {
         ? <details><summary>MySQL 原始报错</summary><pre>{diagnostic.raw}</pre></details>
         : <pre>{diagnostic.raw}</pre>)}
     </div>}
-    {!diagnostic && failed && <p>{checkSummary(failed,checkCopy(item,failed).message)} <span className="exam-muted">（展开检查点查看明细）</span></p>}
-    {correct && <p>正确答案　{correct}</p>}
-    {!!item.acceptedBlanks.length && <ol>{item.acceptedBlanks.map((answers,i)=><li key={i}><code>{answers.join(' ／ ')}</code></li>)}</ol>}
-    {item.explanation && (compact
-      ? <details><summary>题目解析</summary><p>{item.explanation}</p></details>
-      : <p>{item.explanation}</p>)}
-    {solution ? <QuestionSolution {...solution} placement="results"/>
-      : item.referenceSql && <details><summary>参考答案</summary><SqlPreview key={item.referenceSql} sql={item.referenceSql}/></details>}
     {preview && <div className="exam-result-preview">
       <div className="exam-result-preview-head">
         <strong>本次查询结果（{checkCopy(item,preview).label}）</strong>
@@ -310,6 +302,7 @@ export function ItemFeedback({item, compact = false, solution}: {
       {condensed && (preview.actual.length > 2 || preview.actual.some(table=>table.rows.length>8)) &&
         <p className="exam-muted">预览最多 2 个结果集，每组最多 8 行。放大查看完整结果。</p>}
     </div>}
+    {!diagnostic && failed && <p>{checkSummary(failed,checkCopy(item,failed).message)} <span className="exam-muted">（展开检查点查看明细）</span></p>}
     {item.checks.map((check,index)=>{
       const repeated = isDuplicateSqlErrorCheck(check, diagnostic);
       const copy = checkCopy(item,check);
@@ -335,6 +328,13 @@ export function ItemFeedback({item, compact = false, solution}: {
         </div>
       </details>;
     })}
+    {correct && <p>正确答案　{correct}</p>}
+    {!!item.acceptedBlanks.length && <ol>{item.acceptedBlanks.map((answers,i)=><li key={i}><code>{answers.join(' ／ ')}</code></li>)}</ol>}
+    {item.explanation && (compact
+      ? <details><summary>题目解析</summary><p>{item.explanation}</p></details>
+      : <p>{item.explanation}</p>)}
+    {solution ? <QuestionSolution {...solution} placement="results"/>
+      : item.referenceSql && <details><summary>参考答案</summary><SqlPreview key={item.referenceSql} sql={item.referenceSql}/></details>}
   </div>;
 }
 

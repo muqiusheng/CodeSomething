@@ -2,12 +2,12 @@ import {Bookmark as BookmarkIcon} from 'lucide-react';
 import {useLocation} from 'react-router-dom';
 import {useBookmarks,type BookmarkTarget} from './BookmarksProvider';
 
-export function BookmarkButton({target,compact=false}:{target:BookmarkTarget;compact?:boolean}) {
+export function BookmarkButton({target,compact=false,tourTarget}:{target:BookmarkTarget;compact?:boolean;tourTarget?:string}) {
   const store = useBookmarks();
   if (!store) return null;
   const saved = store.items.some(item=>item.id===target.id);
   const label = saved ? '已收藏' : '收藏';
-  return <button type="button" className="btn btn-ghost btn-sm bookmark-button" data-compact={compact}
+  return <button type="button" className="btn btn-ghost btn-sm bookmark-button" data-compact={compact} data-tour={tourTarget}
     aria-pressed={saved} aria-label={label+'：'+target.title}
     aria-busy={store.pending.has(target.id)||undefined}
     disabled={(!store.error && store.loading) || store.pending.has(target.id)}

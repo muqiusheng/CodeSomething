@@ -1,0 +1,16 @@
+[Unit]
+Description=Send Maqibu production backup to Shanghai ECS
+After=network-online.target codesomething-rootless-docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=csdeploy
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/data/codesomething/database /data/codesomething/service/.shanghai-backup /data/maqibu-peer-backup
+EnvironmentFile=/etc/maqibu-shanghai-backup.env
+ExecStart=/usr/bin/flock -n /data/maqibu-peer-backup/.cycle.lock /opt/shanghai-backup-cycle.sh ${BACKUP_RELEASE} ${BACKUP_TARGET}
+TimeoutStartSec=900

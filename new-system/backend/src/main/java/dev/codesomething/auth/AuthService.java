@@ -138,6 +138,7 @@ public class AuthService {
             String id = UUID.randomUUID().toString(), created = Instant.now().toString();
             jdbc.update("INSERT INTO users(id,username,email,password_hash,role,status,created_at,updated_at) VALUES(?,?,?,?,?,'active',?,?)",
                 id, username, address, hash, STUDENT, created, created);
+            if (inviteRequired) jdbc.update("INSERT INTO invitation_registrations(code,user_id) VALUES(?,?)",digest(invite.strip()),id);
             return issue(new User(id, username, address, STUDENT, false));
         });
     }
@@ -263,9 +264,11 @@ public class AuthService {
 
     private void revoke(String id) { jdbc.update("UPDATE user_tokens SET revoked=1 WHERE user_id=?", id); }
 
-    public synchronized String invite(User actor, int maxUses, int hours, String ip) {
+    public synchronized String invite(User actor, int maxUses, int hours, String note, String ip) {
         if (maxUses < 1 || maxUses > 100 || hours < 1 || hours > 720)
             throw ApiException.invalid("invitation", "使用次数须为1至100次，有效期须为1至720小时。");
+        String label=note==null?"":note.strip();
+        if (label.length()>200 || label.indexOf(0)>=0) throw ApiException.invalid("note","备注最多200个字符。");
         return transactions.execute(status -> {
             String code;
             String hash;
@@ -274,11 +277,20 @@ public class AuthService {
                 code = randomToken().substring(0, 8);
                 hash = digest(code);
             } while (jdbc.update("""
-                INSERT INTO invitation_codes(code,created_by,max_uses,expires_at) VALUES(?,?,?,?)
+                INSERT INTO invitation_codes(code,created_by,max_uses,expires_at,note) VALUES(?,?,?,?,?)
                 ON CONFLICT(code) DO NOTHING
-                """, hash, actor.userId(), maxUses, expiresAt) == 0);
+                """, hash, actor.userId(), maxUses, expiresAt,label) == 0);
             audit(actor.userId(), "invite_created", "invitation", hash.substring(0, 12), "maxUses=" + maxUses, ip);
             return code;
+        });
+    }
+
+    public synchronized void revokeInvitation(User actor,String id,String ip) {
+        transactions.executeWithoutResult(status->{
+            var matches=jdbc.queryForList("SELECT code FROM invitation_codes WHERE substr(code,1,12)=?",String.class,id);
+            if (matches.size()!=1) throw new ApiException(HttpStatus.NOT_FOUND,"INVITATION_NOT_FOUND","邀请码不存在。",Map.of());
+            if (jdbc.update("UPDATE invitation_codes SET status='revoked' WHERE code=? AND status='active'",matches.getFirst())>0)
+                audit(actor.userId(),"invite_revoked","invitation",id,"",ip);
         });
     }
 
@@ -315,10 +327,12 @@ public class AuthService {
 
     void seen(String id) {
         Instant now = Instant.now();
+        Instant hour=now.truncatedTo(java.time.temporal.ChronoUnit.HOURS);
+        Instant recent=now.minusSeconds(60);
         int updated=jdbc.update("UPDATE users SET last_seen_at=? WHERE id=? AND (last_seen_at IS NULL OR last_seen_at<?)",
-            now.toString(), id, now.minusSeconds(60).toString());
+            now.toString(),id,(recent.isBefore(hour)?hour:recent).toString());
         if(updated>0) jdbc.update("INSERT OR IGNORE INTO user_activity_hourly(user_id,hour) VALUES(?,?)",
-            id,now.truncatedTo(java.time.temporal.ChronoUnit.HOURS).toString());
+            id,hour.toString());
     }
 
     @org.springframework.scheduling.annotation.Scheduled(fixedDelay=86_400_000, initialDelay=86_400_000)

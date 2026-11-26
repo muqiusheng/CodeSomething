@@ -34,7 +34,6 @@ final class AdminJobRetry {
     }
 
     Result retry(String owner, String kind, String original) {
-        if (!enabled) throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE,"RUNNER_DISABLED","评测运行器尚未启用。",Map.of());
         if (!storage.exists(owner))
             throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE,"JOB_DATABASE_UNAVAILABLE","作业所属学习库暂时不可用。",Map.of());
         String table = switch (kind) {
@@ -43,15 +42,18 @@ final class AdminJobRetry {
             default -> "check_jobs";
         };
         Result result = storage.inLearningTransaction(owner, jdbc -> {
+            var jobs = jdbc.queryForList("SELECT status,snapshot_pruned_at FROM " + table + " WHERE id=?", original);
+            if (jobs.isEmpty()) throw new ApiException(HttpStatus.NOT_FOUND,"JOB_NOT_FOUND","作业不存在。",Map.of());
+            if (jobs.getFirst().get("snapshot_pruned_at") != null)
+                throw new ApiException(HttpStatus.CONFLICT,"JOB_SNAPSHOT_PRUNED","该作业快照已清理，无法重跑",Map.of());
+            if (!enabled) throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE,"RUNNER_DISABLED","评测运行器尚未启用。",Map.of());
             boolean active = jdbcForAccount(owner, jdbc).queryForObject(
                 "SELECT count(*) FROM users WHERE id=? AND status='active'", Integer.class, owner) == 1;
             if (!active) throw conflict("请先解冻此账号。");
             var previous = jdbc.queryForList("SELECT retry_id FROM admin_job_retries WHERE kind=? AND original_id=?",
                 String.class, kind, original);
             if (!previous.isEmpty()) return new Result(previous.getFirst(), false);
-            var statuses = jdbc.queryForList("SELECT status FROM " + table + " WHERE id=?", String.class, original);
-            if (statuses.isEmpty()) throw new ApiException(HttpStatus.NOT_FOUND,"JOB_NOT_FOUND","作业不存在。",Map.of());
-            if (!RETRYABLE.contains(statuses.getFirst())) throw conflict("只有已结束且未通过的作业可以重跑。");
+            if (!RETRYABLE.contains(jobs.getFirst().get("status"))) throw conflict("只有已结束且未通过的作业可以重跑。");
             int limit = "portfolio".equals(kind) ? 1 : "sql".equals(kind) ? 2 : checkLimit;
             int queued = jdbc.queryForObject("SELECT count(*) FROM " + table
                 + " WHERE status IN ('queued','running','cancelling')", Integer.class);

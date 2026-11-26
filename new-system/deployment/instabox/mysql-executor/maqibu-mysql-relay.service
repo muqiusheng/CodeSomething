@@ -1,0 +1,19 @@
+[Unit]
+Description=Maqibu local relay to the private MySQL executor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=csdeploy
+Group=csdeploy
+UMask=0077
+Environment=CS_MYSQL_EXECUTOR_CONFIG=/data/codesomething/service/.remote-mysql/client.json
+ExecStart=/data/codesomething/service/.remote-mysql/command relay
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/data/codesomething/service/.remote-mysql/relay
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

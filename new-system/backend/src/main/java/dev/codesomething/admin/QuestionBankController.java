@@ -19,6 +19,9 @@ import tools.jackson.databind.json.JsonMapper;
 public class QuestionBankController {
     private static final Set<String> TOPICS=Set.of("http","sql","boot","projects");
     private static final Set<String> STATES=Set.of("draft","published","archived");
+    private static final String NOT_DELETED="""
+        NOT EXISTS (SELECT 1 FROM supplemental_question_deletions d WHERE d.question_id=supplemental_questions.id)
+        """;
     private final JdbcTemplate jdbc;
     private final TransactionTemplate transactions;
     private final AuthService auth;
@@ -32,7 +35,9 @@ public class QuestionBankController {
 
     public record Write(String topic,String prompt,List<String> options,int answer,String explanation,String status,long revision) {}
     public record Answer(long revision,int option) {}
-    public record Question(String id,String topic,String prompt,List<String> options,int answer,String explanation,String status,long revision) {}
+    public record Question(String id,String topic,String prompt,List<String> options,int answer,String explanation,String status,
+                           long revision,long attempts,long correct,long learners,String lastAnswerAt) {}
+    public record State(String status,long revision) {}
     public record Practice(String id,String topic,String prompt,List<String> options,long revision) {}
 
     public record QuestionPage(List<Question> items,int page,int size,int total) {}
@@ -44,11 +49,13 @@ public class QuestionBankController {
         if(page<1 || size<1 || size>100) throw ApiException.invalid("page","分页范围无效。");
         if(keyword.length()>1000) throw ApiException.invalid("keyword","检索词过长。");
         String where = """
-             FROM supplemental_questions WHERE (?='' OR topic=?) AND (?='' OR status=?)
+             FROM supplemental_questions WHERE
+            """+NOT_DELETED+"""
+             AND (?='' OR topic=?) AND (?='' OR status=?)
                 AND instr(lower(prompt),lower(?))>0
             """;
         int total=jdbc.queryForObject("SELECT count(*)"+where,Integer.class,topic,topic,status,status,keyword);
-        var items=jdbc.query("SELECT *"+where+" ORDER BY updated_at DESC,id LIMIT ? OFFSET ?",
+        var items=jdbc.query(selectQuestion()+where+" ORDER BY updated_at DESC,id LIMIT ? OFFSET ?",
             this::read,topic,topic,status,status,keyword,size,(page-1L)*size);
         return new QuestionPage(items,page,size,total);
     }
@@ -58,10 +65,39 @@ public class QuestionBankController {
         var write=validate(input);
         String id=UUID.randomUUID().toString();
         return transactions.execute(status -> {
-            jdbc.update("INSERT INTO supplemental_questions VALUES(?,?,?,?,?,?,?,1,?)",id,write.topic(),write.prompt(),
+            jdbc.update("""
+                INSERT INTO supplemental_questions(id,topic,prompt,options,answer,explanation,status,revision,updated_at)
+                VALUES(?,?,?,?,?,?,?,1,?)
+                """,id,write.topic(),write.prompt(),
                 json.writeValueAsString(write.options()),write.answer(),write.explanation(),write.status(),Instant.now().toString());
             audit(request,id,"question_created",write.status());
             return require(id,false);
+        });
+    }
+
+    @PatchMapping("/api/v1/admin/questions/{id}/status")
+    Question state(@PathVariable String id,@RequestBody State input,HttpServletRequest request) {
+        if (!STATES.contains(Objects.toString(input.status(),""))) throw ApiException.invalid("status","请选择有效状态。");
+        return transactions.execute(transaction->{
+            require(id,false);
+            if (jdbc.update("""
+                UPDATE supplemental_questions SET status=?,revision=revision+1,updated_at=?
+                WHERE id=? AND revision=?
+                """,input.status(),Instant.now().toString(),id,input.revision())!=1) throw stale();
+            audit(request,id,"question_updated",input.status());
+            return require(id,false);
+        });
+    }
+
+    @DeleteMapping("/api/v1/admin/questions/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void delete(@PathVariable String id,HttpServletRequest request) {
+        transactions.executeWithoutResult(transaction->{
+            require(id,false);
+            String now=Instant.now().toString();
+            jdbc.update("UPDATE supplemental_questions SET status='archived',revision=revision+1,updated_at=? WHERE id=?",now,id);
+            jdbc.update("INSERT INTO supplemental_question_deletions(question_id,deleted_at) VALUES(?,?)",id,now);
+            audit(request,id,"question_deleted","");
         });
     }
 
@@ -84,29 +120,51 @@ public class QuestionBankController {
     List<Practice> practice(@RequestParam(defaultValue="") String topic,@RequestParam(defaultValue="0") int offset) {
         if(offset<0 || offset>100000) throw ApiException.invalid("offset","分页范围无效。");
         return jdbc.query("""
-            SELECT id,topic,prompt,options,revision FROM supplemental_questions WHERE status='published' AND (?='' OR topic=?)
+            SELECT id,topic,prompt,options,revision FROM supplemental_questions WHERE
+            """+NOT_DELETED+"""
+            AND status='published' AND (?='' OR topic=?)
             ORDER BY updated_at DESC,id LIMIT 20 OFFSET ?
             """,(row,index)->new Practice(row.getString("id"),row.getString("topic"),row.getString("prompt"),
                 options(row.getString("options")),row.getLong("revision")),topic,topic,offset);
     }
 
     @PostMapping("/api/v1/reviews/supplemental/{id}/answer")
-    Map<String,Object> answer(@PathVariable String id,@RequestBody Answer input) {
-        var question=require(id,true);
-        if(question.revision()!=input.revision()) throw stale();
-        if(input.option()<0 || input.option()>=question.options().size()) throw ApiException.invalid("option","请选择有效选项。");
-        return Map.of("correct",question.answer()==input.option(),"answer",question.answer(),"explanation",question.explanation());
+    Map<String,Object> answer(@PathVariable String id,@RequestBody Answer input,HttpServletRequest request) {
+        String user=AuthController.principal(request).user().userId();
+        return transactions.execute(transaction->{
+            var question=require(id,true);
+            if(question.revision()!=input.revision()) throw stale();
+            if(input.option()<0 || input.option()>=question.options().size()) throw ApiException.invalid("option","请选择有效选项。");
+            boolean correct=question.answer()==input.option();
+            jdbc.update("""
+                INSERT INTO supplemental_answer_stats VALUES(?,?,1,?,?)
+                ON CONFLICT(question_id,user_id) DO UPDATE SET attempts=attempts+1,
+                    correct=correct+excluded.correct,last_answer_at=excluded.last_answer_at
+                """,id,user,correct,Instant.now().toString());
+            return Map.of("correct",correct,"answer",question.answer(),"explanation",question.explanation());
+        });
     }
 
     private Question require(String id,boolean published) {
-        return jdbc.query("SELECT * FROM supplemental_questions WHERE id=?",this::read,id).stream()
+        return jdbc.query(selectQuestion()+" FROM supplemental_questions WHERE id=? AND "+NOT_DELETED,this::read,id).stream()
             .filter(question -> !published || question.status().equals("published")).findFirst()
             .orElseThrow(()->new ApiException(HttpStatus.NOT_FOUND,"QUESTION_NOT_FOUND","题目不存在或尚未发布。",Map.of()));
     }
 
     private Question read(java.sql.ResultSet row,int index) throws java.sql.SQLException {
         return new Question(row.getString("id"),row.getString("topic"),row.getString("prompt"),options(row.getString("options")),
-            row.getInt("answer"),row.getString("explanation"),row.getString("status"),row.getLong("revision"));
+            row.getInt("answer"),row.getString("explanation"),row.getString("status"),row.getLong("revision"),
+            row.getLong("attempts"),row.getLong("correct_count"),row.getLong("learners"),row.getString("last_answer_at"));
+    }
+
+    private static String selectQuestion() {
+        return """
+            SELECT supplemental_questions.*,
+                (SELECT sum(attempts) FROM supplemental_answer_stats WHERE question_id=supplemental_questions.id) AS attempts,
+                (SELECT sum(correct) FROM supplemental_answer_stats WHERE question_id=supplemental_questions.id) AS correct_count,
+                (SELECT count(*) FROM supplemental_answer_stats WHERE question_id=supplemental_questions.id) AS learners,
+                (SELECT max(last_answer_at) FROM supplemental_answer_stats WHERE question_id=supplemental_questions.id) AS last_answer_at
+            """;
     }
 
     private List<String> options(String value) { return Arrays.asList(json.readValue(value,String[].class)); }

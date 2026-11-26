@@ -5,6 +5,7 @@ import {adminRead, type Page} from '../../api/admin-api';
 import {Modal} from '../../components/ui/modal';
 import {InlineSpinner,PageSkeleton} from '../../components/shared/LoadingState';
 import {useScopedRead} from '../../hooks/useScopedRead';
+import {useAdminPreferences} from './admin-preferences';
 
 const number = new Intl.NumberFormat('zh-CN');
 const time = new Intl.DateTimeFormat('zh-CN', {dateStyle: 'short', timeStyle: 'short'});
@@ -18,14 +19,18 @@ const stateLabels: Record<string,string> = {
   timeout: 'SQL超时', sql_error: 'SQL错误', output_limit: '输出超限',
   interrupted: '服务中断', cleanup_failed: '清理失败', executed: '已试运行',
   exited: '已退出', created: '已创建', ROLE_ADMIN: '管理员', ROLE_STUDENT: '学员',
+  pending:'待处理',dead:'异常退出',unstarted:'未开始',in_progress:'进行中',completed:'已通关',ok:'运行成功',
+  correct:'通过',wrong:'未通过',partial:'部分通过',generating:'生成中',failed:'失败',restarting:'重启中',
+  invite_active:'有效',invite_used:'已用完',invite_expired:'已过期',invite_revoked:'已撤销',
+  published:'已发布',draft:'草稿',archived:'已下架',reviewed:'已查看',planned:'已采纳',replied:'已回复',closed:'已关闭',
 };
 export const label = (value: string) => stateLabels[value] || value;
 
 export function Status({value}: {value: string}) {
-  const tone = ['passed','active','ready','executed'].includes(value) ? 'success'
-    : ['disabled','unavailable','environment_error','compile_error','business_error','sql_error','cleanup_failed'].includes(value) ? 'error'
-    : ['queued','awaiting_runner','cancelling','timed_out','timeout','output_limit','interrupted'].includes(value) ? 'warning'
-    : value === 'running' ? 'info' : 'neutral';
+  const tone = ['passed','active','ready','executed','completed','correct','ok','invite_active','published','replied','planned'].includes(value) ? 'success'
+    : ['disabled','unavailable','environment_error','compile_error','business_error','sql_error','cleanup_failed','failed'].includes(value) ? 'error'
+    : ['queued','awaiting_runner','cancelling','timed_out','timeout','output_limit','interrupted','pending'].includes(value) ? 'warning'
+    : ['running','reviewed'].includes(value) ? 'info' : 'neutral';
   return <span className={`csx-badge admin-status admin-status-${tone}`} data-status={value}>
     <span className="admin-status-dot" aria-hidden="true"/>{label(value)}
   </span>;
@@ -77,13 +82,16 @@ export function RowActions({subject, children, actions}: {subject: string; child
 }
 
 export function useAdminData<T>(path: string | null, interval = 0) {
+  const {refresh} = useAdminPreferences();
   const request = useCallback(() => adminRead<T>(path!), [path]);
-  const {data,error,reload} = useScopedRead(path === null ? null : '/admin' + path, request, {interval});
+  const {data,error,reload} = useScopedRead(path === null ? null : '/admin' + path, request,
+    {interval: refresh === 'manual' ? 0 : interval * (refresh === 'slow' ? 2 : 1)});
   return {data: data ?? undefined, error: error || undefined, refresh: reload};
 }
 
 export function useAdminFilters<T extends Record<string, string>>(defaults: T) {
   const [params, setParams] = useSearchParams();
+  const {pageSize} = useAdminPreferences();
   const applied = Object.fromEntries(Object.entries(defaults).map(([key, value]) => [key, params.get(key) ?? value])) as T;
   const filterKey = JSON.stringify(applied);
   const [draft, setDraft] = useState({key: filterKey, values: applied});
@@ -108,10 +116,19 @@ export function useAdminFilters<T extends Record<string, string>>(defaults: T) {
     update({...values, ...extra, page: ''});
   }
 
-  return {params, applied, filters, page, apply,
+  return {params, applied, filters, page, pageSize:Number(pageSize), apply,
+    reset: () => {
+      setDraft({key:filterKey,values:defaults});
+      update({...Object.fromEntries(Object.keys(defaults).map(key=>[key,''])),page:''});
+    },
     setFilter: (key: keyof T, value: string) => setDraft({key: filterKey, values: {...filters, [key]: value}}),
     setPage: (value: number) => update({page: value > 1 ? String(value) : ''}),
   };
+}
+
+export function AdminNotice({text,onClose}: {text: string; onClose: () => void}) {
+  return text ? <div className="csx-alert" role="status"><span>{text}</span>
+    <button type="button" className="csx-btn csx-btn-outline" onClick={onClose}>关闭提示</button></div> : null;
 }
 
 export function DataState({loading, error, retry, variant = 'table'}: {loading: boolean; error?: string; retry?: () => void; variant?: ComponentProps<typeof PageSkeleton>['variant']}) {

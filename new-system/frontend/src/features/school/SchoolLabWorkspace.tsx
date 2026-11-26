@@ -286,7 +286,7 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
     lab.fixtureSql
   );
 
-  return <div className="page school-workspace school-practice-workspace">
+  return <div className="page school-workspace school-practice-workspace" data-tour-ready={mysql?'workbench':undefined}>
     <header className="school-lab-heading">
       <Link to="/school" className="back-link"><ArrowLeft size={16} aria-hidden="true"/>{course.title}</Link>
       <h1>{outline.title}</h1>
@@ -294,7 +294,7 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
     </header>
     <div className="school-practice-grid" data-directory-open={directoryOpen}
       style={splitStyle({'prompt-size':promptWidth.value,'lab-code-size':100-promptWidth.value})}>
-      <aside className="school-pane school-brief" aria-label="实验题目">
+      <aside className="school-pane school-brief" data-tour="workbench-prompt" aria-label="实验题目">
         <div className="school-outline-title">
           {directoryOpen && <h2>题目目录</h2>}
           <button type="button" className="btn btn-ghost school-directory-toggle"
@@ -339,12 +339,12 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
           })}
         </div>
       </aside>
-      <section className="sql-practice-reference school-pane school-practice-prompt" aria-labelledby="school-question" tabIndex={0}
+      <section className="sql-practice-reference school-pane school-practice-prompt" data-tour="workbench-prompt" aria-labelledby="school-question" tabIndex={0}
         key={selected}>
         <div className="school-question-header">
           <div className="bookmark-heading">
             <h2 id="school-question"><QuestionText text={question.title}/></h2>
-            <BookmarkButton target={{id:['school-lab',course.id,outline.id,question.id].join('.'),category:'school',
+            <BookmarkButton tourTarget="workbench-bookmark" target={{id:['school-lab',course.id,outline.id,question.id].join('.'),category:'school',
               source:course.title+' · '+outline.title,title:question.title,
               href:'/school/'+course.id+'/'+outline.id+'?question='+encodeURIComponent(question.id)}}/>
           </div>
@@ -368,7 +368,7 @@ function LabWorkspace({details, url, updateWork}: {details: LabDetails; url: str
         {hasOriginalData && <SchoolOriginalMaterials lab={lab} question={question} collapsed={!!details.grading}/>}
       </section>
       <WorkbenchResizer split={promptWidth} axis="x" label="调整实验题干与作答区宽度"/>
-      <div className="school-practice-sql" style={splitStyle({'editor-size':editorHeight.value,'result-size':100-editorHeight.value})}>
+      <div className="school-practice-sql" data-tour="workbench-editor" style={splitStyle({'editor-size':editorHeight.value,'result-size':100-editorHeight.value})}>
         <div className="sql-practice-editor-card">
           {mysql ? <div className="sql-practice-editor" onKeyDownCapture={event => {
             if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !event.repeat) {

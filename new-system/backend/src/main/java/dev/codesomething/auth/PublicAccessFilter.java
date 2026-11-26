@@ -24,6 +24,8 @@ class PublicAccessFilter extends OncePerRequestFilter {
     private static final String AUTH = AUTH_ROOT + "/";
     private static final String ADMIN = "/api/v1/admin";
     private static final String WORKSPACE_HEADER = "X-CS-Workspace-Authorization";
+    private static final Pattern PRIVATE_JAVA = Pattern.compile(
+        "/api/v1/internal/java-judge/(?:claim|[0-9a-f-]{36}/result)");
     private static final Pattern EXAM_CHECK = Pattern.compile("/api/school/courses/([^/]+)/exams/(?:"
         + "[^/]+/(?:drafts|attempts)/[^/]+/questions|mistakes)/([^/]+)/check");
     private final AuthService auth;
@@ -39,6 +41,7 @@ class PublicAccessFilter extends OncePerRequestFilter {
     private final SlidingWindow tutor = new SlidingWindow(15, Duration.ofHours(1));
     private final SlidingWindow environments = new SlidingWindow(20, Duration.ofMinutes(1));
     private final SlidingWindow blockedAudit = new SlidingWindow(5, Duration.ofMinutes(1));
+    private final SlidingWindow feedbackPosts = new SlidingWindow(10, Duration.ofMinutes(10));
     private final JsonMapper json = JsonMapper.builder().build();
 
     PublicAccessFilter(AuthService auth, ExamCatalog exams, @Value("${cs.public}") boolean enabled, @Value("${cs.runner.mode}") String runnerMode,
@@ -69,6 +72,11 @@ class PublicAccessFilter extends OncePerRequestFilter {
             response.setHeader("Cache-Control", "no-store");
             String method = request.getMethod(), ip = request.getRemoteAddr();
             boolean post = "POST".equals(method);
+            if (post && PRIVATE_JAVA.matcher(path).matches()) {
+                // The judge controller authenticates the worker with its scoped service credential.
+                chain.doFilter(request, response);
+                return;
+            }
             if ("GET".equals(method) && path.equals(AUTH + "session")) {
                 chain.doFilter(request, response);
                 return;
@@ -97,7 +105,10 @@ class PublicAccessFilter extends OncePerRequestFilter {
                 throw denied("LOCAL_RUNNER_DISABLED", "隔离运行模式已停用服务端本机文件与IDE操作。");
             }
             if (principal == null) {
-                if (enabled && (under(path, "/api/v1/interactive") || under(path, "/api/v1/bookmarks") || path.matches("/api/school/courses/[^/]+/(?:exams(?:/.*)?|environment/activity|labs/[^/]+/questions/[^/]+/(?:tables|debug|solution))")
+                if (enabled && (under(path, ADMIN) || under(path, "/api/v1/interactive") || under(path, "/api/v1/bookmarks")
+                    || under(path, "/api/v1/announcements") || under(path, "/api/v1/feedback") || under(path, "/api/v1/onboarding")
+                    || under(path, "/api/v1/nudges")
+                    || path.matches("/api/school/courses/[^/]+/(?:exams(?:/.*)?|environment/activity|labs/[^/]+/questions/[^/]+/(?:tables|debug|solution))")
                     || path.matches("/api/school/[^/]+/(?:labs/[^/]+|exams/[^/]+/drafts/[^/]+)/questions/[^/]+/solution")
                     || path.equals("/api/v1/sql/environment/activity")))
                     throw new ApiException(HttpStatus.UNAUTHORIZED, "AUTH_REQUIRED", "请登录学员账号后继续。", Map.of());
@@ -105,6 +116,7 @@ class PublicAccessFilter extends OncePerRequestFilter {
                 return;
             }
             String id = principal.user().userId();
+            if (post && path.equals("/api/v1/feedback")) limit(feedbackPosts, id);
             if ((post && path.startsWith("/api/v1/sql/environment/")) ||
                 path.matches("/api/school/courses/[^/]+/(databases|schema|labs/[^/]+/(?:reset|questions/[^/]+/(?:tables|debug)))")
                 || post && path.matches("/api/school/courses/[^/]+/exams/.+/debug")) limit(environments,id);
@@ -126,7 +138,7 @@ class PublicAccessFilter extends OncePerRequestFilter {
             }
             if (enabled && path.equals("/api/v1/tutor/connection") && post)
                 throw denied("TUTOR_ADMIN_MANAGED", "公网导师连接由服务管理员配置。");
-            auth.seen(id);
+            if (!path.equals("/api/v1/nudges/unread")) auth.seen(id);
             try (var scope = LearningDataSource.asOwner(id)) {
                 chain.doFilter(under(path, ADMIN) || under(path, AUTH_ROOT)
                     ? request : workspaceHeaders(request), response);

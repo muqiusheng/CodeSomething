@@ -40,9 +40,13 @@ public class SqlLearningController {
         if (!publicMode) return environment;
         return instances.computeIfAbsent(LearningDataSource.owner(), id -> environment.learnerInstance(instanceKey(id)));
     }
-    private String instanceKey(String id) { return MysqlEnvironment.digest(dataDirectory+"\n"+id).substring(0,24); }
+    private String instanceKey(String id) {
+        return MysqlEnvironment.digest(environment.publicIdentityRoot(dataDirectory)+"\n"+id).substring(0,24);
+    }
     public String publicContainer(String id) { return environment.learnerInstance(instanceKey(id)).status().container(); }
     public int publicPoolLimit() { return environment.publicPoolLimit(); }
+    public MysqlEnvironment.PoolSettings publicPoolSettings() { return environment.publicPoolSettings(); }
+    public long publicPoolIdleMinutes() { return environment.publicPoolIdleMinutes(); }
     @PostConstruct void recover(){
         var owners = new LinkedHashSet<>(publicMode ? storage.owners(false) : List.<String>of());
         owners.add("admin");
@@ -91,7 +95,9 @@ public class SqlLearningController {
         var old=jdbc.queryForList("SELECT * FROM sql_attempts WHERE idempotency_key=?",write.idempotencyKey());
         if(!old.isEmpty()) {
             var row=old.getFirst();
-            if(!write.sql().equals(row.get("source"))||!write.stageId().equals(row.get("stage_id"))||!write.mode().equals(row.get("mode"))||!write.courseVersion().equals(row.get("course_version")))throw conflict("IDEMPOTENCY_CONFLICT","此请求编号已用于其他SQL。");
+            boolean sameSql = row.get("snapshot_pruned_at") == null
+                ? write.sql().equals(row.get("source")) : MysqlEnvironment.digest(write.sql()).equals(row.get("digest"));
+            if(!sameSql||!write.stageId().equals(row.get("stage_id"))||!write.mode().equals(row.get("mode"))||!write.courseVersion().equals(row.get("course_version")))throw conflict("IDEMPOTENCY_CONFLICT","此请求编号已用于其他SQL。");
             return attempt(row);
         }
         if(jdbc.queryForObject("SELECT count(*) FROM sql_attempts WHERE status IN ('queued','running','cancelling')",Integer.class) >= (publicMode ? 2 : 20))throw conflict("QUEUE_FULL","SQL检查队列已满，请等待已有任务结束。");
@@ -166,6 +172,7 @@ public class SqlLearningController {
     }
     private void validateCode(Attempt a,String currentSql){
         if(!"check".equals(a.mode())||!"passed".equals(a.status())||currentSql==null||!a.digest().equals(MysqlEnvironment.digest(currentSql)))throw conflict("FUNCTIONAL_REQUIRED","请先让当前SQL通过正式检查；修改后需重新检查。");
+        if(a.report()==null)throw conflict("JOB_SNAPSHOT_PRUNED","该次检查的快照已清理，请重新检查当前 SQL。");
         var report=json.convertValue(a.report(),Report.class);
         if(!a.digest().equals(report.snapshotDigest())||!SqlCourse.RULE.equals(report.ruleVersion())||!report.policy().equals("sql-"+a.stageId()+"-1")||report.assertions().isEmpty()||report.assertions().stream().anyMatch(x->!x.passed()))throw conflict("REPORT_MISMATCH","功能证据与本关不一致，请重新检查。");
         int index=SqlCourse.STAGES.indexOf(a.stageId());
